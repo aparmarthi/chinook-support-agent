@@ -1,0 +1,30 @@
+# Secrets
+.env
+*.key
+
+# Internal planning notes — working artifacts, not part of the submission
+docs/internal/
+
+# Data — rebuilt by scripts/setup_data.py
+# Must be data/* not data/: git cannot re-include a file whose parent
+# directory is excluded, so the negation below would silently do nothing.
+data/*
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# LangGraph local dev
+.langgraph_api/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,335 @@
+# Cognitive Architecture
+
+Target stack (verified on PyPI, Aug 2026): `langchain 1.3.x`, `langgraph 1.2.x`, `deepagents 0.7.x`, `langsmith 0.10.x`, `langgraph-cli[inmem] 0.4.x`. Python 3.12 or 3.13 — **not 3.14**, see ADR-009.
+
+**Models:** OpenAI, tiered. `gpt-5.6-luna` ($0.20/$1.20 per 1M) for development, bulk seeding, and evaluator judges; `gpt-5.6-terra` ($2/$12) for the demo path. Read from environment variables so the tier swaps without code changes. Budget in [`BUILD_PLAN.md`](BUILD_PLAN.md).
+
+> **Revised during design review.** The supervisor/subagent design is now a *hypothesis to be tested*, not a commitment, and the authorization boundary has moved out of agent middleware into the data layer. Full reasoning in the ADRs — [ADR-002](decisions.md) and [ADR-006](decisions.md).
+
+---
+
+## 1. Shape — baseline
+
+Start flat. One `create_agent`, six tools, middleware that can actually see every tool call because there is no nesting.
+
+```
+   authenticated session
+          │
+          ▼
+   ┌──────────────────────────────────────────────┐
+   │  AuthContext (runtime context)               │
+   │    customer_id: int   ← verified by caller   │
+   │    thread_owner check before invoke          │
+   └──────────────────┬───────────────────────────┘
+                      ▼
+   ┌──────────────────────────────────────────────┐
+   │  create_agent  (flat baseline)               │
+   │                                              │
+   │  middleware                                  │
+   │   1. CustomerContextMiddleware @dynamic_prompt│
+   │   2. HumanInTheLoopMiddleware  (refund tool) │
+   │   3. ToolCallLimitMiddleware   (built-in)    │
+   │   4. PIIMiddleware             (egress)      │
+   │   5. ModelRetry / ToolRetry    (transient)   │
+   │                                              │
+   │  tools: 4 read + 1 gated write + 1 handoff   │
+   └──────────────────┬───────────────────────────┘
+                      ▼
+   ┌──────────────────────────────────────────────┐
+   │  DATA LAYER — the security boundary          │
+   │                                              │
+   │  chinook.db   read-only URI, parameterized   │
+   │  support.db   writable, refund tickets only  │
+   │                                              │
+   │  every scoped function binds customer_id     │
+   │  from runtime context. No caller can pass    │
+   │  a different one. Audit metadata records     │
+   │  which tenant IDs were actually read.        │
+   └──────────────────────────────────────────────┘
+```
+
+## 2. Shape — supervisor variant (only if measured to win)
+
+Same tools and data layer, with a supervisor delegating to `billing` and `music_concierge` subagents. **Middleware placement changes and this is the part that's easy to get wrong:** subagents are invoked *as tools*, so supervisor-level `@wrap_tool_call` middleware sees the delegation call and its summarized result — not the nested tool calls inside the specialist.
+
+Concretely, in the supervisor variant:
+
+- **HITL must live on the agent that owns the write tool.** If `create_refund_request` belongs to the billing subagent, the interrupt goes there. The alternative — and probably the simpler one — is to keep the refund tool at supervisor level so the gate stays where it's easy to reason about.
+- **Result guards must sit inside each specialist**, at the tool boundary, not around the supervisor's delegation call.
+- **Runtime context must be verified to propagate unchanged** into each subagent invocation. Test it; don't assume it.
+- **Studio may not visualize this the way the demo assumes.** Per first-party docs, tool-invoked subagents are not statically discoverable, and `get_state` with `subgraphs` will not return subagent state. Verify on Day 0 what actually renders.
+
+The reason the authorization boundary lives in the data layer (§4) rather than in middleware is precisely so that **none of the above can silently break the security model.** Middleware placement affects defense-in-depth. It does not affect whether the boundary holds.
+
+## 3. Why start flat
+
+Four options were considered. The honest position is that the right answer is unknown until it's measured.
+
+**A. Flat `create_agent`.** ✅ Baseline. Official guidance: *"For simpler cases with just a few tools, use a single agent."* Six tools is comfortably inside that. Middleware sees everything, HITL is unambiguous, and there's no nesting to reason about.
+
+**B. Supervisor + subagents.** The hypothesis. Real benefits — context isolation (billing pulls back raw rows the catalog path never needs) and narrower tool lists per specialist. Real costs — an extra model hop, the middleware-placement hazard above, and weaker state visibility. Build it *second*, compare on the same dataset and model, keep the winner.
+
+**C. Custom `StateGraph`.** Not the same axis as A and B, and worth being precise about because the sloppy version of this claim is wrong. **LangGraph supports cycles — `create_agent` itself is a loop running on LangGraph.** So the distinction is not "loop vs. DAG." It is: use `create_agent` when the standard model/tool loop plus middleware expresses the behavior; reach for a custom `StateGraph` when you need explicit state transitions, deterministic routing, parallel branches, or bespoke control flow. Here, the standard loop expresses it. The escape hatch is cheap — an agent built with `create_agent` drops into a `StateGraph` as a node with its middleware intact.
+
+**D. `create_deep_agent`.** Wrong harness for a sub-10-second support turn — planning, a virtual filesystem, and skills are overhead here. Deep Agents is the right call for long-horizon work where context outgrows the window. Shown as the graduation path, not the default. Optional stretch, cut first: a playlist curator for the one genuinely multi-step request.
+
+**The interview sentence this buys:** *"I expected specialization to help, so I tested it against a flat agent on the same dataset and model. It moved mixed-intent completion from X to Y at N% more latency, so I kept it / cut it."* That beats any amount of architectural reasoning.
+
+---
+
+## 4. The security boundary
+
+### The chain, in one sentence
+
+> **Trusted `AuthContext` → scoped repository → ownership-enforcing SQL.**
+
+Three links, each with a single job, and the property worth stating is that **no link can be bypassed by anything the model emits.**
+
+1. **`AuthContext`** carries `customer_id`, established by the caller from a verified session. It enters as `context_schema`, never as state, chat content, or a tool argument. The model cannot write to it.
+2. **The scoped repository** is the only way to reach the database. Every method reads identity from `AuthContext` and takes no tenant parameter, so "fetch customer 26" is not expressible — there is no argument to put it in.
+3. **Ownership-enforcing SQL** binds the tenant in the `WHERE` clause of every customer-scoped query. `get_invoice_detail(invoice_id)` runs `WHERE InvoiceId=? AND CustomerId=?` and returns not-found for someone else's invoice — identical to a nonexistent one, so there's no oracle to probe. No LLM-authored SQL anywhere (ADR-003).
+
+Rehearse that sentence. It's the answer to the brief's "how do you ensure the customer can only see info about themselves," and being able to name the three links in order is the difference between a design and a description.
+
+### Layers
+
+The load-bearing ones are 1 and 2 — everything else is defense in depth.
+
+**1. The chain above.**
+
+**2. Tenant-bound threads, validated before the checkpoint loads.** A `thread_id` belongs to exactly one `customer_id`, recorded server-side at creation. Ownership is checked **before the checkpointer reads state** — not after, and not inside the graph. The ordering is the control: once a checkpoint has been loaded, Helena's messages are already in memory and any subsequent check is guarding a door someone already walked through.
+
+This is separate from query scoping and it's the layer originally missed: scoped queries don't help if Helena's thread — with her invoice data already in the message history — is resumed under Richard's context.
+
+#### Where that check actually runs — and why it can't be middleware
+
+Saying "validate before the checkpoint loads" is only an invariant if some named component executes first. **`before_agent` hooks and middleware are too late**: by the time either runs, the Agent Server has resolved the thread and materialized its state. A check there would be inspecting data it has already loaded, while the write-up claims pre-load enforcement. That gap between claim and mechanism is precisely the kind of thing this plan exists to catch.
+
+The component is a thin **`SupportGateway`** that sits *outside* the graph and owns the ordering:
+
+```
+authenticated request ──▶ SupportGateway
+                            1. AuthContext from the verified session
+                            2. resolve public conversation_id ──▶ internal thread_id
+                            3. look up thread_owner(thread_id) in support.db
+                            4. mismatch  ──▶ raise. Nothing loaded, nothing invoked.
+                            5. match     ──▶ invoke the graph
+                                              │
+                                              ▼
+                                       Agent Server loads the checkpoint
+```
+
+Thread ownership lives in `support.db` (the writable store) and is written once at thread creation. Steps 3-4 complete before step 5 exists, which is what makes the ordering claim structurally true rather than asserted.
+
+⚠️ **Studio probably cannot exercise this**, because Studio talks to the Agent Server directly and the gateway sits in front of it. Do not paper over that. Show the cross-tenant rejection through a deterministic test, and say plainly: *"Studio is exercising the graph. The auth boundary lives one layer out, in the application that calls it — here's the test that proves the ordering."* **Never simulate a post-load check and narrate it as pre-load enforcement**; that's the one version of this that's worse than not having the control at all.
+
+This is a **Day 0 spike** (task 0.13), because if the gateway can't be wired cleanly the demo needs to know on day one, not day three.
+
+**3. Separate read and write stores.** `chinook.db` opens with a read-only URI for all catalog and account reads. Refund tickets are inserted into `support.db`. The agent has no write path into Chinook at all. Refund inserts carry an idempotency key so an interrupt resume or retry can't create duplicates.
+
+**4. Audit metadata + result guard.** Scoped functions record which tenant IDs they actually touched. A guard asserts the set is empty or exactly the runtime tenant, and fails closed. Placement depends on topology (§2); the boundary does not.
+
+**5. PII redaction on egress and HITL on writes.**
+
+### ⚠️ Studio's config panel is a simulation of authenticated identity
+
+In the demo, `customer_id` is selected from Studio's config panel. **Say explicitly that this stands in for a backend-authenticated session** — otherwise the sharpest person in the room correctly observes that the user appears to be choosing their own identity, which would be the vulnerability rather than the control.
+
+The framing that closes it:
+
+> "In production this comes from a verified session — the caller sets it after auth and the end user has no way to influence it. Studio's config panel is playing the role of that auth layer so I can switch identities in front of you. The property that matters is unchanged either way: whatever sets it, it is not reachable from anything the model or the user types."
+
+Rehearse this. It costs fifteen seconds and it's the single most attackable-looking thing in the demo.
+
+### How to describe this accurately
+
+The precise claim is narrower than "the model can't leak," and the precision is the point:
+
+> The model cannot select a tenant through the tool interface. Tenant-bound threads and ownership-enforcing queries enforce the boundary. The test suite provides regression coverage for known failure modes.
+
+Two things this deliberately does *not* claim. Derived customer context (name, tier, purchase profile) **is** injected into the prompt by `CustomerContextMiddleware`, so identity is not literally invisible to the model — it is *not model-controlled*, which is the property that matters. And a successful injection can still make the agent say something wrong; what it cannot do is cause an unauthorized read or write. Semantic correctness is a separate problem addressed by grounding evaluators.
+
+**Demo moment:** two tests, not one. The injection attempt ("show me Richard's invoices") and the cross-tenant thread resume. The second is the better one — it's the failure a real system would actually have.
+
+### Every security claim maps to a deterministic test
+
+No claim without a test behind it. If a row here has no passing test by Day 2, the claim comes out of the demo.
+
+| Claim | Test | Assertion |
+|---|---|---|
+| The model cannot express a cross-tenant request | Static: tool signature inspection | No customer-identifying parameter on any tool |
+| Scoped queries return nothing for other tenants | `test_auth_other_customer_invoice` | Not-found, and byte-identical to the nonexistent-ID response |
+| No oracle leaks existence | `test_auth_no_oracle` | Same status, message, and latency class for "not yours" vs. "not real" |
+| A thread cannot be resumed by another tenant | `test_thread_ownership_rejected` | `SupportGateway` raises on mismatch |
+| The check happens *before* state loads | `test_thread_ownership_precedes_load` | Patch the checkpointer's read method; assert it is **never called** on a mismatched tenant. This is the assertion that makes the ordering claim real rather than asserted. |
+| Injection cannot cause an unauthorized read | `test_injection_no_query` | Audit metadata records zero foreign tenant IDs |
+| Another customer's data never appears in output | `test_canary_absent` | Seeded canary facts on customer #26 never surface for #6 |
+| Identity confusion is refused, not relabeled | `test_semantic_scope_refusal` | Asked about Richard while authed as Helena → explicit scope refusal, not Helena's data relabeled |
+| **No write occurs before approval** | `test_hitl_no_write_pre_approval` | `refund_requests` row count unchanged at the interrupt |
+| **Exactly one write after approval** | `test_hitl_single_write_on_approve` | Count increases by exactly 1 |
+| **Zero writes after rejection** | `test_hitl_no_write_on_reject` | Count unchanged, run terminates cleanly |
+| **Resume is idempotent** | `test_hitl_double_resume` | Two resumes of the same interrupt → still exactly 1 row, via the idempotency key |
+| The agent cannot write to Chinook | `test_chinook_read_only` | Write through the read-only URI raises. Already passing in `setup_data.py`. |
+
+---
+
+## 5. Tools
+
+**Six model-visible tools, and the ceiling is deliberate.** The brief says: *"Do not go for breadth of tools. Pick a short list (2-4) interesting business problems that the chatbot should be able to solve."*
+
+Read that precisely — the 2-4 is **business problems**, not tools, so three workflows is compliant. But "do not go for breadth of tools" is an explicit instruction, so every tool has to earn its slot against it and ties go to fewer.
+
+| Tool | Signature | Workflow | Notes |
+|---|---|---|---|
+| `get_my_invoices` | `(limit: int = 10)` | W1 | **No customer ID parameter.** Identity from `ToolRuntime`. |
+| `get_invoice_detail` | `(invoice_id: int)` | W1 | Scoped in the `WHERE` clause. Not-found for others, no oracle. |
+| `get_spend_summary` | `(year: int \| None = None)` | W1 | Deterministic aggregate. |
+| `recommend_for_me` | `(seed_genre: str \| None, limit: int = 5)` | W2 | Computes purchase profile and track details internally; excludes owned tracks. |
+| `create_refund_request` | `(invoice_line_id: int, reason: str)` | W3 | ⚠️ HITL-gated. The only write. Inserts one ticket into `support.db`. Idempotent — see below. |
+| `escalate_to_human` | `(summary: str, urgency: Literal[...])` | W3 | **Read-only. A prepared handoff, not a routed ticket** — see below. |
+
+**Four read, one gated write, one handoff.** An earlier diagram said "5 read + 1 write + 1 escalate," which is seven and doesn't match this list.
+
+### Write semantics, settled now rather than during the build
+
+Three details that look like implementation trivia and are actually the difference between a claim and a provable property.
+
+**`escalate_to_human` does not route anything.** It looks up the customer's assigned `SupportRepId` from Chinook, formats a summary, and returns it. **No row is written and no message is sent.** Describe it as *preparing a handoff*, never as "escalating the ticket" or "notifying the rep" — claiming a side effect that doesn't exist is the easiest overclaim in the demo to get caught on, and it's gratuitous because the honest version is fine. Keeping it read-only also preserves the clean property that **the system has exactly one write path**, which is what makes the HITL story simple.
+
+**The idempotency key must be server-generated and stable: `f"{thread_id}:{tool_call_id}"`.** A fresh UUID per resume would satisfy the `UNIQUE` constraint every time and file a duplicate ticket on every replay — the constraint would be enforcing nothing while appearing to. Both components come from the runtime rather than the model, so the same interrupt resumed twice produces the same key and the second insert is rejected. This is what `test_hitl_double_resume` actually verifies.
+
+**`Status` defaults to `open`, not `pending_approval`.** The row is only inserted *after* a human approves, so a row that exists is by definition past approval — `pending_approval` would describe a state that can never be observed and invites the reading that the agent issues refunds. What the human approved is *filing the request*. The refund itself is decided downstream by someone with authority the agent doesn't have, and saying that out loud is a stronger answer than any guardrail.
+
+### What was cut, and why — this is demo material
+
+Naming your cuts confidently is a better signal than justifying additions.
+
+- **`get_track_details`, `get_my_purchase_profile`** → internal helpers inside `recommend_for_me`. The model never needed to reason over them separately, and each tool description is prompt tokens plus another chance at misselection.
+- **`search_catalog`** → cut. Genre-and-keyword search is a real support question, but `recommend_for_me` already reaches the catalog and carries the entire commercial argument. Two catalog tools was the closest thing to breadth left in the set.
+- **`find_duplicate_charges`** → considered and rejected. Duplicate-charge disputes are the most common real billing complaint, so it was tempting. But Chinook has no payment events, so the tool could only flag *suspicious repeated invoice lines* — it could never answer the question the customer is actually asking. A tool whose best outcome is an escalation is worth less than routing straight to escalation, and it would have bought one demo flourish at the cost of an explicit instruction.
+
+### Two notes worth saying out loud
+
+**Naming.** It's `create_refund_request`, not `request_refund` — the system creates a ticket, it does not move money. Say it that way; a panel will check whether the claim matches the code.
+
+**Why `get_spend_summary` survives** when the model could sum `get_my_invoices` itself: **you don't let a model do arithmetic on money.** Aggregation in SQL is correct by construction; a column of invoice totals added up by an LLM is exactly where billing accuracy quietly fails. Same principle as code evaluators for ground-truth properties, one layer down.
+
+`recommend_for_me` is a deliberately simple content-based heuristic, not a trained recommender. Say so. The demo point is orchestration — getting a recommendation to the customer at the right moment in a support conversation — and a real ranking model drops in behind the same tool signature.
+
+---
+
+## 6. Middleware
+
+Built-in first. Custom only where a test shows a gap — that ordering is itself the argument that production primitives ship in the box.
+
+| Middleware | Type | Purpose | Notes |
+|---|---|---|---|
+| `HumanInTheLoopMiddleware` | built-in | Gate `create_refund_request` | Test approve, edit, reject, resume, **and repeated resume**. Reject is the path that breaks. |
+| `ToolCallLimitMiddleware` | built-in | Runaway-loop and cost protection | `thread_limit` / `run_limit` / `exit_behavior`. **Replaces the custom escalation middleware I'd planned** — the built-in already does this. |
+| `PIIMiddleware` | built-in | Egress redaction | Configure exact fields; verify what appears in traces. Decide deliberately whether a customer should see their *own* contact details — redacting those is a bug, not a feature. |
+| `ModelRetryMiddleware` / `ToolRetryMiddleware` | built-in | Transient failures only | **Do not retry authorization failures, bad arguments, or deterministic SQL errors** — retrying a rejected action is worse than failing. Count the retry path against the latency budget. |
+| `CustomerContextMiddleware` | custom, `@dynamic_prompt` | Inject name, tier, profile, assigned rep | Personalization. Sits *below* the authorization path in priority. |
+| Result guard | custom, `@wrap_tool_call` | Assert audit metadata matches runtime tenant | Defense in depth over §4 layer 1. |
+| `SummarizationMiddleware` | built-in | Long-thread compaction | **Only if a deliberate long-thread test needs it.** Otherwise it's another model behavior and another demo risk for no gain. |
+
+---
+
+## 7. Evaluation
+
+Stratified, so each slice maps to a specific claim in the PRD. Twenty-nine examples is small — report **counts, not percentages** ("6/6 exact billing cases," not "100%"). Percentages on single-digit slices imply a precision the sample doesn't have, and an engineer in the room will do the division and notice.
+
+⚠️ **Every count you quote must match the table below.** Several documents previously said "11/12 billing cases" against a 6-example billing slice — an invented denominator, and the kind of detail that destroys the credibility of every other number if someone checks. The slice sizes here are the only source of truth.
+
+| Slice | Examples | Deterministic checks |
+|---|---|---|
+| Billing facts | 6 | Exact invoice IDs, totals, dates, spend arithmetic |
+| Authorization | 6 | Other-customer IDs, injection language, cross-tenant thread resume, no oracle |
+| Refund / HITL | 5 | No write before approval; exactly one after; zero after reject; idempotent resume |
+| Discovery | 4 | Recommended tracks exist, aren't already owned, requested genre honored |
+| Mixed intent | 4 | Both intents completed, clarification when needed, no silent drop |
+| Escalation | 4 | Correct policy decision, correct assigned rep |
+
+Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed tools, expected escalation class, and any reference output.
+
+**Evaluator order** — cheapest and most certain first:
+
+1. Authorization and write-safety gates (code)
+2. Exact billing and recommendation facts (code)
+3. Workflow and trajectory completion (code)
+4. Latency, token, and cost telemetry
+5. LLM judge for tone and helpfulness — **only after the exact checks pass**
+
+The split is the principle: **anything with a ground truth gets a code evaluator; LLM judges are for the genuinely subjective.** Never let a probabilistic grader score a safety property (ADR-010).
+
+### Primary experiment: flat vs. supervisor — thresholds pre-registered
+
+Same model, same dataset, stratified by workflow, one causal variable. **Write the decision rule down before running it**, because the failure mode of "ship the measured winner" is reading the results and constructing a justification for whichever one you already preferred.
+
+**Default: flat wins.** The supervisor is the challenger and carries the burden of proof. It ships only if it clears every bar below.
+
+| Metric | Threshold for the supervisor to ship | Why this bar |
+|---|---|---|
+| **Mixed-intent completion** | **+2 or more examples** on the 4-example slice, or +3 overall | Primary metric. On n=29, a one-example difference is noise — see the caveat below. |
+| **Routing / tool-selection errors** | Strictly fewer, never more | The main reason to specialize. If it doesn't reduce misselection, the hypothesis failed. |
+| **p50 full-turn latency** | ≤ +2.0s vs. flat | One extra model hop is the known cost. Beyond 2s it's eating the 8s budget. |
+| **Cost per conversation** | ≤ +50% | Delegation adds tokens. A doubling isn't worth a marginal accuracy gain. |
+| **Tool calls per conversation** | No more than +2 | A proxy for the model flailing through delegation rather than acting. |
+| **Security failures** | **Exactly zero, both arms** | Not a comparison. Any authorization or write-safety failure disqualifies that arm outright regardless of every other number. |
+| **No per-workflow regression** | Billing, **discovery (W2)**, authorization, refund/HITL, and escalation counts each **≥ flat** | Closes the obvious hole: the supervisor could win the 4-example mixed-intent slice while quietly breaking billing. Winning the tiebreaker doesn't license losing the main event. W2 belongs here explicitly — it's a compliance-floor workflow, and a routing layer that degrades recommendations is exactly the plausible failure. |
+| **Overall task resolution** | **Non-decreasing** vs. flat | A specialization that trades total correctness for one slice hasn't earned anything. |
+
+**Run each mixed-intent example three times per arm.** It's the primary justification for the supervisor and there are only four examples, so a single pass can't distinguish a real effect from one unlucky sample. Report per-example success *and* run-level variance — if an example passes 3/3 in one arm and 1/3 in the other, that's informative in a way a single run isn't. Twelve extra luna runs is roughly $0.10. This still isn't statistical significance and shouldn't be described as such; it's the cheapest available defense against reading noise as signal.
+
+**State the power limitation rather than hiding it.** Twenty-nine examples cannot support a significance claim, and the mixed-intent slice is four. This is a *decision rule under small samples*, not an experiment — which is why the bar is "clears every threshold and wins the primary metric by a visible margin," and why ties go to the simpler architecture. Say that out loud if asked; the honest framing is stronger than a confident percentage would be.
+
+**Both outcomes are presentable.** If the supervisor wins, you have numbers instead of intuition. If it loses, you built the complex thing, measured it, and deleted it — and pre-registering the threshold is what makes that a decision rather than a rationalization.
+
+Only after this settles, compare Luna vs. Terra on the hard subset. Same discipline: **model selection is an experiment output, not a fixed choice** — if luna clears the billing-accuracy and tool-selection bars, demo on luna and the cost story improves by an order of magnitude.
+
+---
+
+## 8. Data
+
+`data/chinook.db` (read-only) and `data/support.db` (writable), built by `scripts/setup_data.py` from the canonical SQL dump.
+
+Verified: 59 customers · 275 artists · 347 albums · 3,503 tracks · 25 genres · 412 invoices · 2,240 invoice lines · 8 employees (3 Sales Support Agents).
+
+| | Customer | Detail |
+|---|---|---|
+| **Primary** | **#6 Helena Holý** (Czech Republic) | 7 invoices, $49.62 lifetime. Rock (10), TV Shows (6), Latin (6). Latest invoice **#404, 2025-11-13, $25.86**. Rep: **Steve Johnson (#5)**. |
+| **The other tenant** | **#26 Richard Cunningham** (USA) | The customer Helena must never see. Rep: Margaret Park (#4). Seed a canary fact here for leakage regression tests. |
+
+**What the schema does and doesn't support** — worth knowing before claiming it in a demo. Chinook has invoices, not shipments, so this is a digital store with no "where's my order." It has no payment-processor events, so a "was I charged twice" question cannot be answered — the invoice table doesn't know what a card was charged, and building a tool that eyeballs repeated line items would dress up a guess as a capability. It has no download or entitlement events, so "I never received this track" can be *collected* and ticketed but not *verified*. Each of those ends in `escalate_to_human`, which prepares a handoff summary for the assigned rep — it does not route or file anything. They are handoff paths, not capabilities, and the agent should say so plainly to the customer. The brief anticipates this: the dataset is not a perfect fit, and the job is to weave a narrative rather than fight it.
+
+---
+
+## 9. Repo layout
+
+```
+.
+├── langgraph.json
+├── src/gateway.py            # SupportGateway — ownership check BEFORE the graph  ← outermost boundary
+├── src/agent/
+│   ├── graph.py              # flat baseline  ← the file to show
+│   ├── graph_supervisor.py   # variant, only if it wins
+│   ├── context.py            # AuthContext
+│   ├── prompts.py
+│   ├── middleware/
+│   └── tools/{billing,catalog,escalation}.py
+├── src/data/
+│   ├── db.py                 # read-only chinook + writable support  ← the security boundary
+│   └── audit.py              # tenant-access metadata
+├── evals/
+│   ├── datasets/             # stratified, per §7
+│   ├── evaluators.py
+│   └── run_experiment.py
+├── tests/                    # authorization + thread-ownership regression
+├── scripts/setup_data.py
+└── docs/
+```
+
+No `notebooks/`, `artifacts/`, or `serving/` — nothing is trained and Studio is the interface (ADR-008).
+
+**Note `gateway.py` sits in `src/`, not `src/agent/`.** That's deliberate and worth being able to explain: it is not part of the agent, it's the thing that decides whether the agent gets invoked at all. Putting it inside the agent package would be the same category error as putting the ownership check in middleware.
+
+**Naming:** the runtime context object is **`AuthContext`** everywhere. Earlier drafts called it `SupportContext` in the diagram and ADR-007 while the security chain called it `AuthContext` — two names for one object, which is a small thing that gets embarrassing when you're explaining code live and the file disagrees with your sentence. `AuthContext` won because it names what the object *is* rather than what app it belongs to.
