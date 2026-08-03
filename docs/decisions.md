@@ -201,9 +201,9 @@ What changed is the risk accounting. Engine scans on a schedule rather than on d
 
 *Sequencing was backwards.* Earlier versions said enable Day 0 for "lead time." But initialization audits **past** traces and clusters them into prioritized issues, and recurring scans run every six hours *whether or not anything is found*. So enabling against an empty project pays for scans that have nothing to look at, while seeding first and enabling once gets the same artifact from the initialization pass — sooner and far cheaper.
 
-*It is not free.* Engine bills in LangChain Compute Units at **$1.50/LCU** — 30-40 for initialization, 10-15 per scan. Enabled across the build that's **$250-300**, more than ten times the entire OpenAI budget. Prior versions wrote this off as "doesn't touch the budget" because it's a different meter, which is true and materially misleading. Set a spend limit on Day 0 (blank means unlimited), scope Engine to this agent's traces, and ask in Slack who is paying.
+*It is not free.* Engine bills in LangChain Compute Units at **$1.50/LCU**. Prior versions wrote this off as "doesn't touch the budget" because it's a different meter, which is true and materially misleading. ⚠️ **The specific figures once given here — 30-40 LCUs to initialize, 10-15 per scan — were the 100,000-trace point on a volume curve** (2 LCUs/run at 1k traces, 8 at 10k, 30 at 100k, four runs a day). At a 2,000-trace project a run is ~$5.70. The conclusion is unchanged and better founded: the recurring schedule is what runs up the bill, so set a spend limit, scope Engine to one agent's traces, and never leave the limit blank.
 
-*And a correction to a correction:* Engine does not require contacting LangChain for access. An Organization Admin enables it under *Settings → Engine enablement*. The real gate is whether that toggle exists in the provided workspace.
+*And a correction to a correction:* Engine does not require contacting LangChain for access — an Organization Admin enables it under *Settings → Engine enablement*. But the real gate was neither an access request nor the plan tier. **It is organization type: "Engine is not available for personal organizations."** Superseded by [ADR-021](#adr-021--cutting-the-gated-features-rather-than-working-around-them), which cuts Engine, Insights, and trace seeding outright.
 
 **What is protected above Engine**, in order: correct and secure billing and refund behavior; a saved trace with an explainable failure; trace → dataset → experiment; deterministic authorization and HITL evaluators; a measured result; two timed rehearsals.
 
@@ -360,3 +360,47 @@ So the judge was re-run against deliberately bad replies. Tool talk and schema w
 **Consequence.** Tone is reported separately from the code checks and never contributes to pass/fail. A style score cannot sink a run, and an authorization failure never gets averaged against a warmth score.
 
 **Would change our mind.** Judge and agent share a model (`gpt-5.6-luna`), which risks a model preferring its own register. The calibration cases are held deliberately blunt so they would survive a judge-model swap; if the tone signal ever drives a real decision, run it on a different family first.
+
+---
+
+## ADR-020 — Answering "invent a reliability problem" with a real one
+
+**Status.** Accepted. Drives Block 1 and Block 5.3 of [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
+
+**Context.** The kickoff post asked whether there was a specific support or reliability problem to optimize for. The answer: *"No specific problem, but if you create one and craft a narrative around it, that would be interesting!"* — an explicit invitation to invent a scenario.
+
+**Decision.** Don't invent one. Use the fabricated-handoff failure this build actually shipped and fixed (ADR-016), framed for the business as **the silent broken promise**: the agent tells a customer their issue has been passed to their account manager, and nothing was passed to anyone.
+
+**Why the real one is stronger than a fiction.**
+
+Every number in it is measured. Three of four escalation cases did it, both sides are on record as LangSmith traces, and the fix is in the diff. An invented scenario can only ever be described.
+
+It is the exact failure this audience cannot see. A wrong answer generates a complaint you can count. An unkept promise generates silence — the customer stops seeking help because they believe it's handled. One of the three cases was an account-and-data deletion request, which makes it a compliance event rather than a support miss.
+
+It survived every other check. Warm tone, correct facts, no data leaked, nothing thrown, latency fine. An error-rate dashboard shows green. The only thing that catches it is comparing what the agent *said* against what it *did*, which requires something to have recorded both — which is the argument for the platform, made concrete rather than asserted.
+
+And answering the invitation with "I didn't need to invent one" is itself the demonstration being asked for.
+
+**Alternatives considered.** *Invent a business scenario* — the generic ROI slide; modeled, not measured, and it competes with the real story for the same minutes. *Both, layered* — rejected on time: Block 1 is four minutes and two narratives is one too many.
+
+**Consequence.** Block 1 plants it in ~50 seconds and Block 5.3 pays it off with before/after traces side by side. 5.3 becomes the single most protected block in the deck, above the security tests, because it's the only place the room sees a real failure and its fix together.
+
+**Risk.** It requires admitting the agent shipped a bad bug. That reads as confidence rather than weakness *only* if the root cause is precise and the fix is enforced — hence "two correct components composed badly," not "the model hallucinated," and hence a code evaluator rather than a prompt edit alone.
+
+---
+
+## ADR-021 — Cutting the gated features rather than working around them
+
+**Status.** Accepted. Supersedes the conditional treatment of Engine and Insights throughout the planning docs.
+
+**Context.** The other kickoff question — which account, and whose LCU budget — was answered *"would use your own LS account."* That account is a free **personal** organization. Insights is not provisioned (`clio_enabled: false`), and Engine reports *"Engine is not available for personal organizations"* — an org-type restriction, so the $39 Plus plan would not have unlocked it either.
+
+**Decision.** Cut Engine, Insights, and the 150-conversation seeding run. Do not upgrade, do not create a non-personal org to work around it, and do not describe either feature beyond one prepared sentence if asked.
+
+**Why not work around it.** Creating an organization to demo a feature would mean presenting an environment that isn't the one the work was done in, and the demo's whole credibility rests on everything shown being real. The seeding run is the clearer call: its only consumer was Insights and Engine, so with both gone it's an hour of runtime and 150 traces producing nothing. Work whose consumer disappeared should disappear with it.
+
+**Consequence, and it's a constraint worth naming.** The brief requires showing *differentiating* features, and the obvious differentiators were all gated. Every differentiator now has to come from ungated capability: thread forking and replay from an arbitrary step, one-click trace-to-dataset on a real failure, the same evaluators offline and online, and tracing as an environment variable. The planning note that at least two differentiators must be ungated is the only reason this requirement is still satisfiable.
+
+**The upside is real rather than consoling.** Engine automates the loop of spot-the-failure, root-cause, dataset example, evaluator. This build walked that loop by hand and has the artifact to show for it. Having done it manually is a better basis for talking about the automation than having watched the automation run.
+
+**Would change our mind.** Access to a non-personal workspace before demo day. Worth accepting if offered, but not worth soliciting — a feature learned the night before is not one to demo.

@@ -42,6 +42,14 @@ Post this on Day 0, before writing agent code. The brief allots 15-30 minutes an
 
 ---
 
+## Answers received
+
+> ✅ **Posted, and both answered.** Neil: *"Yep, would use your own LS account. No specific problem, but if you create one and craft a narrative around it, that would be interesting!"*
+>
+> **Q1 → the build changed.** The own account is a free personal organization: Engine is unavailable on personal orgs, Insights isn't provisioned. Engine, Insights, and the 150-conversation trace-seeding run are all cut ([ADR-021](decisions.md)). The $45-60 figure quoted below turned out to be wrong as well — see the corrected volume curve in [`BUILD_PLAN.md`](BUILD_PLAN.md). Left as written because it's the question that was actually asked.
+>
+> **Q2 → the demo got its spine.** "Create one" was answered with a real failure rather than an invented one: the agent claiming handoffs it never made ([ADR-020](decisions.md)). Both questions paid for themselves; had either waited until Day 2, an hour would have gone into seeding traces for a consumer that doesn't exist and Block 5 would have been built around a feature that can't be shown.
+
 ## Why these two questions to open with
 
 Both are things **only they can answer**, and both change what gets built.

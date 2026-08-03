@@ -96,11 +96,22 @@ Workable with model tiering. The same build run entirely on a flagship model cos
 
 Still inside $21 at uncached rates, but it **reaches the $15 stop threshold.** That's the threshold doing its job, not a budgeting error. If you get there: move rehearsal runs to luna and drop the model comparison. Don't raise the threshold — the reserve exists so demo day cannot fail on a billing error.
 
-### LCU spend is a separate budget and it is not small
+### ~~LCU spend is a separate budget and it is not small~~ → RESOLVED: Engine is unavailable, and the figures below were wrong anyway
 
-LangSmith Engine bills in **LangChain Compute Units at $1.50 each**, on a different meter from the OpenAI key. Initialization is 30-40 LCUs (**$45-60**) and each 6-hourly scan is 10-15 (**$15-22.50**). Left enabled across the build that reaches **$250-300**, which dwarfs the entire OpenAI budget.
+**Answered.** The kickoff question came back as "use your own LangSmith account." That account is a **free personal organization**, and Engine reports **"Engine is not available for personal organizations."** The gate is org *type*, not plan tier — so upgrading to Plus would not have unlocked it either. Insights is also off (`clio_enabled: false`). **LCU spend on this project is $0**, and both features move from conditional to cut. See the demo script's 5.6 for the one-sentence answer.
 
-This is the single largest cost in the project and it was previously written off as "doesn't touch this budget." Technically true, materially misleading. Set an LCU limit Day 0, enable Engine only after seeding, and confirm in Slack who is paying.
+**Correcting the numbers anyway, because they were nearly quoted in a room.** This section said initialization was 30-40 LCUs at $45-60 and each scan 10-15 LCUs. Those came from the docs. The [pricing calculator](https://www.langchain.com/pricing-langsmith) models it differently — per-run LCUs scale with trace volume, log-interpolated, at four runs per day:
+
+| Traces in project | LCUs per run | Cost per run | Left on for a month |
+|---|---|---|---|
+| 1,000 | 2 | $3 | ~$360 |
+| ~2,000 *(this project)* | ~3.8 | **~$5.70** | ~$686 |
+| 10,000 | 8 | $12 | ~$1,440 |
+| 100,000 | 30 | $45 | ~$5,400 |
+
+So the old "$45-60 to initialize" is really the **100,000-trace** end of the curve — off by roughly 8x for a project this size. The correction cuts both ways and the second half matters more: a single scan is far cheaper than feared, while **leaving it enabled is far more expensive**, because it runs four times a day whether or not anything changed. The original instinct (seed first, enable once, don't leave it on) was right for a reason the numbers didn't actually support.
+
+**The transferable lesson is the same one the OpenAI pricing table taught.** A figure lifted from a docs page and carried into a customer conversation is a liability when the pricing page models it differently. Quote the shape — "metered per scan, scales with trace volume" — and offer to pull exact numbers.
 
 **Four rules:**
 
@@ -152,8 +163,8 @@ A second provider is tempting — Google Cloud credit would effectively extend t
 | 0.4 | ⚠️ **Install Python 3.12 or 3.13 first — neither is on this machine.** Local `python3` is **3.14.2**; only 3.11 and 3.14 are present. Then venv, install, lock resolved versions. | `python -c "import langchain, langgraph, deepagents"` clean **on 3.12/3.13**. Do not shrug and use 3.14 — ADR-009 picked this range because the ecosystem's wheel coverage lags a new minor, and discovering a missing wheel mid-build costs hours you don't have. |
 | 0.5 | `scripts/setup_data.py` → read-only `chinook.db` **and** writable `support.db` (ADR-014). | Row counts match `ARCHITECTURE.md` §8. A write to `chinook.db` raises. |
 | 0.6 | LangSmith key, `LANGSMITH_TRACING=true`, project created. | Hello-world trace in the UI. |
-| 0.7 | **Check plan tier and AI-feature availability.** Insights needs Plus/Enterprise. Confirm Polly and Engine. | You know which of the three you can demo. Ask in Slack if missing — provisioning takes time. |
-| 0.8 | **Push to GitHub and connect the repo to Engine. Set an LCU spend limit. Do NOT enable Engine yet.** | Connected and capped. See the Engine correction below — enabling now burns money for nothing. |
+| 0.7 | ✅ **Done — answered, and the answer is no.** Own LangSmith account confirmed in Slack; it's a free personal org. Engine: *"not available for personal organizations"* (org type, not plan tier). Insights: `clio_enabled: false`. | You know which of the three you can demo: **none**. Both cut, one honest sentence each. Demo differentiators must all come from ungated capability. |
+| 0.8 | ✅ **Done — repo pushed.** Engine connection and LCU limit are moot per 0.7. | Private repo (`docs/BRIEF.md` holds their brief verbatim, so it isn't public). |
 | 0.9 | **Disable auto-recharge** (the real stop). Set a $15 budget alert, plus 50/75/90% notifications. Confirm LangSmith shows non-zero trace cost. | Auto-recharge off, alerts configured, cost telemetry working. |
 | 0.10 | **Studio smoke test.** Trivial `create_agent`, minimal `langgraph.json`, `langgraph dev`. | Graph renders, message round-trips. |
 | 0.11 | ⚠️ **Verify runtime context in Studio.** Add a `context_schema` field, set it per-run from the UI, read it in a tool. | You can flip `customer_id` between runs without a restart. |
@@ -178,18 +189,13 @@ Every earlier version of this plan said to enable Engine on Day 0 for runway, as
 
 **1. Seed first, then enable.** Initialization is the high-value moment and it works on traces that already exist. Enabling on Day 0 against an empty project means initialization finds nothing, and then you pay for a scan every six hours while there's still nothing to find. Correct order: build → seed trace volume → *then* enable and let initialization do the work in one pass.
 
-**2. It is not free, and the numbers are material.** Engine bills in LangChain Compute Units at **$1.50/LCU**:
+**2. It is not free — but the figures this section carried were the wrong point on a curve.** ⚠️ **See the corrected table in "LCU spend" above.** The docs' flat "30-40 LCUs to initialize" is the **100,000-trace** case; per-run cost scales with trace volume (2 LCUs at 1k, 8 at 10k, 30 at 100k) at four runs a day. For a 2,000-trace project a run is ~3.8 LCUs, about **$5.70** — not $45-60. The conclusion below survives the correction and sharpens: the recurring schedule, not initialization, is what runs up a bill.
 
-| Phase | Trigger | LCUs | Cost |
-|---|---|---|---|
-| Initialization | First enable on a project | 30-40 | **$45-60** |
-| Recurring scan | Every 6 hours, automatically | 10-15 | **$15-22.50 each** |
+**Moot in practice.** Engine cannot be enabled here at all — *"Engine is not available for personal organizations"* (task 0.7, ADR-021). Kept in the document because the reasoning is sound and the sequencing advice is the right answer for a customer who *can* enable it, which is the situation this analysis was really for.
 
-Enabling Day 0 and leaving it on for three days is initialization plus roughly twelve scans — **order of $250-300**. Seeding first and enabling once is initialization plus a scan or two while you review: **~$50-90**. Same artifact, a fraction of the spend, available sooner.
+**Actions, for the customer case rather than this build.** Set a monthly LCU spend limit — org-wide under *Settings → Engine enablement* or per-project, enterable in USD or LCU, and LangSmith pauses new runs when it's hit. **Leaving it blank allows unlimited spend**, which on a four-scans-a-day schedule is the sharp edge worth flagging unprompted. Use *Focus on specific traces* to scope Engine to one agent's runs.
 
-**Actions.** Set a monthly LCU spend limit on Day 0 — org-wide under *Settings → Engine enablement* or per-project, enterable in USD or LCU, and LangSmith pauses new runs when it's hit. **Leaving it blank allows unlimited spend.** Use *Focus on specific traces* to scope Engine to this agent's runs. And **ask in Slack who is paying for LCUs on this exercise** — a legitimate question, exactly what a DE asks before switching on a metered feature for a customer, and the answer decides whether Engine is in the demo at all.
-
-**Also corrected:** Engine is enabled by an Organization Admin under *Settings → Engine enablement*. It does **not** require contacting LangChain for access, which an earlier review asserted. The real gate is whether that toggle exists in your workspace — check on Day 0 (task 0.7).
+**Also corrected:** Engine is enabled by an Organization Admin under *Settings → Engine enablement* and does **not** require contacting LangChain, which an earlier review asserted. But the real gate turned out to be neither access request nor plan tier — it's **organization type**, and nothing on the pricing page says so.
 
 **Exit:** one secure invoice answer in Studio, one trace, one deterministic test, one saved fallback trace, Slack thread open.
 
@@ -278,13 +284,16 @@ No new architecture. Day 3 makes Day 2's work legible.
 | 3.4 | Pre-stage every browser tab; save all trace/experiment URLs into `DEMO_SCRIPT.md`. | **P0** |
 | 3.5 | **Two slides, ≤90 min to build.** (1) discovery + assumptions + ROI, (2) measured results with every number labeled **measured / modeled / unavailable**. Architecture gets shown in Studio and code, not on a slide. | **P0** — brief: *"a couple slides are okay… but don't spend much time building or presenting slides."* Was three; a diagram of an architecture you can show live is the one to cut. |
 | 3.6 | Record measured results into one JSON/CSV artifact; render the headline table from it. | **P1** — stops numbers drifting between docs. |
-| 3.7 | **Seed ~150 conversations** — only if Insights/Engine are available and the LCU question is answered. | **P1**, gated on 0.7. Must happen *before* 3.8 and 3.9. |
-| 3.8 | Insights report over the seeded traces. Read it; the categories are demo narration. | **P2** |
-| 3.9 | **Now enable Engine**, let initialization audit the seeded traces, then review its issues, root-cause diagnosis, and proposed evaluator. | **P2** — order matters, see the Engine section above. Initialization works on past traces, so this is the cheapest and fastest path to a usable artifact. |
+| 3.7 | ~~Seed ~150 conversations~~ **CUT.** | Gated on 0.7, which resolved to "neither available." Seeding existed *only* to give Insights and Engine material. With no consumer it's an hour of runtime and 150 traces producing nothing. **Cutting work whose only consumer disappeared is the right call and a good thing to say out loud in Q&A.** |
+| 3.8 | ~~Insights report~~ **CUT** — not provisioned on a free personal org. | Say nothing unless asked. Never describe a feature you couldn't try. |
+| 3.9 | ~~Enable Engine~~ **CUT** — unavailable for personal organizations. | One prepared sentence in Q&A (DEMO_SCRIPT 5.6). |
+| 3.12 | **Screenshot the before/after fabricated-handoff traces.** | **P0 — new, and it outranks most of this table.** Free-plan traces are retained 14 days and these were recorded 3 Aug. Block 5.3 is the strongest moment in the demo and it currently depends on data with an expiry date. |
 | 3.10 | Annotation queue + one human-labeled example. | **P2** |
 | 3.11 | **Stretch:** Deep Agents playlist curator. | **P3 — cut first.** |
 
-**On 3.9 — fix what Engine finds.** An earlier version of this plan said to leave an Engine-detected bug unfixed for the drama of finding it live. That was wrong. If it affects correctness or safety, fix it, and show the original trace, the issue, the proposed change, the evaluator, and the passing result — while running the corrected build. Same story, and you're not asking a panel to trust a system you know is broken.
+**On 3.9 — the story it was supposed to produce happened anyway, by hand.** This plan wanted Engine to surface a real issue so the demo could show trace → diagnosis → fix → passing eval. Engine is unavailable, and the build produced that exact artifact without it: the fabricated-handoff bug, caught by the eval suite, root-caused to two correctly-built components composing badly, fixed in the prompt, and pinned by a new code evaluator — with traces on both sides. That's now Block 5.3 and it's the best material in the demo.
+
+Worth noticing rather than glossing: the loop was always the product, and Engine is an automation of it. Having walked it manually is a *better* qualification for talking about Engine than having watched it run.
 
 **Hard stop: stop changing code 4 hours before the demo.** Use them to rehearse and to write the two-sentence answer to "what would you do next."
 
@@ -298,8 +307,8 @@ Decided now, while calm:
 2. Annotation queues (3.10)
 3. Long-thread summarization warm-up
 4. Polly
-5. Insights (3.8) — describe, don't show
-6. Engine (3.9) if access or output is weak
+5. ~~Insights (3.8)~~ — **cut, not available**
+6. ~~Engine (3.9)~~ — **cut, not available on a personal org**
 7. Online evaluators / dashboard — describe, don't show
 8. `CustomerContextMiddleware` personalization
 9. **Supervisor variant, if the flat baseline is adequate** — and say so proudly
@@ -343,9 +352,11 @@ Everything in the numbered list above — supervisor, model comparison, Engine, 
 | Python 3.14 dependency breakage | Medium | High | ADR-009 — pin 3.12/3.13 Day 0. |
 | **Burning the $21 credit** | Low-Medium | **Critical** | luna for dev and seeding; auto-recharge off so the balance is a real floor; $15 stop threshold with daily dashboard reconciliation; drop seeding and model comparison at $12-14. |
 | LangSmith shows $0 cost | Medium | Medium | Check Day 0 (0.9). Configure workspace model pricing. |
-| Engine has nothing to show | **High** | **Low, by design** | Seed first so initialization has material; demoted out of the critical path. If empty, one honest sentence. |
-| Engine LCU spend surprises someone | **Low** | **High if it happens** | Spend limit set Day 0, ownership confirmed in Slack before enabling. Blank limit means unlimited — never leave it blank. |
-| Insights unavailable on plan | Medium | Low | Check Day 0 (0.7). Ask in Slack. |
+| ~~Engine has nothing to show~~ | **Resolved** | None | Unavailable on a personal org. One prepared sentence (DEMO_SCRIPT 5.6). |
+| ~~Engine LCU spend surprises someone~~ | **Resolved** | None | Cannot be enabled. LCU spend is $0. |
+| ~~Insights unavailable on plan~~ | **Resolved — it is** | Low | `clio_enabled: false`. Cut. |
+| **Demo traces expire before demo day** | **Low but rising** | **High** — 5.3 is the best block in the deck | Free plan retains base traces **14 days**; the before/after pair was recorded 3 Aug. Screenshot them (task 3.12). |
+| **Free-tier trace ceiling** | Low | Low | 5,000 base traces/month, ~2,000 used. Overage is $0.005/trace, so it's a slope not a cliff — but avoid casual large `--repeat` sweeps. |
 | Polly unavailable or different | Medium | Low | Check Day 0. If absent, say nothing. **Never describe a feature you couldn't try.** |
 
 The demo-overrun risk is the one that actually bites. Rated High for a reason: everyone thinks their demo fits.
@@ -354,10 +365,14 @@ The demo-overrun risk is the one that actually bites. Rated High for a reason: e
 
 ## Questions for Slack
 
-Two on Day 0 (in `slack-kickoff.md`), because they affect scope and provisioning takes time:
+Two on Day 0 (in `slack-kickoff.md`), because they affect scope and provisioning takes time. **Both now answered — and both answers changed the build**, which is the retrospective justification for asking them before writing code rather than after:
 
-- Does the workspace include Engine, Insights, and Polly — and if Engine is available, whose LCU budget does it draw on?
-- During the presentation, do you want me as the prospect team, or presenting retrospectively to the panel?
+| Asked | Answered | What changed |
+|---|---|---|
+| Which account, and whose LCU budget for Engine? | *"Would use your own LS account."* | Free personal org → Engine and Insights cut, seeding (3.7) cut, LCU budget $0, all demo differentiators must be ungated. |
+| Is there a specific support or reliability problem to optimize for? | *"No specific problem, but if you create one and craft a narrative around it, that would be interesting!"* | The demo gets an explicit narrative spine. Answered with the **real** fabricated-handoff failure rather than an invented scenario — see ADR-020. |
+
+Had the first question waited until Day 2, the plan would have spent an hour seeding traces for a consumer that doesn't exist, and Block 5 would have been built around a feature that can't be shown.
 
 **Everything technical waits until you've tried it.** A question asked before attempting the documented pattern reads as not having read the docs. The same question after — *"on langchain 1.3.x I expected A, observed B, minimal repro attached, this blocks decision C; is B intended?"* — reads as a Deployed Engineer. Likely candidates once the build is underway:
 

@@ -46,7 +46,7 @@ Full requirement-to-artifact matrix in [`BRIEF.md`](BRIEF.md), which holds the b
 | Realistic flow of questions the bot handles | Block 2 — billing, discovery, refund | — |
 | Underlying cognitive architecture + tools | Block 4 | — |
 | Important LangSmith features and how they tie together | Block 5, walked as a closed loop rather than a feature list | **Do not show deployments** |
-| **Differentiating features** | Block 5.2 and 5.3 named explicitly as such; Engine at 5.6 if available | At least two must come from ungated capabilities |
+| **Differentiating features** | Blocks 5.2, 5.3, 5.5 — named explicitly as such | **All** must come from ungated capability; Engine and Insights are confirmed unavailable |
 | Friction log — what was harder than expected | Block 6 | — |
 | Q&A | Throughout + at the end | 10 min of the 45 |
 | Show and explain your code | Blocks 3 and 4 | Drill it cold on Day 3 (Build Plan 3.2b) |
@@ -77,7 +77,15 @@ Hard cap is 10 minutes for company and business value; use 5. **Neil and Conrad 
 
 **Open on their problem and your assumptions (1:15).**
 
-> "You've built agents already and they work in a notebook. What hasn't happened is production. In my experience that's almost never because the model isn't good enough. It's three things: you can't see why a run went wrong, you can't change anything without fear of breaking something else, and you can't put a number on the blast radius when it *is* wrong.
+> ✅ **This is the narrative Neil invited.** Asked whether they had a specific reliability problem to optimize for, the answer was "no specific problem, but if you create one and craft a narrative around it, that would be interesting." The strongest available answer is not an invented scenario — it's the one this build actually shipped and then fixed, with traces on both sides. Plant it here, pay it off in 5.3. **Do not describe it as hypothetical**; every word of it happened.
+
+> "You've built agents already and they work in a notebook. What hasn't happened is production, and in my experience that's almost never because the model isn't good enough.
+>
+> The failure I'd want you worrying about isn't a wrong answer. Wrong answers produce complaints, and complaints you can count. It's the agent telling a customer *'I've passed this to your account manager'* when nothing was passed to anyone. The customer stops chasing, because they think it's handled. Nobody files a ticket about the ticket that was never filed.
+>
+> And it's invisible to everything you'd normally watch. Warm tone, correct facts, no data leaked, nothing thrown. Every dashboard you own is green.
+>
+> That's the shape of it — you can't see why a run went wrong, you can't change anything without fear of breaking something else, and you can't put a number on the blast radius when it *is* wrong. I'll show you that exact bug in my own agent later, and the thing that caught it.
 >
 > Before I show you anything — one thing I want to be upfront about. Chinook is commerce data. Invoices, tracks, customers. It has no support tickets, so I can't tell you what your actual queue looks like. What I've *assumed* is that billing lookup is a high-volume, low-complexity, high-anxiety support class, and that the same conversation is a discovery opportunity you're not using. If that assumption is wrong, the architecture holds but the business case changes, and that's the first thing I'd want to validate with you."
 
@@ -258,13 +266,13 @@ Run it. Then land the assertion that makes it more than a passing test:
 
 ## Block 5 — The LangSmith loop (7:00)
 
-> **Two paths, both exactly 7:00.** Without Engine, the production loop gets a full minute. With Engine, it compresses to 30 seconds and Engine takes the other 30. A conditional feature must never extend the block, or the fallback and the good path have different lengths and only one of them was rehearsed.
+> **One path, 7:00.** Engine is unavailable on a personal organization (see 5.6), so the conditional branch is deleted rather than carried. 5.5 keeps its full minute and there is exactly one version of this block to rehearse.
 
 **Order matters and the order is the argument.** The brief asks *"what features are important to show and in what order?"* — so the sequencing is a graded answer, not a convenience. Say it out loud:
 
 > "I'll walk these in the order you'd actually hit them, because they chain — each one produces the input for the next."
 
-> ✅ **R6 requires "differentiating features."** Engine, Insights, and Polly are the obvious ones and they're all access-gated, so **at least one differentiator has to come from something in every workspace.** Guaranteed available, in rough order of how hard they are to replicate elsewhere: forking a thread and re-running from any prior step (5.2), one-click trace → dataset (5.3), the same evaluators running offline and online (5.5), and tracing as an environment variable rather than an integration project. Land at least two of those explicitly as *differentiators*, not as features — then Engine is a bonus rather than the only thing carrying the requirement.
+> ✅ **R6 requires "differentiating features," and the gated ones are now confirmed unavailable** — so **every differentiator has to come from ungated capability.** That's a constraint, not a loss: the four below are available in any workspace, and the planning note that at least two must come from here is what makes the requirement survivable now that Engine and Insights are off the table. In rough order of how hard they are to replicate elsewhere: forking a thread and re-running from any prior step (5.2), one-click trace → dataset on a real failure (5.3), the same evaluators running offline and online (5.5), and tracing as an environment variable rather than an integration project. **Name at least two out loud as differentiators**, in those words.
 
 > ⛔ **Do not show Deployment, Fleet, or Sandboxes.** The brief rules deployments out and they're one click away in the same nav. If it comes up in Q&A: "there's a managed deployment story and a self-hosted one, happy to go deeper another time," and return to the loop.
 
@@ -282,9 +290,31 @@ Run it. Then land the assertion that makes it more than a passing test:
 
 If Polly is available, **use it live on a real trace** rather than describing it. ⚠️ Verify on Day 0. If it isn't there, say nothing — never describe a feature you couldn't try.
 
-**3. Trace → dataset (1:30). Protect this one.** "Add to Dataset" on a real failing thread. **Slow down — this is the hinge of the pitch:**
+**3. Trace → dataset (1:30). Protect this one — and this is where Block 1 pays off.** **Slow down. This is the hinge of the entire pitch**, and it is the answer to "craft a narrative around a reliability problem."
 
-> "This solves your second problem. That failure just became a permanent regression test. Every production surprise makes the suite stronger. That's the difference between a demo and a system that gets better instead of quietly worse."
+Open the **before** trace. Two things on screen at once: the reply, and the empty tool list.
+
+> "Remember the failure I opened with. This is it, in my agent, on the third day.
+>
+> Read the reply — *'I'm handing this to Steve Johnson to review the possible duplicate charge... I've passed along your concern for investigation.'* Warm, correct, on-brand. Now look at the trace. **No tool calls. None.** Steve Johnson was never contacted. There is no ticket. Helena is now waiting for a callback that will never come, and she has stopped looking for help anywhere else, because she was told it was handled.
+>
+> Three of my four escalation cases did this. And the one I'd point at is the third — a customer asking for their account and personal data to be deleted, told it had been passed along. It hadn't. In your business that's not a support miss, it's a data-subject request that silently evaporated."
+
+Then the part that makes it a platform argument rather than a bug story:
+
+> "Here's why this is the one I chose to show you. Every other check passed it. The tone judge liked it. The facts were right. No data leaked. Nothing errored, nothing timed out, latency was fine. If you were watching an error-rate dashboard you saw a green conversation.
+>
+> The only thing that catches this is comparing what the agent *said* against what it actually *did* — and that comparison only exists if something recorded both. That's the trace."
+
+**Now the loop, live.** "Add to Dataset" on the failing thread → the `escalation` split of `chinook-support-v1`.
+
+> "That failure is now a permanent regression test. And I wrote a grader for the whole class of it, not just this example — it reads the answer for claims like *'I've filed'* or *'I've passed along'* and fails the run if the matching tool never fired. A prompt fix on its own expires at the next model version. The grader doesn't."
+
+Open the **after** trace beside it: same question, `escalate_to_human` present in the tool list.
+
+> "Same case after the fix. The difference between those two screens is the whole product."
+
+⚠️ **Be precise about the fix, because Conrad will ask.** It was two things and neither alone was sufficient: a prompt section stating that an action has only happened once its tool returns, and a code evaluator so the fix is enforced rather than hoped for. The root cause is worth naming — two correct components composed badly. Personalization middleware supplied the rep's name, and the prompt described how to phrase a handoff, so the model had everything it needed to write a convincing sentence and no reason to make the call. **Say "two correct pieces composed into a wrong behavior," not "the model hallucinated."** The second is both vaguer and less true.
 
 **4. Experiments (2:00).** Open the comparison view.
 
@@ -304,19 +334,17 @@ Land Monday.com: *"This is the loop Monday.com made 8.7x faster. That multiple i
 
 If Engine follows, cut this to the one sentence in quotes and move on. This is the minute Engine spends.
 
-**6. Engine, if it produced something (conditional, 0:30).** Only if it found a real issue after seeding.
+**6. Engine — resolved: not available, and say so in one sentence (0:00).**
 
-> "Everything I just walked by hand — spot the failure, find root cause, make it a dataset example, write the evaluator — Engine does on a schedule. It scans traces, clusters recurring issues, diagnoses root cause, and then opens a pull request against your repo with a proposed fix. It can do that because it understands LangChain and LangGraph code.
->
-> Here's one it found in my agent." *Show the issue, the proposed change, and the passing eval on the corrected build.*
->
-> "That's the argument for the framework and platform being built by the same people. **The remediation is code-aware** — Engine reads the repository, so it can locate the code path behind a failing trace and propose the change as a pull request, not just tell you something broke."
+> ⛔ **Engine and Insights are out, and this is settled fact rather than a judgment call.** The exercise runs on a personal LangSmith account. Insights is not provisioned on that plan, and Engine reports **"Engine is not available for personal organizations"** — an org-type restriction, not a price tier, so upgrading would not have unlocked it either. Block 5 therefore has **one** path, and the production loop at 5.5 keeps its full minute. The old two-path timing note is gone: a conditional that never resolves is just an unrehearsed branch.
 
-Be accurate: it proposes fixes **for review**, runs on a schedule rather than instantly, and is metered in LangChain Compute Units. Overselling a brand-new product is the fastest way to lose Conrad.
+Do not walk up to a feature you could not run. If it comes up — and Neil may well raise it, since Engine is the newest thing they ship:
 
-**If Engine had nothing**, one sentence and move on: *"I seeded trace volume and ran Engine's initialization pass over it — a three-day synthetic traffic profile wasn't enough for it to surface a recurring issue, which is honestly the right behavior for a tool built to find patterns. Worth a look on real volume."* That's a fine answer. Do not stretch.
+> "I didn't demo Engine. It's not available on a personal organization, which is what I'm running on, so I'd only be describing it from the docs. What I'll say is that the loop I just walked by hand — spot the failure, find the root cause, turn it into a dataset example, write the evaluator — is exactly the loop Engine is built to run on a schedule, and the interesting part of the design is that it's repository-aware, so remediation can arrive as a pull request rather than an alert. I'd want to try it against real trace volume before I said anything stronger than that to a customer."
 
-Don't say "enabled on day zero" — the plan deliberately seeds first and enables after, since initialization audits past traces and idle scans cost LCUs for nothing. Describing the sequencing you actually chose is a better answer than the one you abandoned.
+That answer is *better* than a thin live demo would have been. It's accurate, it shows you read the product properly, it demonstrates the discipline of not overselling something you couldn't verify — and **"never describe a feature you couldn't try" is the rule that makes every other claim in the session credible.**
+
+⚠️ **Do not quote the LCU figures from memory.** The build plan carried $45-60 for initialization, taken from the docs; the pricing calculator actually scales with trace volume — about 2 LCUs per run at 1k traces, 8 at 10k, 30 at 100k, four runs a day. At this project's ~2k traces a run is roughly $6, while leaving it enabled for a month is several hundred dollars. If pricing comes up, give the shape ("it's metered per scan and scales with trace volume") and offer to pull exact numbers, rather than reciting a figure that turns out to be the 100k-trace end of a curve.
 
 **Close the block:**
 
@@ -331,6 +359,8 @@ Don't say "enabled on day zero" — the plan deliberately seeds first and enable
 Two slides total for the whole session — the brief says a couple are fine but not to spend much time building or presenting them, so the architecture is shown in Studio and in code rather than drawn.
 
 **Friction (1:00).** Genuinely candid — it reads as competence and the exercise asks for it. Two or three real items from `FRICTION_LOG.md`, with what you'd change. Prefer one deep, reproducible product observation over five papercuts.
+
+The three strongest, and none of them is a complaint about a missing feature: **middleware compose into the prompt and nothing shows you the prompt they composed** — which is what produced the bug in 5.3, so it lands as root cause rather than grumbling; **a useful approval card can't be built without blocking the event loop**, which has a real fix worth describing; and **`langgraph dev` advertises hot reload and silently doesn't**, which cost more time than the blocker it was hiding. Save the Engine availability point for Q&A rather than spending friction time on it — "I couldn't access it" is thinner than three findings that came from building.
 
 **Recommendation (1:00). Do not skip this — it's what separates a demo from a Deployed Engineer.**
 
@@ -352,11 +382,13 @@ Decide now, not at minute 28 with a room watching.
 | 0:13 | Block 2b (recommendations) to 60 seconds |
 | 0:22 | Middleware walkthrough — mention, don't show code |
 | 0:26 | Block 5.5 (online evals) — one sentence, don't click |
-| 0:29 | Block 5.6 (Engine) — one sentence, don't click |
+| 0:29 | Block 5.2 (thread forking) — describe it, don't click through |
 
-**Never cut:** the two security tests (Block 3), the HITL pause (2c), the architecture reversal (Block 4), trace → dataset → experiment (5.3-5.4), and **the recommendation close (Block 6)**.
+**Never cut:** the two security tests (Block 3), the HITL pause (2c), the architecture reversal (Block 4), **the before/after fabricated-handoff story (5.3)**, the experiment (5.4), and **the recommendation close (Block 6)**.
 
-**Engine is no longer protected.** It was in the previous version; that over-corrected. It's a conditional capstone — great if it produced something, one honest sentence if not. The recommendation close is protected instead, because that's the thing only a Deployed Engineer would do.
+**5.3 is now the most protected thing in the deck**, above even the security tests. It's the block that answers the invitation to build a narrative around a reliability problem, it's the only place the room sees a real failure and its fix side by side, and it's the argument for the platform rather than for the framework. If it has to compress, cut the account-deletion aside and keep the two traces on screen.
+
+The Engine row is gone from this table because Engine is gone from the deck (5.6). The recommendation close is protected instead, because that's the thing only a Deployed Engineer would do.
 
 ---
 
@@ -364,7 +396,8 @@ Decide now, not at minute 28 with a room watching.
 
 "Embrace hot takes" is a stated operating principle. Pre-committed, each defensible, each placed. Five delivered with conviction beats fifteen.
 
-1. **"Text-to-SQL is the obvious answer here and it's the wrong one."** (Block 3.) Most people demoing Chinook will reach for the SQL toolkit. Naming that, then explaining it makes injection an exfiltration path, is the sharpest differentiator in the demo.
+1. **"The most expensive failure in support isn't a wrong answer. It's a promise nobody kept."** (Blocks 1 and 5.3.) The spine of the whole demo, and the one to say with the most conviction — a wrong answer gets corrected, while an unkept promise makes the customer stop looking for help. It also earns the right to the follow-up: *"and my agent did exactly that, on day three."*
+2. **"Text-to-SQL is the obvious answer here and it's the wrong one."** (Block 3.) Most people demoing Chinook will reach for the SQL toolkit. Naming that, then explaining it makes injection an exfiltration path, is the sharpest differentiator in the demo.
 2. **"Never let an LLM judge grade a safety property."** (Block 5.4.)
 3. **"I built the multi-agent version and measured it against the simple one."** (Block 4.) Whichever won, the fact that you *tested* it rather than asserted it is the point.
 4. **"Using the most powerful harness available is how prototypes fail to become products."** (Block 4.)
@@ -390,7 +423,9 @@ Each of these is either wrong or unsupportable. They're listed because they're t
 | "Swapping model providers is a string change" | "The agent and tool contract is provider-neutral; adapters, credentials, parameters, and behavior still need evaluation." |
 | "One line of middleware solves legal review" | "The framework makes the approval gate concise; production still needs policy, audit, identity, and idempotency." |
 | "Swap SQLite for Postgres with no code changes" | "The model and tool contract stays stable; pooling, transactions, migrations, and tests all change." |
-| "This ran for about $12" | The actual post-run total from the OpenAI dashboard. |
+| "This ran for about $12" | The actual post-run total from the OpenAI dashboard. Measured spend came in under $1, so the planning estimate now *overstates* it by more than 10x — quoting the estimate would undersell the strongest cost number you have. |
+| "The model hallucinated the handoff" | "Two correct components composed into a wrong behavior — personalization supplied the rep's name, the prompt described how to phrase a handoff, and nothing required the tool call." Vaguer *and* less true, and it gives away the root-cause analysis that makes 5.3 impressive. |
+| "Engine wasn't available so I couldn't show it" *(said apologetically)* | "I don't describe a feature I couldn't try — which is why you can trust the parts I did show." Same fact, and it converts a gap into the reason to believe everything else. |
 | "91.7% accuracy" | "6 out of 6 billing cases." Denominators must match the eval slices in ARCHITECTURE §7 — an invented one is worse than no number. |
 
 ---
@@ -413,9 +448,9 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 **"How do you know your evaluator predicts production quality?"** — You don't yet, and say so. Explain slice coverage, production feedback, annotation queues with real reps, drift monitoring, and how failures become examples. Pretending 30 examples predicts production is the wrong answer.
 
-**"What does this cost to run?"** — Pull actual cost off a trace. ~$0.08/conversation raw on the mid-tier model, ~$0.008 on the cheap one, against a ~$3.60 loaded human touch. Be explicit that per-conversation cost is *measured*, the $3.60 is an *assumption*, and this is inference-only — it excludes platform and engineering cost. Then the detail that lands: the whole build ran on roughly [actual] of API credit. A prospect worried this is an expensive science project just watched someone build it for the price of lunch.
+**"What does this cost to run?"** — Now measured rather than estimated, so use the real numbers. Across 326 recorded eval conversations: **~$0.0011 each** on the cheap model, against a ~$3.60 loaded human touch. ⚠️ **Caveat it honestly** — most eval examples are single-turn, so a real multi-turn support conversation costs several times that; the planning estimate of ~$0.008 for a full conversation is the safer figure to quote, and the mid-tier model is roughly 10x either. Be explicit that per-conversation cost is *measured*, the $3.60 is an *assumption*, and this is inference-only — it excludes platform and engineering cost. Then the detail that lands: the entire build, every experiment and rerun included, came to **under $1** of API credit against a $21 budget. A prospect worried this is an expensive science project just watched someone build it for the price of a coffee.
 
-**"What if it hallucinates a recommendation for a track you don't stock?"** — Recommendations come only from tool results, never model memory; the groundedness judge scores this every run. Good place to volunteer that the recommender is a simple content-based heuristic on purpose — the demo point is orchestration, and a real ranking model drops in behind the same tool signature.
+**"What if it hallucinates a recommendation for a track you don't stock?"** — Structural, not graded: `recommend_for_me` returns rows from the catalog, so a recommendation the store doesn't carry would have to be invented outside the tool result. The discovery slice checks the recommended tracks came from the tool and excludes ones she already owns. ⚠️ **Do not claim a groundedness judge** — the only LLM judge here scores tone, and every other check is code. Claiming a grader that doesn't exist is exactly the kind of thing that unravels the rest of the session. Good place to volunteer that the recommender is a simple content-based heuristic on purpose — the demo point is orchestration, and a real ranking model drops in behind the same tool signature.
 
 **"Why flat / why supervisor?"** — Block 4, with the numbers. Never intuition.
 
@@ -427,16 +462,44 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 **"What breaks first at 100x?"** — Catalog search; `LIKE` doesn't survive it and wants a hybrid index. Then checkpointing to Postgres. The tool contract holds; the data layer changes.
 
-**"What did you cut, and why?"** — Deep Agents sidecar, extra middleware, beta features — everything above core evidence. Naming your cuts confidently is a strong signal.
+**"Why didn't you show Engine or Insights?"** — Likely from Neil, and there is a clean answer. Engine reports that it isn't available for personal organizations, and Insights isn't provisioned on that plan; the exercise runs on a personal account. So demoing either would mean narrating documentation. Then turn it into the point: *"the rule I hold to with customers is that I don't describe a feature I couldn't try — which is also why you can trust the parts I did show."* If they offer access for a follow-up, take it.
+
+**"What did you cut, and why?"** — Deep Agents sidecar, extra middleware, gated features, and the 150-conversation trace-seeding run. That last one is worth naming: seeding existed only to give Insights and Engine material to chew on, and once both were confirmed unavailable it was an hour of runtime and 150 traces producing nothing. Cutting work whose only consumer disappeared is a better signal than doing it anyway.
 
 **"What would you do next with another week?"** — Real auth integration; a proper retrieval layer for catalog search; online evaluators with alerting; and an annotation queue with actual support reps, because their labels are the highest-quality eval signal available and almost nobody uses them.
 
 ---
 
-## 11. Pre-flight
+## 11. Saved artifacts — the URLs Block 5.3 depends on
+
+⚠️ **Screenshot all of these today.** Base traces on the free plan are retained **14 days**, and these were recorded on 3 August, so they expire around **17 August**. The narrative in 5.3 is the strongest thing in the demo and it currently rests on data with an expiry date. A PNG in the repo has no expiry.
+
+**Before — the fabricated handoff.** Reply claims the handoff; tool list is empty. Verified: zero tool runs in each trace.
+
+| Case | Trace |
+|---|---|
+| Duplicate charge | [`019fc63c-4062`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fc63c-4062-7032-8fc2-7dffc5ce4798) |
+| Missing download | [`019fc63c-47dd`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fc63c-47dd-7483-a7d2-f4f96c3130bf) |
+| **Account deletion** — the sharpest one | [`019fc63c-5df2`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fc63c-5df2-7c83-9c5a-56875f0fa3c7) |
+
+**After — the same case, fixed.** `escalate_to_human` present in the tool list.
+
+| Case | Trace |
+|---|---|
+| Duplicate charge | [`019fc63e-9d5b`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fc63e-9d5b-7222-923e-58db84179650) |
+
+**Dataset:** [`chinook-support-v1`](https://smith.langchain.com/datasets/37b06b66-dfd9-4cdf-a6a8-8e9f2556b6c7) — 30 examples, six splits matching the eval slices.
+
+Still to capture: the Block 2 multi-turn customer thread, the injection attempt, and the flat-vs-supervisor experiment comparison.
+
+---
+
+## 12. Pre-flight
 
 - [ ] `langgraph dev` running, graph loaded, Studio open
 - [ ] Five tabs staged in presentation order
+- [ ] **Before/after traces open in two tabs, side by side** — 5.3 is the block that cannot be improvised
+- [ ] **Screenshots of both traces saved in the repo**, in case retention or the network fails you
 - [ ] Saved fallback trace URLs for every key moment
 - [ ] Both demo customers verified (Helena #6, Richard #26)
 - [ ] Refund state reset so the HITL interrupt actually fires

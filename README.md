@@ -57,13 +57,15 @@ Three positions changed during review, before any code was written. Each is reco
 
 **The supervisor became a hypothesis instead of a commitment** ([ADR-002](docs/decisions.md)). A flat agent is the baseline; specialization has to clear pre-registered thresholds to ship.
 
-## Engine sequencing and cost
+## Engine and Insights: not used, and why
 
-Two things worth getting right, both of which this plan initially got wrong.
+Both were planned as conditional capstones. Both are out, and the reason is worth stating precisely because two of the three things this section used to assert were wrong ([ADR-021](docs/decisions.md)).
 
-**Seed before enabling.** Engine's initialization pass audits *past* traces and clusters them into prioritized issues, while recurring scans run every six hours whether or not anything is found. Enabling on an empty project pays for scans with nothing to analyze. Build → seed → then enable once.
+**Engine is unavailable on a personal organization** — the settings toggle reads *"Engine is not available for personal organizations."* That's an org-type gate, not a plan tier, so the $39 Plus plan wouldn't have unlocked it. Insights isn't provisioned either (`clio_enabled: false`). The exercise runs on a personal account, so neither is demoable, and the 150-conversation trace-seeding run that existed only to feed them was cut with them.
 
-**It's metered.** LangChain Compute Units are $1.50 each — 30-40 for initialization, 10-15 per scan. Enabled across a three-day build that's $250-300; seed-then-enable is ~$50-90 for the same artifact. Set a spend limit on Day 0, because blank means unlimited. Engine is upside rather than a dependency: the demo works without it.
+**The LCU figures previously quoted here were wrong by about 8x.** This said 30-40 LCUs to initialize; the pricing calculator scales per-run LCUs with trace volume — 2 at 1k traces, 8 at 10k, 30 at 100k — so the 30-LCU figure is the 100,000-trace case. At this project's ~2k traces a run is roughly $5.70. The sequencing advice survives and gets sharper: initialization was never the expensive part, **leaving it enabled is**, at four automatic scans a day.
+
+**The artifact Engine was supposed to produce exists anyway.** Spot the failure, root-cause it, turn it into a dataset example, write the evaluator, prove the fix — done by hand, with traces on both sides. That's the demo's central story.
 
 ## Setup
 

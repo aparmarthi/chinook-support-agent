@@ -219,9 +219,11 @@ The test asserts the property that matters: the request is rejected **and the ch
 - [ ] Saved fallback trace for every live moment.
 - [ ] A closing **recommendation** — pilot scope, metrics to instrument, safety stop, next review.
 
-**Upside — good if present, one honest sentence if not:**
+**Upside — resolved. Both gated features are unavailable on a personal organization ([ADR-021](decisions.md)):**
 
-- [ ] Engine enabled *after* seeding, with at least one detected issue, if access and LCU budget allow.
-- [ ] Insights report over seeded traces.
-- [ ] Polly.
+- [x] ~~Engine enabled after seeding~~ — **cut.** *"Engine is not available for personal organizations"*; org-type gate, not plan tier. Trace seeding cut with it, having lost its only consumer.
+- [x] ~~Insights report~~ — **cut.** `clio_enabled: false` on this plan.
+- [ ] Polly — check at rehearsal; if absent, say nothing.
 - [ ] Deep Agents playlist contrast.
+
+The loop Engine automates was walked manually instead, and produced the demo's central artifact: a real failure, root-caused and fixed, with traces on both sides ([ADR-020](decisions.md)).
