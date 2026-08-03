@@ -21,8 +21,13 @@ import logging
 import shutil
 import sqlite3
 import ssl
+import sys
 import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from src.data.db import chinook_path, data_dir, support_path  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +36,10 @@ CHINOOK_SQL_URL = (
     "ChinookDatabase/DataSources/Chinook_Sqlite.sql"
 )
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data"
-SQL_DUMP = DATA_DIR / "Chinook_Sqlite.sql"
-CHINOOK_DB = DATA_DIR / "chinook.db"
-SUPPORT_DB = DATA_DIR / "support.db"
+
+def sql_dump_path() -> Path:
+    """Path to the downloaded Chinook SQL dump."""
+    return data_dir() / "Chinook_Sqlite.sql"
 
 # No foreign keys to Chinook: support.db is a separate file, so CustomerId and
 # InvoiceLineId are unenforced references. Ownership is verified in application
@@ -51,7 +55,24 @@ SUPPORT_DB = DATA_DIR / "support.db"
 #
 # Status starts at 'open' because the row only exists after a human approved
 # filing the request. Approval of the refund itself happens downstream.
+#
+# thread_owner binds each conversation to exactly one customer. SupportGateway
+# reads it before the graph is invoked, so a mismatched tenant is rejected
+# before the checkpointer ever loads state (ARCHITECTURE §4, layer 2).
+#
+# ConversationId is the only identifier a client ever sees. ThreadId stays
+# internal, so a caller cannot name someone else's thread even to attack it.
 SUPPORT_SCHEMA = """
+CREATE TABLE IF NOT EXISTS thread_owner (
+    ConversationId  TEXT    PRIMARY KEY,
+    ThreadId        TEXT    NOT NULL UNIQUE,
+    CustomerId      INTEGER NOT NULL,
+    CreatedAt       TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_thread_owner_customer
+    ON thread_owner (CustomerId);
+
 CREATE TABLE IF NOT EXISTS refund_requests (
     RefundRequestId INTEGER PRIMARY KEY AUTOINCREMENT,
     CustomerId      INTEGER NOT NULL,
@@ -97,44 +118,52 @@ def _ssl_context() -> ssl.SSLContext:
 
 def download_dump(force: bool = False) -> Path:
     """Fetch the Chinook SQL dump, skipping the download if already present."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    if SQL_DUMP.exists() and not force:
-        logger.info("SQL dump already present at %s", SQL_DUMP)
-        return SQL_DUMP
+    dump = sql_dump_path()
+    dump.parent.mkdir(parents=True, exist_ok=True)
+    if dump.exists() and not force:
+        logger.info("SQL dump already present at %s", dump)
+        return dump
 
     logger.info("Downloading Chinook dump from %s", CHINOOK_SQL_URL)
     request = urllib.request.Request(CHINOOK_SQL_URL)
     with urllib.request.urlopen(request, context=_ssl_context()) as response:
-        with SQL_DUMP.open("wb") as handle:
+        with dump.open("wb") as handle:
             shutil.copyfileobj(response, handle)
-    logger.info("Wrote %s (%.0f KB)", SQL_DUMP, SQL_DUMP.stat().st_size / 1024)
-    return SQL_DUMP
+    logger.info("Wrote %s (%.0f KB)", dump, dump.stat().st_size / 1024)
+    return dump
 
 
 def build_chinook(force: bool = False) -> Path:
     """Execute the dump into a fresh SQLite file of reference data."""
-    if CHINOOK_DB.exists():
+    db = chinook_path()
+    if db.exists():
         if not force:
-            logger.info("Chinook DB already exists at %s (--force to rebuild)", CHINOOK_DB)
-            return CHINOOK_DB
-        CHINOOK_DB.unlink()
+            logger.info("Chinook DB already exists at %s (--force to rebuild)", db)
+            return db
+        db.unlink()
 
-    sql = SQL_DUMP.read_text(encoding="utf-8", errors="replace")
-    with sqlite3.connect(CHINOOK_DB) as conn:
+    sql = sql_dump_path().read_text(encoding="utf-8", errors="replace")
+    with sqlite3.connect(db) as conn:
         conn.executescript(sql)
-    logger.info("Built reference database at %s", CHINOOK_DB)
-    return CHINOOK_DB
+    logger.info("Built reference database at %s", db)
+    return db
 
 
 def build_support(force: bool = False) -> Path:
-    """Create the writable support database holding refund request tickets."""
-    if SUPPORT_DB.exists() and force:
-        SUPPORT_DB.unlink()
+    """Create the writable support database holding tickets and thread owners.
 
-    with sqlite3.connect(SUPPORT_DB) as conn:
+    Uses ``CREATE TABLE IF NOT EXISTS``, so re-running without ``--force`` adds
+    tables introduced since the file was first built rather than discarding it.
+    """
+    db = support_path()
+    db.parent.mkdir(parents=True, exist_ok=True)
+    if db.exists() and force:
+        db.unlink()
+
+    with sqlite3.connect(db) as conn:
         conn.executescript(SUPPORT_SCHEMA)
-    logger.info("Built support database at %s", SUPPORT_DB)
-    return SUPPORT_DB
+    logger.info("Built support database at %s", db)
+    return db
 
 
 def verify_counts(db_path: Path) -> None:
@@ -191,10 +220,10 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     download_dump(force=args.force)
-    build_chinook(force=args.force)
+    chinook_db = build_chinook(force=args.force)
     build_support(force=args.force)
-    verify_counts(CHINOOK_DB)
-    verify_read_only(CHINOOK_DB)
+    verify_counts(chinook_db)
+    verify_read_only(chinook_db)
 
 
 if __name__ == "__main__":

@@ -9,12 +9,22 @@ deepagents>=0.7.1,<1.0
 
 # Model provider — OpenAI (see docs/BUILD_PLAN.md "Budget")
 langchain-openai>=1.4.1,<2.0
+# Direct dependency, not just transitive: the retry middleware names OpenAI's
+# transient exception classes so it retries a timeout and not a bad request.
+openai>=2.52.0,<3.0
 # langchain-anthropic>=1.5.3,<2.0  # uncomment only if switching providers
 
 # Studio / local dev server
 langgraph-cli[inmem]>=0.4.31,<1.0
 
 python-dotenv>=1.0.0
+# macOS framework Python ships no usable CA bundle; scripts/setup_data.py
+# builds an SSL context from this one (see docs/FRICTION_LOG.md).
+certifi>=2026.7.22
+# scripts/setup_studio_assistants.py talks to the local Agent Server REST API.
+requests>=2.32.0
 
 # Dev
 pytest>=8.0.0
+# The middleware async paths (abefore_agent, aafter_model) are tested directly.
+pytest-asyncio>=1.0.0

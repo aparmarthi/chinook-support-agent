@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "chinook_support": "./src/agent/graph.py:agent"
+  },
+  "env": ".env"
+}
