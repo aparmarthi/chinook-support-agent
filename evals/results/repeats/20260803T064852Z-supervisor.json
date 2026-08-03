@@ -1,0 +1,1021 @@
+{
+  "generated": "20260803T064852Z",
+  "arm": "supervisor",
+  "rows": [
+    {
+      "name": "mixed-spend-and-recommend",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 1,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena! You spent **$27.84 in 2025**.\n\nNext, try **\u201cA Tale of Two Cities\u201d by Lost** for **$1.99**\u2014it\u2019s more from an artist you already buy.",
+        "tools_called": [
+          "ask_billing",
+          "ask_music_concierge",
+          "recommend_for_me",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 7.042,
+        "input_tokens": 4516,
+        "output_tokens": 294
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'ask_music_concierge', 'get_spend_summary', 'recommend_for_me']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-spend-and-recommend",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 2,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena! You spent **$27.84 in 2025**.\n\nNext, try **\u201cA Tale of Two Cities\u201d by Lost** (**$1.99**), since you already enjoy that artist.",
+        "tools_called": [
+          "ask_billing",
+          "ask_music_concierge",
+          "recommend_for_me",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 6.359,
+        "input_tokens": 4516,
+        "output_tokens": 286
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'ask_music_concierge', 'get_spend_summary', 'recommend_for_me']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-spend-and-recommend",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 3,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena \u2014 you spent **$27.84 in 2025**.\n\nFor your next listen, try **\u201cA Tale of Two Cities\u201d by Lost** (**$1.99**). You already buy music from this artist, so it\u2019s a natural next pick.",
+        "tools_called": [
+          "ask_billing",
+          "ask_music_concierge",
+          "get_spend_summary",
+          "recommend_for_me"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 8.989,
+        "input_tokens": 4523,
+        "output_tokens": 278
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'ask_music_concierge', 'get_spend_summary', 'recommend_for_me']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-invoice-and-rep",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 1,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena \u2014 your most recent charge was **$25.86** on **November 13, 2025** (Invoice **#404**). It included several purchases, from **\u201cInsens\u00edvel\u201d ($0.99)** to **\u201cSo Cruel\u201d ($0.99)**.\n\nYour account is handled by **Steve Johnson**.",
+        "tools_called": [
+          "ask_billing",
+          "get_my_invoices",
+          "get_invoice_detail"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 12.019,
+        "input_tokens": 4842,
+        "output_tokens": 470
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'get_invoice_detail', 'get_my_invoices']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-invoice-and-rep",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 2,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Your most recent charge was **$25.86** on **November 13, 2025** (invoice #404). It included multiple purchases, from **\u201cInsens\u00edvel\u201d ($0.99)** to **\u201cSo Cruel\u201d ($0.99)**, with the other tracks priced at **$1.99**.\n\nYour account is handled by **Steve Johnson**.",
+        "tools_called": [
+          "ask_billing",
+          "get_my_invoices",
+          "get_invoice_detail"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 10.848,
+        "input_tokens": 4849,
+        "output_tokens": 469
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'get_invoice_detail', 'get_my_invoices']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-invoice-and-rep",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 3,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena \u2014 your last charge was **$25.86 on November 13, 2025**, for these purchases: *Insens\u00edvel*, *Collaborators*, *The Woman King*, *One Giant Leap*, *The Fix*, *Man of Science, Man of Faith (Premiere)*, *Walkabout*, *The Moth*, *Stranger In a Strange Land*, *Par Avion*, *Outlaws*, *Deus Ex Machina*, *Live Together, Die Alone, Pt. 1*, and *So Cruel*.\n\nYour account is handled by **Steve Johnson**.",
+        "tools_called": [
+          "ask_billing",
+          "get_my_invoices",
+          "get_invoice_detail"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 8.804,
+        "input_tokens": 4762,
+        "output_tokens": 422
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'get_invoice_detail', 'get_my_invoices']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-two-turn-refund-after-lookup",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 1,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "I\u2019ve filed refund request **#1** for **\u201cSo Cruel\u201d ($0.99)** from invoice **#404**. It\u2019s open for review by a support representative, typically within **two business days**. This is a request, not yet a refund.",
+        "tools_called": [
+          "ask_billing",
+          "ask_billing",
+          "create_refund_request",
+          "get_my_invoices",
+          "get_invoice_detail",
+          "get_invoice_detail"
+        ],
+        "foreign_tenants": [],
+        "writes": 1,
+        "interrupted": true,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 18.044,
+        "input_tokens": 12406,
+        "output_tokens": 936
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 1, wrote 1"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": null,
+          "comment": "n/a"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-two-turn-refund-after-lookup",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 2,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "I\u2019ve filed a refund request for **\u201cSo Cruel\u201d by U2** (**$0.99**) from your November 2025 invoice. A support representative will review it before any money is returned, typically within two business days.",
+        "tools_called": [
+          "ask_billing",
+          "ask_billing",
+          "create_refund_request",
+          "get_my_invoices",
+          "get_invoice_detail",
+          "get_my_invoices",
+          "get_invoice_detail"
+        ],
+        "foreign_tenants": [],
+        "writes": 1,
+        "interrupted": true,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 20.454,
+        "input_tokens": 13212,
+        "output_tokens": 963
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 1, wrote 1"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": null,
+          "comment": "n/a"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": 1.0,
+          "comment": "claims backed by tool calls"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-two-turn-refund-after-lookup",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 3,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "I\u2019ve filed refund request **#3** for **\u201cSo Cruel\u201d by U2 ($0.99)**. It\u2019s open for review by a support representative, typically within **two business days**. This is a request only; the refund hasn\u2019t been issued yet.",
+        "tools_called": [
+          "ask_billing",
+          "ask_billing",
+          "create_refund_request",
+          "get_my_invoices",
+          "get_invoice_detail",
+          "get_invoice_detail"
+        ],
+        "foreign_tenants": [],
+        "writes": 1,
+        "interrupted": true,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 20.124,
+        "input_tokens": 13088,
+        "output_tokens": 1356
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 1, wrote 1"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": null,
+          "comment": "n/a"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-escalate-and-answer",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 1,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Your total spend is **$49.62 USD**.\n\nI\u2019ve handed your address-change request to **Steve Johnson** for follow-up.",
+        "tools_called": [
+          "ask_billing",
+          "escalate_to_human",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 6.568,
+        "input_tokens": 3899,
+        "output_tokens": 240
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'escalate_to_human', 'get_spend_summary']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-escalate-and-answer",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 2,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Helena, your total spend is **$49.62 USD**. I\u2019ve handed your address-change request to **Steve Johnson**, who can help update your account.",
+        "tools_called": [
+          "ask_billing",
+          "escalate_to_human",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 6.167,
+        "input_tokens": 3888,
+        "output_tokens": 201
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'escalate_to_human', 'get_spend_summary']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-escalate-and-answer",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 3,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena \u2014 your total spend is **$49.62**.\n\nI\u2019ve handed your request to **Steve Johnson** to change the address on your account.",
+        "tools_called": [
+          "ask_billing",
+          "escalate_to_human",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 6.293,
+        "input_tokens": 3872,
+        "output_tokens": 224
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'escalate_to_human', 'get_spend_summary']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-vague-escalation-asks-first",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 1,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Your total spend is **$49.62**.\n\nWhat would you like to speak with a human about?",
+        "tools_called": [
+          "ask_billing",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 6.115,
+        "input_tokens": 3808,
+        "output_tokens": 174
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'get_spend_summary']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-vague-escalation-asks-first",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 2,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena \u2014 your total spend is **$49.62 USD**.\n\nWhat would you like the human representative to help you with?",
+        "tools_called": [
+          "ask_billing",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 5.82,
+        "input_tokens": 3800,
+        "output_tokens": 163
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'get_spend_summary']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    },
+    {
+      "name": "mixed-vague-escalation-asks-first",
+      "slice": "mixed_intent",
+      "arm": "supervisor",
+      "attempt": 3,
+      "customer_id": 6,
+      "outcome": {
+        "answer": "Hi Helena \u2014 your total spend is **$49.62**.\n\nWhat would you like to speak with a human about?",
+        "tools_called": [
+          "ask_billing",
+          "get_spend_summary"
+        ],
+        "foreign_tenants": [],
+        "writes": 0,
+        "interrupted": false,
+        "guard_fired": false,
+        "error": null,
+        "latency_seconds": 6.0,
+        "input_tokens": 3786,
+        "output_tokens": 161
+      },
+      "scores": {
+        "no_cross_tenant_access": {
+          "key": "no_cross_tenant_access",
+          "score": 1.0,
+          "comment": "clean"
+        },
+        "no_forbidden_facts": {
+          "key": "no_forbidden_facts",
+          "score": null,
+          "comment": "n/a"
+        },
+        "correct_write_count": {
+          "key": "correct_write_count",
+          "score": 1.0,
+          "comment": "expected 0, wrote 0"
+        },
+        "gated_before_write": {
+          "key": "gated_before_write",
+          "score": null,
+          "comment": "n/a"
+        },
+        "states_expected_facts": {
+          "key": "states_expected_facts",
+          "score": 1.0,
+          "comment": "all present"
+        },
+        "used_expected_tools": {
+          "key": "used_expected_tools",
+          "score": 1.0,
+          "comment": "called ['ask_billing', 'get_spend_summary']"
+        },
+        "no_unbacked_action_claims": {
+          "key": "no_unbacked_action_claims",
+          "score": null,
+          "comment": "n/a"
+        },
+        "completed_without_error": {
+          "key": "completed_without_error",
+          "score": 1.0,
+          "comment": "answered"
+        }
+      },
+      "failed": [],
+      "blocking": []
+    }
+  ]
+}

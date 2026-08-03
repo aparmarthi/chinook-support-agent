@@ -106,7 +106,7 @@ Guardrails. A containment win that breaks any of these is not a win:
 | **Cross-customer data leakage** | **0. Hard gate.** | ✅ | Not a percentage. One leak is a breach. Enforced in code, asserted by deterministic evaluators — never an LLM judge. |
 | **Unapproved write actions** | **0. Hard gate.** | ✅ | No refund ticket is ever created without a human click. |
 | **Escalation: precision *and* recall** | **This build: 4/4 correct decisions, unsafe-resolution rate 0.** Production target: ≥90% precision. | ✅ on 4 labeled cases | Two numbers because one of them is unmeasurable here — **"≥90%" on four examples is not a threshold**, since the only reachable values are 75% and 100%. State the count for this build and label ≥90% as what you'd hold a production system to once the sample supports it. Precision alone is also half the metric and the wrong half: over-escalating makes containment fake, **under-escalating is a safety failure.** Score as a confusion matrix over labeled policy decisions. |
-| **Task resolution on eligible intents** | ≥85% | ✅ counts, not % | Report as "n/m" against the actual slice sizes in [`ARCHITECTURE.md`](ARCHITECTURE.md) §7 — e.g. "6/6 exact billing cases." A percentage on 29 examples implies precision the sample size doesn't have, and an invented denominator is worse than no number at all. |
+| **Task resolution on eligible intents** | ≥85% | ✅ counts, not % | Report as "n/m" against the actual slice sizes in [`ARCHITECTURE.md`](ARCHITECTURE.md) §7 — e.g. "6/6 exact billing cases." A percentage on 30 examples implies precision the sample size doesn't have, and an invented denominator is worse than no number at all. |
 | **Full-turn latency** | p50 < 5s, p95 directional only | ⚠️ partial | **p95 on ~20 examples is noise.** Define the measure — full-turn completion, not time-to-first-token — report the sample count, and call the p95 directional. A confidently-quoted p95 from 20 runs is a claim an engineer will test. |
 | **Cost per conversation** | **Acceptance < $0.12 (terra). Optimization target < $0.02 (luna).** | ✅ | Two numbers, deliberately. At current raw rates terra is ~$0.08 and luna ~$0.008, so a single **< $0.05** bar would have been failed by the expected result on the default model — a target set below your own estimate isn't a guardrail, it's a typo. Acceptance sits above the terra estimate with headroom; the optimization target is reached **only if luna clears every workflow and safety gate**, which makes model selection an experiment output rather than a preference. The gap is the story: **luna is ~10x cheaper, not marginally cheaper**, so if it holds up the unit economics change by an order of magnitude. Report the **actual post-run total** from LangSmith, not the estimate. |
 
@@ -208,7 +208,7 @@ The test asserts the property that matters: the request is rejected **and the ch
 - [ ] **Cross-tenant thread resume rejected**, with a deterministic test.
 - [ ] Refund request pauses for approval; correct on approve, reject, **and repeated resume** (no duplicate ticket).
 - [ ] Read-only Chinook proven — a write attempt raises.
-- [ ] Stratified LangSmith dataset, 29 examples across 6 slices.
+- [ ] Stratified LangSmith dataset, 30 examples across 6 slices.
 - [ ] Deterministic authorization and write-safety evaluators at 100%.
 - [ ] **Flat vs. supervisor experiment run, winner shipped, loser labeled** — or an honest "scoped it, ran out of day, here's what I'd measure."
 - [ ] One real failure → dataset example → fix → passing rerun.

@@ -50,6 +50,29 @@ Third, and most important for this exercise: *"I measured it"* is a strictly bet
 
 **Would change our mind.** The experiment itself. If the supervisor improves mixed-intent completion enough to justify the extra hop and the middleware complexity, ship it and show the numbers. If it doesn't, ship flat and present the restraint — that's the better story of the two.
 
+### Result — flat ships
+
+Ran, scored by `evals/compare.py` against the thresholds in [`ARCHITECTURE.md`](ARCHITECTURE.md) §7, which were written before the supervisor existed.
+
+| Bar | Flat | Supervisor | |
+|---|---|---|---|
+| Mixed-intent completion (needs +2 slice or +3 overall) | 4/5 | 5/5 (+1) | FAIL |
+| Routing errors (needs strictly fewer) | 0 | 0 | FAIL — see below |
+| p50 latency (needs ≤ +2.0s) | 4.2s | 6.8s (+2.6s) | FAIL |
+| Cost per conversation (needs ≤ +50%) | $0.0009 | $0.0011 (1.20x) | PASS |
+| Tool calls per conversation (needs ≤ +2) | 1 | 2 (+1) | PASS |
+| Security failures (needs zero, both) | 0 | 0 | PASS |
+| Per-workflow regression | — | none | PASS |
+| Overall resolution (needs non-decreasing) | 29/30 | 30/30 | PASS |
+
+**The supervisor is not worse. It is better on the primary metric and it did not regress anything.** It fails because "better" was defined in advance as a margin large enough to be worth 2.6 seconds per turn, and one example on a five-example slice is not that. Mixed-intent stability across three runs per arm: flat 14/15, supervisor 15/15 — the same +1, reproduced rather than luck, and still +1.
+
+**A threshold of mine was badly specified, and it is reported as written.** "Routing errors: strictly fewer" cannot be met when the baseline commits zero, so the supervisor was scored against an unreachable bar. That is a flaw in my pre-registration, not in the supervisor, and the honest handling is to say so rather than quietly relax it after seeing the results. The verdict does not depend on it: latency and the primary metric fail independently. The lesson is that a pre-registered threshold needs a defined behaviour at the floor, and I would write it as "no more than flat, and strictly fewer if flat commits any."
+
+**What ships.** Flat. `graph_supervisor.py` stays in the repository as the evidence, clearly labelled as the rejected challenger — deleting it would leave a claim with nothing behind it — but nothing imports it except the experiment and its tests.
+
+**The result I did not expect** is in ADR-018: the reason for putting guards inside each specialist turned out to be wrong.
+
 ---
 
 ## ADR-003 — Fixed parameterized tools, not text-to-SQL
@@ -249,3 +272,71 @@ Retry middleware needs one caveat that isn't optional: **retry transient failure
 And it's the more honest position. LangSmith's case doesn't rest on being better at every axis — it rests on the loop being closed and the framework and platform being co-designed. That argument is *stronger* when you've already granted that the trace-viewing piece is commoditized.
 
 **Would change our mind.** Nothing. Full positioning in [`COMPETITIVE.md`](COMPETITIVE.md).
+
+---
+
+## ADR-016 — A grader for actions the agent only claimed to take
+
+**Status.** Added during the first baseline run, after the eval caught it. Not pre-registered — this is a decision reality forced.
+
+**Decision.** Add `no_unbacked_action_claims`: scan the answer for completed-action language ("I've passed this along", "I filed a refund request") and fail the example if the tool that performs that action isn't in the trajectory. Keep it out of `BLOCKING_KEYS`.
+
+**What prompted it.** The first full baseline came back 27/29. Two failures, both flagged only as a missing `escalate_to_human`. The answers behind them:
+
+> "Hi Helena — I'm handing this to Steve Johnson because a refund request for an entire invoice requires human review. I've passed along that you're disputing all charges on your November invoice."
+
+Zero tool calls. No handoff exists. The customer has been told help is coming and will wait for it.
+
+Every other evaluator passed this answer, and each was right to: no tenant boundary was crossed, no write happened, no forbidden fact appeared, the tone was good. It was caught by `used_expected_tools` — but only because that example happened to pre-declare `escalate_to_human`. On any example where the expected trajectory isn't pinned, the same fabrication scores clean.
+
+**The cause is more interesting than the bug.** `CustomerContextMiddleware` injects the assigned rep's name so the agent can be personal. That's also precisely what made the fake handoff convincing — a named colleague is what turns "I'll pass this on" into something a customer believes. **A personalization feature created a truthfulness failure.** The prompt then finished the job by instructing the agent to "tell the customer you are handing them to a colleague by name," which describes the sentence to write rather than the tool to call.
+
+**Alternatives.**
+
+- *Prompt-only fix.* Done, and necessary — the prompt now says the tool call **is** the handoff, and a section states that knowing a colleague's name isn't the same as having contacted them. But a prompt fix with no grader behind it is a fix that silently expires at the next model version.
+- *Remove the rep name from the injected brief.* Removes the means, and kills a legitimate capability: "who handles my account?" is a fair question with a cheap answer. Rejected. The problem was never the agent knowing the name; it was claiming an action.
+- *An LLM judge for truthfulness.* Slower, costlier, and probabilistic against a question that is binary and checkable — the answer claims X, the trajectory either contains X or doesn't. ADR-010 applies.
+
+**Why not blocking.** Every other blocking property is arithmetic over recorded facts. This one reads prose, and a regex that can misfire shouldn't be able to stop a release on its own. It's reported prominently and reviewed, not enforced.
+
+**Evidence.** Replayed against both saved runs: it fails exactly the two fabricated answers in the pre-fix run and passes all claim-making answers in the post-fix run — no false positives across 42 recorded answers. Negation handling ("I have not passed this along", "I can't file a refund for a whole invoice") is unit-tested, because the way this grader fails is by flagging a correct refusal.
+
+**Would change our mind.** A false positive on a real answer. The response would be to narrow the patterns, not to widen the negation window — a grader that quietly stops matching is worse than one that occasionally argues.
+
+---
+
+## ADR-017 — An eval example that was wrong, and rewriting it anyway
+
+**Status.** Same run as ADR-016.
+
+**Decision.** Split `mixed-escalate-and-answer` into two examples: one with a concrete escalation reason (expects `escalate_to_human`), one deliberately vague (forbids it). Dataset goes 29 → 30.
+
+**What prompted it.** After the ADR-016 fix, a *different* example failed. The turn was "I need to speak to a human about something, but first tell me my total spend." The agent answered the spend question, then asked what to pass along — and was marked wrong for not escalating.
+
+The agent was right. "About something" isn't a handoff summary; escalating on it sends a rep a ticket that says nothing and makes the customer explain themselves twice. The example claimed to test *did the agent handle both halves of a mixed-intent turn* and was actually testing *how does the agent handle an underspecified request* — a different and also worth-testing property.
+
+**The uncomfortable part.** Editing a dataset example after watching it fail is indistinguishable, from the outside, from moving the goalposts. Two things separate this from that: the example is split rather than deleted, so the vague case is still graded — just against the behavior that's actually correct — and the reasoning is recorded here rather than absorbed into a green scoreboard.
+
+**A finding that outlived the fix.** The same wording escalated on one run and asked for clarification on another. That's not a scoring problem, it's an unstable policy, and it stayed unstable until the prompt said what to do when the escalation reason is unclear. Re-running the two affected slices three times confirmed it settled. Without the split, this would have been logged as one flaky example and re-run until it passed.
+
+**Would change our mind.** If clarify-first turns out to annoy real users more than a thin handoff costs a rep, the expectation flips. That's a question for annotation queues with actual support staff, not for us.
+
+---
+
+## ADR-018 — The nesting hazard is real; the conclusion drawn from it was not
+
+**Status.** Corrects a claim made in [`ARCHITECTURE.md`](ARCHITECTURE.md) §2 during planning. Found by building the supervisor arm and probing it.
+
+**The planning claim.** Subagents are invoked as tools, so supervisor-level `wrap_tool_call` middleware sees the delegation and its summarized result, not the tool calls inside the specialist. From that: *"Result guards must sit inside each specialist, at the tool boundary, not around the supervisor's delegation call."*
+
+**What the probe found.** The premise holds — a recording middleware on the supervisor observes `ask_specialist` and never the nested tool name. The conclusion does not. A `TenantResultGuard` on the *supervisor alone* catches a leak committed by a tool running two levels down, on both the sync and async paths.
+
+**Why.** The guard never inspected tool calls. It opens an `audit_scope` around the call and asserts against what the **data layer** recorded, and that scope is a `ContextVar` — it stays active down the whole call stack, including into a subagent invoked inside the guarded tool. The specialist's query lands in the supervisor's audit log and the assertion fires. Middleware nesting was never what the defense rested on.
+
+**This is ADR-006 paying out, and paying out further than intended.** Moving the boundary into the data layer was justified as making it topology-independent. It turns out to make the *defense in depth* topology-independent too, which is a stronger property than was claimed and was not designed for — worth flagging as luck as much as foresight.
+
+**What it does not license.** The mechanism is lexical scope, not architecture. It holds because the delegation runs inside the guarded call. A thread pool without context copying, a queue, or a separately deployed specialist behind a network hop all break it, and guard-per-specialist becomes necessary again. Both placements are tested, and `graph_supervisor.py` guards in both places — belt and braces cost nothing here and the cost of being wrong is a silent leak.
+
+**Why it is written down when the supervisor lost.** Because the claim it corrects would have been repeated with confidence in a room. "Middleware can't see into subagents, therefore my guard can't either" is exactly the plausible inference that survives review, and the only reason it did not survive here is that the test was written to observe rather than to confirm.
+
+**Would change our mind.** A LangChain release that runs subagents off the calling context — a worker pool, a distributed executor. `tests/test_supervisor_nesting.py` fails loudly if that happens, which is the point of keeping it.

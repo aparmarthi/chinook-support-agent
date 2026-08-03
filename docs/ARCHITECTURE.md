@@ -55,7 +55,7 @@ Same tools and data layer, with a supervisor delegating to `billing` and `music_
 Concretely, in the supervisor variant:
 
 - **HITL must live on the agent that owns the write tool.** If `create_refund_request` belongs to the billing subagent, the interrupt goes there. The alternative — and probably the simpler one — is to keep the refund tool at supervisor level so the gate stays where it's easy to reason about.
-- **Result guards must sit inside each specialist**, at the tool boundary, not around the supervisor's delegation call.
+- ~~**Result guards must sit inside each specialist**, at the tool boundary, not around the supervisor's delegation call.~~ **Measured, and this was wrong — see [ADR-018](decisions.md).** The premise is right and the conclusion isn't: a `TenantResultGuard` on the supervisor alone *does* catch a leak from a tool two levels down, because it asserts on the data layer's audit log through a `ContextVar` rather than on tool calls, and that scope follows the call stack into the subagent. Verified sync and async in `tests/test_supervisor_nesting.py`. Guards are still placed in both positions, because the mechanism is lexical scope and any hop off the calling context — thread pool, queue, remote specialist — would break it.
 - **Runtime context must be verified to propagate unchanged** into each subagent invocation. Test it; don't assume it.
 - **Studio may not visualize this the way the demo assumes.** Per first-party docs, tool-invoked subagents are not statically discoverable, and `get_state` with `subgraphs` will not return subagent state. Verify on Day 0 what actually renders.
 
@@ -226,17 +226,17 @@ Built-in first. Custom only where a test shows a gap — that ordering is itself
 |---|---|---|---|
 | `HumanInTheLoopMiddleware` | built-in | Gate `create_refund_request` | Test approve, edit, reject, resume, **and repeated resume**. Reject is the path that breaks. |
 | `ToolCallLimitMiddleware` | built-in | Runaway-loop and cost protection | `thread_limit` / `run_limit` / `exit_behavior`. **Replaces the custom escalation middleware I'd planned** — the built-in already does this. |
-| `PIIMiddleware` | built-in | Egress redaction | Configure exact fields; verify what appears in traces. Decide deliberately whether a customer should see their *own* contact details — redacting those is a bug, not a feature. |
-| `ModelRetryMiddleware` / `ToolRetryMiddleware` | built-in | Transient failures only | **Do not retry authorization failures, bad arguments, or deterministic SQL errors** — retrying a rejected action is worse than failing. Count the retry path against the latency budget. |
-| `CustomerContextMiddleware` | custom, `@dynamic_prompt` | Inject name, tier, profile, assigned rep | Personalization. Sits *below* the authorization path in priority. |
-| Result guard | custom, `@wrap_tool_call` | Assert audit metadata matches runtime tenant | Defense in depth over §4 layer 1. |
+| `PIIMiddleware` | built-in | Ingress redaction | **Scoped to `credit_card` on input, deliberately.** A customer disputing a charge may type a card number; the agent has no use for it and the checkpoint keeps it forever, so it never enters the transcript. Email is *not* redacted — showing someone their own address is not a leak, and blanking it degrades the reply for no privacy gain. Scope is the decision here, not coverage. |
+| `ModelRetryMiddleware` / `ToolRetryMiddleware` | built-in | Transient failures only | Both default to `retry_on=(Exception,)`, which retries authorization denials — three refusals cost triple and are exactly as refused. Narrowed to OpenAI timeout/connection/rate-limit/5xx and `sqlite3.OperationalError`. Tested against the default in both directions. |
+| `CustomerContextMiddleware` | custom class | Inject name, country, assigned rep | Personalization; sits *below* authorization and has no security role. **Not `@dynamic_prompt`** — that decorator is synchronous and the profile read is I/O, so the load is hoisted into `abefore_agent` and cached in state. Same constraint that reshaped the approval card. No "tier" — Chinook has no such field. |
+| `TenantResultGuard` | custom, `wrap_tool_call` | Assert audit metadata matches runtime tenant | Defense in depth over §4 layer 1. Observes the data layer through a `ContextVar` audit scope, so it guards tools that never check themselves — including ones not written yet. Tested with a deliberately leaking tool, on both the sync and async paths. |
 | `SummarizationMiddleware` | built-in | Long-thread compaction | **Only if a deliberate long-thread test needs it.** Otherwise it's another model behavior and another demo risk for no gain. |
 
 ---
 
 ## 7. Evaluation
 
-Stratified, so each slice maps to a specific claim in the PRD. Twenty-nine examples is small — report **counts, not percentages** ("6/6 exact billing cases," not "100%"). Percentages on single-digit slices imply a precision the sample doesn't have, and an engineer in the room will do the division and notice.
+Stratified, so each slice maps to a specific claim in the PRD. Thirty examples is small — report **counts, not percentages** ("6/6 exact billing cases," not "100%"). Percentages on single-digit slices imply a precision the sample doesn't have, and an engineer in the room will do the division and notice.
 
 ⚠️ **Every count you quote must match the table below.** Several documents previously said "11/12 billing cases" against a 6-example billing slice — an invented denominator, and the kind of detail that destroys the credibility of every other number if someone checks. The slice sizes here are the only source of truth.
 
@@ -246,7 +246,7 @@ Stratified, so each slice maps to a specific claim in the PRD. Twenty-nine examp
 | Authorization | 6 | Other-customer IDs, injection language, cross-tenant thread resume, no oracle |
 | Refund / HITL | 5 | No write before approval; exactly one after; zero after reject; idempotent resume |
 | Discovery | 4 | Recommended tracks exist, aren't already owned, requested genre honored |
-| Mixed intent | 4 | Both intents completed, clarification when needed, no silent drop |
+| Mixed intent | 5 | Both intents completed, clarification when needed, no silent drop |
 | Escalation | 4 | Correct policy decision, correct assigned rep |
 
 Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed tools, expected escalation class, and any reference output.
@@ -256,10 +256,13 @@ Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed 
 1. Authorization and write-safety gates (code)
 2. Exact billing and recommendation facts (code)
 3. Workflow and trajectory completion (code)
-4. Latency, token, and cost telemetry
-5. LLM judge for tone and helpfulness — **only after the exact checks pass**
+4. **Unbacked action claims** (code) — the answer says it filed a refund or handed the customer to their rep; the tool list says otherwise
+5. Latency, token, and cost telemetry
+6. LLM judge for tone and helpfulness — **only after the exact checks pass**
 
 The split is the principle: **anything with a ground truth gets a code evaluator; LLM judges are for the genuinely subjective.** Never let a probabilistic grader score a safety property (ADR-010).
+
+`no_unbacked_action_claims` is the one evaluator that reads prose, and it is deliberately *not* a blocking check for exactly that reason — every blocking property is arithmetic over recorded facts (audit log, write counts, interrupts), and a regex should not be able to stop a release by itself. It earns its place because it catches a class of failure nothing else sees: a fluent, well-toned, factually clean answer describing an action that never happened. See ADR-016.
 
 ### Primary experiment: flat vs. supervisor — thresholds pre-registered
 
@@ -283,6 +286,14 @@ Same model, same dataset, stratified by workflow, one causal variable. **Write t
 **State the power limitation rather than hiding it.** Twenty-nine examples cannot support a significance claim, and the mixed-intent slice is four. This is a *decision rule under small samples*, not an experiment — which is why the bar is "clears every threshold and wins the primary metric by a visible margin," and why ties go to the simpler architecture. Say that out loud if asked; the honest framing is stronger than a confident percentage would be.
 
 **Both outcomes are presentable.** If the supervisor wins, you have numbers instead of intuition. If it loses, you built the complex thing, measured it, and deleted it — and pre-registering the threshold is what makes that a decision rather than a rationalization.
+
+### Result — flat ships
+
+Scored by `python -m evals.compare`. The supervisor came out **better on the primary metric and regressed nothing**: 5/5 mixed-intent against flat's 4/5, 30/30 overall against 29/30, zero security failures in both arms, and only 1.20x the cost. It still loses, because the pre-registered bar asked for a margin worth paying 2.6 seconds a turn for, and +1 example on a five-example slice is not that margin. Three runs per arm reproduced the same +1 (flat 14/15, supervisor 15/15), which is what makes it a real but small effect rather than a lucky sample.
+
+One bar was mis-specified: "routing errors, strictly fewer" is unreachable when flat commits zero. It is reported as a failure because that is how it was written, and the correction belongs in the next pre-registration, not in this one after seeing results. The verdict does not turn on it.
+
+`graph_supervisor.py` stays as evidence and is imported by nothing but the experiment and its tests.
 
 Only after this settles, compare Luna vs. Terra on the hard subset. Same discipline: **model selection is an experiment output, not a fixed choice** — if luna clears the billing-accuracy and tool-selection bars, demo on luna and the cost story improves by an order of magnitude.
 

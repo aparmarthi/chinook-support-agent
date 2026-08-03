@@ -243,7 +243,7 @@ Day 1 proved it works. Day 2 proves it's *engineered*. Protect this day — this
 
 | # | Task | Notes |
 |---|---|---|
-| 2.1 | Build the stratified dataset, 29 examples across 6 slices (`ARCHITECTURE.md` §7). | Some by hand, some via Studio's "Add to Dataset" from real threads — **do it that way on purpose** so you can demo the motion later. Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed tools. |
+| 2.1 | Build the stratified dataset, 30 examples across 6 slices (`ARCHITECTURE.md` §7). | Some by hand, some via Studio's "Add to Dataset" from real threads — **do it that way on purpose** so you can demo the motion later. Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed tools. |
 | 2.2 | `evals/evaluators.py`, in the order from §7. | Code evaluators for authorization, write-safety, and exact facts. LLM judges for tone only, and only after the exact checks pass. |
 | 2.3 | Run the flat baseline. Record counts, never percentages. | "6/6 exact billing cases" — denominators must match the slice sizes in ARCHITECTURE §7. |
 

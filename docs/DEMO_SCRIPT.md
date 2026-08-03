@@ -292,7 +292,7 @@ Deterministic evaluators first:
 
 > "Authorization and write-safety: [n/n], and those are code evaluators, not LLM judges. Never let a probabilistic grader score a binary safety property. Anything with a ground truth gets a code evaluator; judges are for the genuinely subjective, like tone. Teams that use LLM-as-judge for everything end up unable to trust any of their numbers.
 >
-> I'm reporting counts rather than percentages on purpose — 29 examples across six slices. '6 out of 6 billing cases' is honest. A percentage implies a precision this sample size doesn't have."
+> I'm reporting counts rather than percentages on purpose — 30 examples across six slices. '6 out of 6 billing cases' is honest. A percentage implies a precision this sample size doesn't have."
 
 Then the architecture experiment from Block 4, and the model comparison:
 
@@ -411,7 +411,7 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 **"What happens on HITL retry or double-resume?"** — Demonstrate reject, and note the idempotency key means a resumed interrupt can't create two tickets. This is a "have you actually run this" question.
 
-**"How do you know your evaluator predicts production quality?"** — You don't yet, and say so. Explain slice coverage, production feedback, annotation queues with real reps, drift monitoring, and how failures become examples. Pretending 29 examples predicts production is the wrong answer.
+**"How do you know your evaluator predicts production quality?"** — You don't yet, and say so. Explain slice coverage, production feedback, annotation queues with real reps, drift monitoring, and how failures become examples. Pretending 30 examples predicts production is the wrong answer.
 
 **"What does this cost to run?"** — Pull actual cost off a trace. ~$0.08/conversation raw on the mid-tier model, ~$0.008 on the cheap one, against a ~$3.60 loaded human touch. Be explicit that per-conversation cost is *measured*, the $3.60 is an *assumption*, and this is inference-only — it excludes platform and engineering cost. Then the detail that lands: the whole build ran on roughly [actual] of API credit. A prospect worried this is an expensive science project just watched someone build it for the price of lunch.
 

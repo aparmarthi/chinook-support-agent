@@ -8,23 +8,37 @@ Post this on Day 0, before writing agent code. The brief allots 15-30 minutes an
 
 ## The message
 
-> **Plan of attack — Chinook support agent**
+**Slack formatting:** single asterisks for bold, not double. Blank lines between the numbered questions — Slack's list rendering is unreliable when they're packed together, and those are the lines you most want read.
+
+> *Plan of attack — Chinook support agent*
 >
-> Treating this as a small customer POC rather than a feature showcase.
+> Hey Neil and Conrad — sharing my plan before I start building.
 >
-> **Assumed buyer problem:** billing questions are high-volume and deterministic but touch sensitive data, while the same conversation is an unused discovery opportunity. Chinook has no support tickets, so that's a stated assumption about a retailer of this shape — I'll frame it as something to validate rather than something the data showed me.
+> I'm treating this as a small customer POC rather than a feature showcase.
 >
-> **Three narrow flows:** account/billing lookup and catalog recommendations grounded in owned tracks are the floor — those are the two distinct areas. Refund-request intake with human approval is the third if the first two land clean. Two hard gates throughout: zero cross-customer reads, zero writes before approval.
+> *The assumption I'm working from:* billing questions are common and straightforward, but still sensitive because they involve customer data — and the same conversation is an unused music-discovery opportunity. Chinook has no support-ticket history, so this is a hypothesis about a store like this, not something the data proves.
 >
-> **Architecture:** starting with a flat `create_agent` and fixed parameterized tools — no text-to-SQL, since LLM-authored SQL on a multi-tenant surface makes injection an exfiltration path. Authenticated `customer_id` comes from runtime context, never a model-selected argument, and threads are bound to one tenant so a checkpoint can't be resumed as someone else. If the flat baseline shows tool confusion or context bloat, I'll compare it against a billing/concierge supervisor on the same dataset — thresholds written down before I run it, and flat wins ties. Studio as the UI, no custom frontend.
+> *Scope:* I'll start with two areas — account and billing questions, and recommendations based on the customer's purchase history. If those are solid, I'll add refund-request intake with human approval as a third.
 >
-> **LangSmith story** will be one real loop rather than a tour: trace a failure → add it to a dataset → run deterministic authorization and fact evaluators plus a subjective helpfulness judge → compare the change. Engine and Insights are upside if the workspace supports them.
+> My two hard requirements are that a customer never sees another customer's information, and that the agent never writes anything without approval.
 >
-> **Two questions that affect scope:**
-> 1. Does the provided workspace include Engine, Insights, and Polly — and if Engine is available, is LCU spend on me or on LangChain for this exercise? Initialization looks like 30-40 LCUs, so I'd rather ask than surprise someone with a bill. Either answer is fine; it just decides whether Engine is in the demo.
-> 2. On the assumption above — is there a specific reliability failure this store has already hit in production, or a support class that's actually painful for them? I'll run with billing-lookup-as-high-volume if not, but if you have a real one I'd rather build the story around that than around my guess.
+> *Approach:* I'll start with one agent and a small set of clearly defined tools. The signed-in customer will come from the application, not from anything typed in chat or selected by the model. I'm avoiding text-to-SQL so customer isolation doesn't depend on SQL written by the model.
 >
-> I'll share the first Studio trace and any decision reversal once the vertical slice is up.
+> I'll also keep each conversation tied to the customer who started it, so a conversation containing one customer's history can't later be reopened as someone else.
+>
+> If one agent struggles to choose the right tools, I'll compare it with a version that separates billing and recommendations. I'll use the same test cases, write down the success criteria before running the comparison, and keep the simpler version if the results are effectively tied.
+>
+> *LangSmith:* I want to show one real improvement loop rather than a feature tour — find a failure in a trace → save it as a test case → evaluate it → make a change → compare the result. I'll use Studio for the interactions instead of building a custom UI.
+>
+> *Two questions:*
+>
+> 1. I'm planning to use my own LangSmith account and run the application locally. Is there an account or project you'd prefer me to use? I'm asking now because access to Engine, Insights, and Polly may depend on the account — and Engine's first run is metered, around 30–40 compute units, so I'd rather not put that on the wrong bill. No problem if they aren't available; I'll plan the demo without relying on them.
+>
+> 2. Is there a particular support or reliability problem you'd like me to optimize for? Otherwise, I'll continue with billing questions as the assumed high-volume case.
+>
+> I'll share the first working Studio trace once the end-to-end flow is running, along with anything I learn that changes the plan.
+
+**Voice note.** This is deliberately plainer than an engineering doc — no backticks, no "exfiltration path," no `create_agent`. Neil is a director and the post is a first impression, so readable beats dense. The technical precision is still there ("no argument for it to set," "resumed as someone else"), just carried in ordinary words.
 
 ---
 
@@ -32,7 +46,7 @@ Post this on Day 0, before writing agent code. The brief allots 15-30 minutes an
 
 Both are things **only they can answer**, and both change what gets built.
 
-**Q1 — access and LCU ownership.** Provisioning takes time, so this affects three days of sequencing. The cost half does more work than it looks like: asking who pays before switching on a metered feature is the reflex you'd want from someone deploying LangSmith at a customer, it shows you read the pricing page and not just the feature list, and it quietly signals you know LCUs exist — which not every candidate will.
+**Q1 — workspace, which is really an access-and-cost question.** Provisioning takes time, so this affects three days of sequencing. Fold the "which account?" logistics into it rather than asking them separately: on a personal account, Insights needs Plus/Enterprise and Engine's initialization pass is 30-40 LCUs at $1.50 each — **$45-60 out of your own pocket**. Naming that number does real work. It's the reflex you'd want from someone deploying LangSmith at a customer, it shows you read the pricing page and not just the feature list, and it gives them an easy way to say "plan without Engine."
 
 **Q2 — the buyer's actual pain.** ⚠️ **This replaced "do you want me treating you as the prospect team?", which was a bad opening question.** The brief already answers it: *"we will simulate working with a music store," "10 minutes for customer questions," "tell the business a compelling story."* They're the prospect. Asking anyway is the exact failure this doc warns against everywhere else — burning your first impression on something a re-read settles.
 
