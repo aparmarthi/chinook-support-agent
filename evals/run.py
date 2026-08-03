@@ -61,6 +61,11 @@ def main() -> None:
         help="run each example N times; reported per-example so variance is visible",
     )
     parser.add_argument(
+        "--judge",
+        action="store_true",
+        help="also grade tone with an LLM, on examples that passed the code checks",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="grade empty outcomes to check the harness without spending money",
@@ -78,6 +83,10 @@ def main() -> None:
     from evals.dataset import EXAMPLES, SLICE_SIZES
     from evals.evaluators import BLOCKING_KEYS, grade
     from evals.target import RunOutcome, run_example
+
+    judge_tone = None
+    if args.judge:
+        from evals.judges import judge_tone
     from scripts.setup_data import build_support
 
     build_support()
@@ -102,12 +111,25 @@ def main() -> None:
             failed = [k for k, v in scored.items() if v["score"] == 0.0]
             blocking = sorted(set(failed) & BLOCKING_KEYS)
 
+            # Gated on purpose: an answer that failed a code check has already
+            # been decided, and grading its prose would put a warmth score on
+            # the same scoreboard as an authorization failure.
+            tone = None
+            if args.judge and not failed and not args.dry_run:
+                tone = judge_tone(outcome.as_dict(), example)
+                scored["tone"] = tone
+
             mark = "FAIL" if failed else "pass"
             flag = "  <<< BLOCKING" if blocking else ""
             suffix = f" (run {attempt}/{args.repeat})" if args.repeat > 1 else ""
             print(f"  [{index:2}/{total}] {mark}  {example.name}{suffix}{flag}")
             for key in failed:
                 print(f"           {key}: {scored[key]['comment']}")
+            if tone and tone["failed_checks"]:
+                print(
+                    f"           tone {tone['score']:.2f}: "
+                    f"{', '.join(tone['failed_checks'])} — {tone['comment']}"
+                )
 
             rows.append(
                 {
@@ -124,6 +146,33 @@ def main() -> None:
             )
 
     _report(rows, SLICE_SIZES, args)
+
+
+def _report_tone(rows: list[dict]) -> None:
+    """Style scores, kept apart from the code checks and from the pass count.
+
+    Reported per failing check rather than as one average, because "3.7 out of
+    4" says nothing actionable and "nine replies opened with process instead of
+    the answer" is a prompt edit.
+    """
+    graded = [
+        r["scores"]["tone"]
+        for r in rows
+        if r["scores"].get("tone", {}).get("score") is not None
+    ]
+    if not graded:
+        return
+    print(f"\nTONE (judge, {len(graded)} replies that passed every code check)")
+    mean = sum(t["score"] for t in graded) / len(graded)
+    print(f"  mean {mean:.2f} of 1.00")
+    misses: dict[str, int] = defaultdict(int)
+    for verdict in graded:
+        for check in verdict["failed_checks"]:
+            misses[check] += 1
+    if not misses:
+        print("  every reply passed all four checks")
+    for check, count in sorted(misses.items(), key=lambda kv: -kv[1]):
+        print(f"  {check:24} failed {count}/{len(graded)}")
 
 
 def _unstable_examples(rows: list[dict]) -> list[tuple[str, int, int]]:
@@ -161,8 +210,12 @@ def _report(rows: list[dict], slice_sizes: dict[str, int], args) -> None:
             if result["score"] is not None:
                 totals[key].append(result["score"])
     for key, scores in sorted(totals.items()):
+        if key == "tone":
+            continue  # fractional; reported below rather than rounded to a count
         marker = " (blocking)" if key in {"no_cross_tenant_access"} else ""
         print(f"  {key:26} {int(sum(scores))}/{len(scores)}{marker}")
+
+    _report_tone(rows)
 
     blocked = [r["name"] for r in rows if r["blocking"]]
     print("\nSAFETY")

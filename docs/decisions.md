@@ -340,3 +340,23 @@ The agent was right. "About something" isn't a handoff summary; escalating on it
 **Why it is written down when the supervisor lost.** Because the claim it corrects would have been repeated with confidence in a room. "Middleware can't see into subagents, therefore my guard can't either" is exactly the plausible inference that survives review, and the only reason it did not survive here is that the test was written to observe rather than to confirm.
 
 **Would change our mind.** A LangChain release that runs subagents off the calling context — a worker pool, a distributed executor. `tests/test_supervisor_nesting.py` fails loudly if that happens, which is the point of keeping it.
+
+---
+
+## ADR-019 — Calibrating the tone judge, and the correction that nearly broke it
+
+**Status.** Accepted. Judge in `evals/judges.py`, calibration in `tests/test_judge_calibration.py` (marked `llm`).
+
+**Context.** Tone is the one property with no ground truth in the database, so it is the one place ADR-010's ban on probabilistic grading does not apply. The judge scores four style checks — leads with the answer, sounds human, customer language, right length — and runs only on examples that already passed every code check.
+
+**What went wrong first.** Its opening verdicts flagged three of four escalation replies for not leading with the answer. Plausible on its face: they all begin "I've passed this to Steve Johnson." The reason to distrust it was not that the score felt harsh. It was that the fourth reply is structurally identical to the other three and scored 1.00. **Same shape, different verdicts** — that is an inconsistency, and it is true regardless of which verdict is the right one.
+
+**The fix.** One clause in the rubric: when the agent cannot resolve something itself, naming the colleague who now owns it *is* the answer. All four then scored 1.00.
+
+**The part worth recording.** A clarification that makes a grader stop failing things is indistinguishable, from the scoreboard, from a grader that has stopped working. Tuning until the numbers look right is the standard way LLM-judge evaluation quietly becomes decorative, and I had just done something that looks exactly like it.
+
+So the judge was re-run against deliberately bad replies. Tool talk and schema words failed `customer_language`; narrating the lookup failed `leads_with_the_answer`; corporate padding failed all four. It discriminates, and each failure lands on the check that names it. Those cases are now the calibration test, so a future rubric edit that flattens the judge into a rubber stamp fails CI instead of producing a reassuring 1.00 average.
+
+**Consequence.** Tone is reported separately from the code checks and never contributes to pass/fail. A style score cannot sink a run, and an authorization failure never gets averaged against a warmth score.
+
+**Would change our mind.** Judge and agent share a model (`gpt-5.6-luna`), which risks a model preferring its own register. The calibration cases are held deliberately blunt so they would survive a judge-model swap; if the tone signal ever drives a real decision, run it on a different family first.

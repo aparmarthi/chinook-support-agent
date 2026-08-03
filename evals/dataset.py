@@ -8,7 +8,7 @@ correct agent and sends you looking for a bug in the wrong place. The figures
 here came from querying the repository directly; if the seed data is rebuilt
 with different dates, this file has to be regenerated, not patched.
 
-**Slice sizes are fixed and small on purpose.** Twenty-nine examples cannot
+**Slice sizes are fixed and small on purpose.** Thirty examples cannot
 support a percentage — "83%" of a six-example slice is five, and quoting it as
 a percentage invites someone to do the division and find the denominator was
 invented. Results get reported as counts.

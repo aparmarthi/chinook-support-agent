@@ -262,7 +262,11 @@ Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed 
 
 The split is the principle: **anything with a ground truth gets a code evaluator; LLM judges are for the genuinely subjective.** Never let a probabilistic grader score a safety property (ADR-010).
 
-`no_unbacked_action_claims` is the one evaluator that reads prose, and it is deliberately *not* a blocking check for exactly that reason — every blocking property is arithmetic over recorded facts (audit log, write counts, interrupts), and a regex should not be able to stop a release by itself. It earns its place because it catches a class of failure nothing else sees: a fluent, well-toned, factually clean answer describing an action that never happened. See ADR-016.
+**Measured, 30/30 on the code checks**, with the tone judge at a mean 0.97 of 1.00 across the 29 replies eligible for it. The thirtieth is the pending-approval example, which ends on an interrupt and has no final answer — the judge returns `None` rather than zero there, because "not graded" and "bad tone" must not average together.
+
+The judge is calibrated and the calibration is a test (`tests/test_judge_calibration.py`, marked `llm`). It needed to be: the first version marked four structurally identical escalation replies with two different verdicts. See ADR-019 — the interesting part is not the miscalibration but what fixing it nearly did.
+
+`no_unbacked_action_claims` is the one *code* evaluator that reads prose, and it is deliberately *not* a blocking check for exactly that reason — every blocking property is arithmetic over recorded facts (audit log, write counts, interrupts), and a regex should not be able to stop a release by itself. It earns its place because it catches a class of failure nothing else sees: a fluent, well-toned, factually clean answer describing an action that never happened. See ADR-016.
 
 ### Primary experiment: flat vs. supervisor — thresholds pre-registered
 
