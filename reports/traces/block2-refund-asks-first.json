@@ -1,0 +1,454 @@
+{
+  "label": "block2-refund-asks-first",
+  "run_id": "019fcb48-e427-7f23-814e-37fd0305d1d9",
+  "recorded": "2026-08-04 05:39:40.543192+00:00",
+  "inputs": {
+    "messages": [
+      {
+        "content": "Actually there's a track on invoice 404 I never downloaded. I want a refund.",
+        "role": "user"
+      }
+    ]
+  },
+  "outputs": {
+    "messages": [
+      {
+        "content": "Hi \u2014 what did I spend with you last year, and can you show me my most recent invoice?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "dcdaef59-c388-46c2-95b3-cb204f6e2cd4"
+      },
+      {
+        "content": [
+          {
+            "id": "rs_0c025a07924842b4006a717b0b3010819bb9394908b85c9969",
+            "summary": [],
+            "type": "reasoning",
+            "content": [],
+            "encrypted_content": "gAAAAABqcXsMyRbkHpbM8cjznzUX82Zty7J147l5jBGg4ThCB2qTd8_b9G_UXvd_c_lxFBUyug63QoQfrjHffj-eJ9RQW9l1i40FjDo8NMycRmisfT3nB6PZnpjcSRFArVXsJicrHPcEdm66aTcKmF-qREk0rJyeimlLU1RbFV510EIujC0aX83mPQl55G0QwvEF_VXT9ejohwvn91F1VSWqhugUtLHNmH01akruncMHVuiW8HxHwd37WCMD5F3taOx2aM3TFOz99l9AFQAGI8xzo5U-WsC4GnN2FRI-lR_VgYmrNZmKpkxw8w9igNT2UBUP-Wg3-ivucBJK-3IDeveD4-Fy7VcFq_QK5MmSHcsWjOduABRRVa5W_EWnacYmtXwl-hXvQwBObbvtZPvIjh_utVsOrzOvpzOn_ENld5eSbHuuDJAdjUjJWVS1AeY2DVUo6-HKJ3_kTwJmS47H1mtztojhdLsEDfDFeD7KC-WSqWNt8ydkIgqufHSjZpsOL4Llhl6xBzXL1Nn-q6a4RN2_4yU0CcdHL7KE5DR__1xsZpPj7sjHNHqxABz2ZfIsLhFKFc0GKun_2Ywj7woByfNLoKaMY07yD1LZvc8LZiVuQ7AcYiQwnRay4DKXshBKAwHWmq3eqmLy97-Pk0tPLD0MkS25ao5wSPS1DdHn0J_Zpi8WKKfvKM04Q7B0ZGQie5RWyWWSrD-29oVTqOGiLAxwnA9OtTLcjYaYrXxSQlruN8si2nNkg2-ZDtJ7milSA-MtfvfmvMCO9yQhgzL_x5Yv4AN7W_mxfgZi64jqv1ARcSkPUhjru165KfJTgLIMaS7swQzgV1by__QbeOvedHQE-ERmQnav_75-K26MsgRkUvrFd91n-OP9lzVsZQllXWSGiW8sAMxn7SnNSoWpW3O7PvyKafNWv2F2IABV67k3KuXHxNBcSj_oMDOgSCrcth2mp-jrS8LXehjkBPl7c-SM59QrbZizxReRF-LjHPY0fL0WqokHeBEL8Od6dCiL0J37b71E7dzdd4W24ip3QNfB_zKjd68YCRIGQQ2_romuhIIyh07KQ8zjdT-0CNW0ue_9GuGgNN9HRWUcA2HkdmSVTgwSg8EX_8fcTEmWu0TMCW12KT0ozpn24g27hmg6Uj9JqREuwLuqgGTQ8H6qM8zUV-G2U96snG9qE06Kj8m1qzwacbhXzHXBNxCjHLsEKtx1lsAVqZFp"
+          },
+          {
+            "arguments": "{\"year\":2024}",
+            "call_id": "call_c55SQ5t74MMN6D5KlFf9z549",
+            "name": "get_spend_summary",
+            "type": "function_call",
+            "id": "fc_0c025a07924842b4006a717b0c0324819b817386e073ce56a9",
+            "status": "completed"
+          },
+          {
+            "arguments": "{\"limit\":1}",
+            "call_id": "call_EHBfHrEZmroLQDVN9dT2xq19",
+            "name": "get_my_invoices",
+            "type": "function_call",
+            "id": "fc_0c025a07924842b4006a717b0c0340819b968203da3b49c922",
+            "status": "completed"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {
+          "id": "resp_0c025a07924842b4006a717b0ab7f0819b80dd873bab52ab34",
+          "created_at": 1785821962.0,
+          "metadata": {},
+          "model": "gpt-5.6-luna",
+          "object": "response",
+          "service_tier": "default",
+          "status": "completed",
+          "model_provider": "openai",
+          "model_name": "gpt-5.6-luna"
+        },
+        "type": "ai",
+        "name": "chinook_support",
+        "id": "resp_0c025a07924842b4006a717b0ab7f0819b80dd873bab52ab34",
+        "tool_calls": [
+          {
+            "name": "get_spend_summary",
+            "args": {
+              "year": 2024
+            },
+            "id": "call_c55SQ5t74MMN6D5KlFf9z549",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_my_invoices",
+            "args": {
+              "limit": 1
+            },
+            "id": "call_EHBfHrEZmroLQDVN9dT2xq19",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 1498,
+          "output_tokens": 108,
+          "total_tokens": 1606,
+          "input_token_details": {
+            "cache_creation": 25,
+            "cache_read": 1470
+          },
+          "output_token_details": {
+            "reasoning": 53
+          }
+        }
+      },
+      {
+        "content": "In 2024: 1 invoice(s), $0.99 total. First purchase 2024-04-11, most recent 2024-04-11.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_spend_summary",
+        "id": "4519f156-ec4b-4aec-b023-c593e8a9a8ec",
+        "tool_call_id": "call_c55SQ5t74MMN6D5KlFf9z549",
+        "status": "success"
+      },
+      {
+        "content": "1 most recent invoice(s):\n  Invoice #404 - 2025-11-13 - $25.86 - Prague, Czech Republic",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_my_invoices",
+        "id": "bc9727d8-c284-4424-8c78-65a2e414b822",
+        "tool_call_id": "call_EHBfHrEZmroLQDVN9dT2xq19",
+        "status": "success"
+      },
+      {
+        "content": [
+          {
+            "id": "rs_0c025a07924842b4006a717b0db2b0819b82a67d9d0be08b5e",
+            "summary": [],
+            "type": "reasoning",
+            "content": [],
+            "encrypted_content": "gAAAAABqcXsP2fYpxZWOw_MORK1dhYFQJFrl-PGXYClrotyn3Lhl_Cj_OEByRCG1xncVQHdVHvsrW5m4wzXv8Bp0LdrF-dtOV_kEzkqhW5q8h1yMTX53D_j9n3EW4X6aZKeTmj1aLxK3K299oSOFT9Tf435TH5iyJHVBF04KklARaeoRbRHg4sKlQQzYWSaQgJJfly_3XriY4jmFyBLgm8U2lBdbGnVmOZvW498Wig8agK1kgWrm7-0xXN8U9kZH_WcdVNMkIiHVRv6ejSm1Ow5Iykzo8GnzdRyseXXQeAun45BD7TztA-T8f9_PKzy9RFtLP-Oxg64XiGsrDkEcVD5WLrY8iVCvC-QqFrjrJ065CSRTqeTbJsPi-yMk2GhPQ4XP6nm2xrjlRmzRkYcrQP7pWDKfx_xSAfvMk3iZfb55EyRxVPOvUcg5dQ-q0Pad_eNLvKP1Kc03eqv9TN5ZUAdf-9RSXy3dD81ERNrLOlTyRtH0mxQotNY6JfcijHUwsGhrtY2ccIO-9oBW1O6AZVJ4-8nhOSl99F1lWD02lS-Ac9EzQfspp3Cphm-03ylFQkUvHihto4oaZME0MVcwxkdikqOd9A-vtwAlqVfbvuQ0LTCEHdh4ynoUgg9xZokCKbcJXj0R3xWYSG4Hvk114ta78D13hx7s3Pc1NRQZjkJdBVZYsdlJoUFWAXRH51Ba4hhlBs4r_RlBQ5ujndcuH9uENhFxTzreVH4pj0QCk5xfpQQhOrhEsABJ7QIK385s_ZWOvkrrvqvUb0JGjeX3RpKwVo2YLPFq3fjHhYaGYsY48CRQMrHG7PW2VgecfnGuwWNhP9TxoLmSgEN9EagL_kj4DrBdXjhF4iG5RcGqvP7B1FMk14xaFEHnV2y0Rdt8bOh-6dZ-tOa1DlqVw-Fc-j6lCYpwCrJCfliT8WwGhrSuqJE_dKCzmZs55AEh5S0c7kCAfg-OHD6G02C8R6p6urOnhPw1Lks1549C26slRr-PzYaZosQewbvnqpqawFsq4DY_uYU3adKrwHtCtsqlsMxx8KhXnGhZyvYcDi5XNkseCXybLONwIycsIgIFfvRu8EnnFfmj7hbPtJ6GYOj_zzjuya19STDG_IjEwWOot6ESU6cIiNYv6dHjyyDNEFa1I_wYajRHAMWVCEXLJzc_OaxsH9oREJQSxFoj9S0CVNvY72B3fQHMVjjoLmp6l_ltg-L2BxPUTOYD5_ra40DxjxiiwToD8woziYpqlRcDx5zmYrFyRN8hyQ9rrQBkmZeYIzOmFv6Nhcx2-h8q-pIP3j3lgDEJDbK59isT6ZJiucsT8sKqUeNpkm6U57ZuPSEK6TMc9a4ahDe_0qsgiwnVeD75UJHfOFUf4sHpaiuu2Cy864KY-xsCKp0lX35xPdvNA34nWLaCtZpd8y8ndGaj0vSw1GAN-sUdn3wXHxeNoCPP6qun8O0l5iaCGhjEE8F-zBlYbMh0zjkOOZYeBKhDFko1JgiUCZGBldre7EcB--0Vdk0VxZIIHypy8OmPfIFZ7NkwyFizgmGcQyVlOSgTodjA-VbrYeoy3_ZJEwPAOHnjxnU5A1y8v7Os8M_fn5ximJhYGPmemecDlthvW07UtIC8WMSfipPDPpd6vmAuGThBikcMNLgSylLcS2D39EJy_rk_qUJiGEGlQ50JXSLKV0rXppg7hNyxdEBtUyMqMeqEUyCsxVxLka5hRaqoHOV_x-YZ3wpcBoHeuqbAV9gjZDXFmcRUvS0zFQWRAhS9OOEKTk4btcZlDupy7CW8NfpB_0TNkap0TH7ISb7gPKjdYIkYGszvOe2k7_iCOKLROny9aLaXaqKtVOAWYvlu7gYq1Ruq9JdIrNalOOBN76OmEMJhFOW2AEZ928f_UHy4ErGCJxvr1Pdmh_iFflzeR6Ys4aMCaiTeUKvXVGoajdrqLlhPcJPS9ETeghTS4rg2tOPeCovLKfMNW_3c_6F0NlYiSEqaKJ6GWH4BvJbCumWbYg9KkywcWjT464ScYcKIR2Q1Md_9dKiwpts="
+          },
+          {
+            "arguments": "{\"invoice_id\":404}",
+            "call_id": "call_zHmWRWlu6NZm9HNPdkosHkwZ",
+            "name": "get_invoice_detail",
+            "type": "function_call",
+            "id": "fc_0c025a07924842b4006a717b0f69ac819bba222ad02bca112d",
+            "status": "completed"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {
+          "id": "resp_0c025a07924842b4006a717b0cfcb4819b9bca126863343320",
+          "created_at": 1785821965.0,
+          "metadata": {},
+          "model": "gpt-5.6-luna",
+          "object": "response",
+          "service_tier": "default",
+          "status": "completed",
+          "model_provider": "openai",
+          "model_name": "gpt-5.6-luna"
+        },
+        "type": "ai",
+        "name": "chinook_support",
+        "id": "resp_0c025a07924842b4006a717b0cfcb4819b9bca126863343320",
+        "tool_calls": [
+          {
+            "name": "get_invoice_detail",
+            "args": {
+              "invoice_id": 404
+            },
+            "id": "call_zHmWRWlu6NZm9HNPdkosHkwZ",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 1694,
+          "output_tokens": 222,
+          "total_tokens": 1916,
+          "input_token_details": {
+            "cache_creation": 196,
+            "cache_read": 1495
+          },
+          "output_token_details": {
+            "reasoning": 200
+          }
+        }
+      },
+      {
+        "content": "Invoice #404, 2025-11-13, total $25.86, billed to Prague, Czech Republic.\n14 line item(s):\n  Line #2188 - Insens\u00edvel by Tit\u00e3s - 1 x $0.99 = $0.99\n  Line #2189 - Collaborators by Battlestar Galactica - 1 x $1.99 = $1.99\n  Line #2190 - The Woman King by Battlestar Galactica - 1 x $1.99 = $1.99\n  Line #2191 - One Giant Leap by Heroes - 1 x $1.99 = $1.99\n  Line #2192 - The Fix by Heroes - 1 x $1.99 = $1.99\n  Line #2193 - Man of Science, Man of Faith (Premiere) by Lost - 1 x $1.99 = $1.99\n  Line #2194 - Walkabout by Lost - 1 x $1.99 = $1.99\n  Line #2195 - The Moth by Lost - 1 x $1.99 = $1.99\n  Line #2196 - Stranger In a Strange Land by Lost - 1 x $1.99 = $1.99\n  Line #2197 - Par Avion by Lost - 1 x $1.99 = $1.99\n  Line #2198 - Outlaws by Lost - 1 x $1.99 = $1.99\n  Line #2199 - Deus Ex Machina by Lost - 1 x $1.99 = $1.99\n  Line #2200 - Live Together, Die Alone, Pt. 1 by Lost - 1 x $1.99 = $1.99\n  Line #2201 - So Cruel by U2 - 1 x $0.99 = $0.99",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_invoice_detail",
+        "id": "7cc82ccc-14d7-4ffe-aff8-1d76ba96e94a",
+        "tool_call_id": "call_zHmWRWlu6NZm9HNPdkosHkwZ",
+        "status": "success"
+      },
+      {
+        "content": [
+          {
+            "id": "rs_0c025a07924842b4006a717b10dd8c819bb5b92f1e13b7d830",
+            "summary": [],
+            "type": "reasoning",
+            "content": [],
+            "encrypted_content": "gAAAAABqcXsSlXMoadf3rcMs7JZUlHE-uR1CXXZdPT-EMgGpSTCElsFF1yxmA4Cw2EMruE-ajbZBUdE8gT7AC1LhqLfc5vct0Vst12SK5TAw1OrpOjrQsyY9Vnkzaxu8FTsRw1WyETIO_v-sjAgFcRJjxiXoxZjdE7yKCXZBMM0dkZ-9Gyxe12UUkoMXAsWXnVsdZCqY1VjYmab8lxR-RAktrpQPchkXnEIGjh16MA1Mik1l17dYAQMkdR4q9Pp1GEUpFaV3QvOb7zfqYt61BTkuaZBWkDEt7RKeX-fw7h_UVAPX1HCqMNfKBcmnUAKPUBRSfzPpojx6iZdNwFXXhnokfr6R6dMOvpH7pLBf99ChTuaB1kvBwKQgrYwzfIR35m_ONq_-zsZUxyqzWdDvvu2Dxv8lM6NjSqPlF-q7wAzgVfKpBsWRS_PZEEiKnObmc8tgpUe9iFWV6SFE7OjlUs5u4V2AC0pmj8CYnpo2et9K2S-lAqkI7JqUqIdCMCs1e8BUnl1vetQKvBtZCAnC2Cvqdm-3VuUD7YDDxORO5m1E3HaqzsKwMhqLtIXRcS7f-YRFAhx6uJitl74mLGLItxZgBLJuMRV5d1kBTirzTJbFgaB7LuEHaMLI7N47sdj-kbmT3XTTofjrVMd8h3LcKYFlLpx_lzrg0zDZxrmVXWzFLbjwfjNIdlDG2EYiU4kpIA-8SVufq2ctZKj2tlHvc30zdI5TUzN5tn906JywZ0b0zDxUn4puWHvKhwIXHUlNeYnmZU6UVme3bsf0N48zIanf_jANzvbL1loy7lEziNqzjchX5ICU--RPUnpzdKkVZqHTW_1sANH-RsvDvltu9GrIff-g3KWjl9GZsuVWsYtwl1ih1Ev7CEzNtJ3KezS6fePeZO6Id0F8IjAOb-uycBWEd-4_ySfAOGHA2SCBVmRkUwOHoKKFr_CmuNthhTFsFRWvrWElDqG3m0qUwhPRmPIPtqStZmFatx0yqZ39APxW9nN8YKiZaLvAx5G027I57KVz_mwqP-sg8EExKU71rUJ4wruuwM5Ytsvf3xUYXGaB91e1dK7Z1ER8R8bbHicF2EQi2NBpuUCLlSpyO9a485uVubwz4pFIBy-JZer0pCZmwrbiCoDEF_6wnH7W9GCR9SGCS6ZeSDIXSdMzHeOmtZXXbk5VbZPp3559jgpH3IST86iz-Df7jdc2Tg4p1MjkgJjwOoy-9XApCkhYnrgkncnhwbHGuEaEt-mrZNcYvMt8fCaVrjoxumb0weGqvUv6fFZLDMBcJPS3517BWnm8CpIGJ_HN39vHESCWtBczUrCK0wTxPQxPPeIk_rCMPu2_n-MntYJ8HNt96KskHNhB8_4CnyKglxDs_NZ0u1Fn6qoVBrjcH4pFPZlaOZZeM56zOC89xAhmoqFovNU-VaL2ngEkKl155yEfNDnNdtJnwk0FcIOXF-rhSYCcxbXrzwSD0sCcEfIpddFy5rIjI10OcN05FTNQowt0jp6P-cWikDC3cm-nfxfVXQRg6xNkAPng12pf1EBK_pKwsbtVzEYTpHc_YnnszvCov1-CxCxrQRk4sG557AEISHPG5MnQoVWGxHkvb7mncuKaWjK6Q4K9VhFxCABDsAnUdpv7mA7n19_gb50kI4ACtd2-VPyR2NXhrTfBzHIUuql_gK76pRGAoqDEYCKQz1Gei24D3E-Cvo036pSc7fLbBd_MWXJkD57Vp33EMePY80Pt"
+          },
+          {
+            "type": "text",
+            "text": "Hi Helena \u2014 last year (2024), you spent **$0.99**.\n\nYour most recent invoice is:\n\n- **Invoice #404**\n- **Date:** November 13, 2025\n- **Total:** $25.86\n- **14 purchases**, including tracks by Tit\u00e3s, Battlestar Galactica, Heroes, Lost, and U2.",
+            "annotations": [],
+            "id": "msg_0c025a07924842b4006a717b11fbd4819b891192e971cbc2db",
+            "phase": "final_answer"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {
+          "id": "resp_0c025a07924842b4006a717b1026ac819b8f9bfca40bf15c76",
+          "created_at": 1785821968.0,
+          "metadata": {},
+          "model": "gpt-5.6-luna",
+          "object": "response",
+          "service_tier": "default",
+          "status": "completed",
+          "model_provider": "openai",
+          "model_name": "gpt-5.6-luna"
+        },
+        "type": "ai",
+        "name": "chinook_support",
+        "id": "resp_0c025a07924842b4006a717b1026ac819b8f9bfca40bf15c76",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 2333,
+          "output_tokens": 217,
+          "total_tokens": 2550,
+          "input_token_details": {
+            "cache_creation": 639,
+            "cache_read": 1691
+          },
+          "output_token_details": {
+            "reasoning": 134
+          }
+        }
+      },
+      {
+        "content": "Nice. I'm bored of what I've got \u2014 what should I listen to next?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "b3316b30-7469-4114-a4fd-7f5d9ba74cdd"
+      },
+      {
+        "content": [
+          {
+            "id": "rs_0c025a07924842b4006a717b176a44819b8ce48a5cf8bd148f",
+            "summary": [],
+            "type": "reasoning",
+            "content": [],
+            "encrypted_content": "gAAAAABqcXsYeX7fzfPQ8kYDOMgYgMuwlecov29y14yf03lOy7B3hjHONy8nVrLjQHbYsm8_CKVHTtLrUb-JKmmb3qiL6IDJbrLgPIUi-kQhefov9he-cEtUvtassrFIkFtCV5fgNkWY3hr0hSoHDhcvqJ1WTxJIFIDBUri6_jwUBX_3LGjZelG3LxCuEY9lG1tuiKVu345vSyeFRkhx64RUk8Ah54ljl8mLGrPCPwGgq64XScHiy9z9qzQHXZvY2rpfdX9QqEwgKrLfStAo8kRpdoBbUWlAuW9yso5q_PXlLiIe9X9UyinApwJNdip4NplgpCwZz9qLqJXVY9KSAdUnpN4riWtWVBbbR4AzU0c0EEYcibOKDQF2RfBF4yMugGUyYbQD9kGkYGmsRr9D-CsSKManw6-1Q2bi5gOkBnaqnC3hPih5blZZcsc4Don5mrDzmM_vQYpp-AgkvO5QoiJVRr8f4ByeIvS5J6tELtR12P1NA7HMYpgN4tIrjfuQMtfQ4O440RclbSb8vceE0ySObmUePpKhdKOHpf2MJxbQ4YKxQ1x99iPjRwkj_z6Phb9Yf2GIM0BJIiprMXTyNcs5vnxPFDcUmjASfN4_FLtpGwayFNkmoQP9KHu8gMAU6VwQKh0AXa6UXaIoE8rEVGrVI__6SUWK-q8GlwJpJvRZb0ut0nDri-keibQ7rTrJetTMV6E4lWX5HsViNZO5yeyMmLYrHGPh92HOt5fa1BFXvSc-4qWreSBEgS2pJL_m2m3SgUo9RXQx8Co8KhWFcncix5KQ-foOoXTEV6pAB-f3rQLM59P-K1-uzsQ7sp-bhpfAN-lQqBfcI8g3J0uTObFeTLfOIQUnHoApSe82FBzACVaZkCB_qxH0tc2ZkW7-THaFWRvt-b6rLsdK2XMu9GZk0NS1Va9G7O7afHhOQ2ujx7GPKr5ljCIxcEp2thWSx31ukBssi90VuY1dd-9z-eFp3pEm5RG0Z13ROpowu_LjK-Gy_dLPM5E="
+          },
+          {
+            "arguments": "{\"seed_genre\":null,\"limit\":5}",
+            "call_id": "call_POPYeIOPjGbu5FvKuYq41iZx",
+            "name": "recommend_for_me",
+            "type": "function_call",
+            "id": "fc_0c025a07924842b4006a717b180180819b93f08734b4c6bfba",
+            "status": "completed"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {
+          "id": "resp_0c025a07924842b4006a717b16131c819baf59918d5b4f8431",
+          "created_at": 1785821974.0,
+          "metadata": {},
+          "model": "gpt-5.6-luna",
+          "object": "response",
+          "service_tier": "default",
+          "status": "completed",
+          "model_provider": "openai",
+          "model_name": "gpt-5.6-luna"
+        },
+        "type": "ai",
+        "name": "chinook_support",
+        "id": "resp_0c025a07924842b4006a717b16131c819baf59918d5b4f8431",
+        "tool_calls": [
+          {
+            "name": "recommend_for_me",
+            "args": {
+              "seed_genre": null,
+              "limit": 5
+            },
+            "id": "call_POPYeIOPjGbu5FvKuYq41iZx",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 2572,
+          "output_tokens": 46,
+          "total_tokens": 2618,
+          "input_token_details": {
+            "cache_creation": 239,
+            "cache_read": 2330
+          },
+          "output_token_details": {
+            "reasoning": 18
+          }
+        }
+      },
+      {
+        "content": "5 recommendation(s):\n  #2857 - A Tale of Two Cities by Lost ($1.99) - more from Lost, an artist they already buy\n  #1435 - Too Young To Die by Jamiroquai ($0.99) - more from Jamiroquai, an artist they already buy\n  #205 - Jorge Da Capad\u00f3cia by Caetano Veloso ($0.99) - more from Caetano Veloso, an artist they already buy\n  #2926 - Zoo Station by U2 ($0.99) - more from U2, an artist they already buy\n  #2819 - Battlestar Galactica: The Story So Far by Battlestar Galactica ($1.99) - more from Battlestar Galactica, an artist they already buy",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "recommend_for_me",
+        "id": "a9a88276-2f67-4c93-bac5-88ebff5a9b61",
+        "tool_call_id": "call_POPYeIOPjGbu5FvKuYq41iZx",
+        "status": "success"
+      },
+      {
+        "content": [
+          {
+            "type": "text",
+            "text": "Try **\u201cA Tale of Two Cities\u201d by Lost** for **$1.99** \u2014 it\u2019s another pick from an artist you already buy. You might also enjoy **\u201cZoo Station\u201d by U2** for **$0.99**.",
+            "annotations": [],
+            "id": "msg_0c025a07924842b4006a717b1a3ab4819b8ff1d6b67317d862",
+            "phase": "final_answer"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {
+          "id": "resp_0c025a07924842b4006a717b193440819b8955c99fcc4dbbb7",
+          "created_at": 1785821977.0,
+          "metadata": {},
+          "model": "gpt-5.6-luna",
+          "object": "response",
+          "service_tier": "default",
+          "status": "completed",
+          "model_provider": "openai",
+          "model_name": "gpt-5.6-luna"
+        },
+        "type": "ai",
+        "name": "chinook_support",
+        "id": "resp_0c025a07924842b4006a717b193440819b8955c99fcc4dbbb7",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 2799,
+          "output_tokens": 56,
+          "total_tokens": 2855,
+          "input_token_details": {
+            "cache_creation": 227,
+            "cache_read": 2569
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Actually there's a track on invoice 404 I never downloaded. I want a refund.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "26286b0d-6976-4315-ab31-0ed9923a34e5"
+      },
+      {
+        "content": [
+          {
+            "id": "rs_0c025a07924842b4006a717b1d9ee0819bab36c3c72ae8f8b8",
+            "summary": [],
+            "type": "reasoning",
+            "content": [],
+            "encrypted_content": "gAAAAABqcXseOdPar9fZBb-d4z9X2Ghg7H_0y5TsvdFJ1DLagQyv30xjvwH0e_g0Opfgo4Q2J8HmeK-rg5Hse9FOlFb7Mgu2mqlLb6KHXyLbruU-UimGRBOLDiXjRj2Nn-DhXFOl25ZRjQ8dJP7P6m-ARHCu-WpGrWWxlFnUadUt62wYuct_JvCGF_RaxFXo9VH6dsl1H6H8MzXBmazG7M8oVqdVJtV06DS2NDFS_OfyvPNaL63co-hcJhCS4e-RJaJGYBAUKOrf9WmakviWUQcnBxkzfht5xnOzWerWDA46hOXrjXlUevGuEL9-PNGDgyfwifeifFczUZ20vrGsMfLkfYF_DnEuHjKADEmw3MWfNM723lGFLy_8ZfcthgLjTZH_cRInfudtgobpLmB8R9IRrk5XAqJ4_72U-eXMWQW4hX1PQ-X6LZYnBdMzbXBvwNdThV6_HcX_SP14NAEOyxIBMViBmtwDDU766zPeUxENFvaFJhILPvZHm9AkToG7YURBj8dem00K_xBU_h8jVMasHFr2dg4lY8At1qU99utTTacIKq0MG6XN4TgeZWZNI3V1SDjLJYPwb59MBzlcI1wb4PcBYJLQDqr_yCRUyxyJoFSSFp4WLVoF7Xlon7hbbaORyMxU5mKcKC_8nDPLc3IDHli1fXHfJQjxObL5BAxo_wTVWbqXWXWplV3-XU1f9Z23VsAnlBmC6knPfnlkoNYE7LBxuwh-1y7RrKShgqbwbpI-F4bYELtGhQ4_5koTCIpeAnHBi94Y4j1k4UUKCKnwCCVoWAvRpu62PRqO7keEL0uXI1pHp07rjhcJFXyG8uOxMRPZjLNWPScDteSFB9v1OeFCLDYXyBz-CEat3cU725ZQy-oYaS9gJYSaJeW5sdOwig2_WuXfW23qNYCgzIziNFy0jjGKdSlG1LZSK5cuTh-K0rFXT-fv-IAZn-SeWt0dDaiYJr1wJWIvBDtpfP1IbuenB84Q-u_zDhneqqa861ODGAwQY408gxVKTY65MuBGBga-zB_4WnugAXewtTU8aMV8nEJtrrs-PKICpQukWHOrCbKAHBW0bsotJdPYE4qfHJ4YTt3TwRJc73hJ-uOoksO0QBR7MdcPYEDvmXeS6882C38usFhNv6Yt9w0-7qqO5Fhf7sQhEWDS5wX5kQlQR7-IqlEEbQ=="
+          },
+          {
+            "type": "text",
+            "text": "Which track on invoice **#404** would you like a refund for? I\u2019ll submit the request for that specific purchase.",
+            "annotations": [],
+            "id": "msg_0c025a07924842b4006a717b1e0de4819bbb62abead4f0cd5a",
+            "phase": "final_answer"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {
+          "id": "resp_0c025a07924842b4006a717b1cb7d0819b9982855c961e57fd",
+          "created_at": 1785821980.0,
+          "metadata": {},
+          "model": "gpt-5.6-luna",
+          "object": "response",
+          "service_tier": "default",
+          "status": "completed",
+          "model_provider": "openai",
+          "model_name": "gpt-5.6-luna"
+        },
+        "type": "ai",
+        "name": "chinook_support",
+        "id": "resp_0c025a07924842b4006a717b1cb7d0819b9982855c961e57fd",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 2878,
+          "output_tokens": 70,
+          "total_tokens": 2948,
+          "input_token_details": {
+            "cache_creation": 79,
+            "cache_read": 2796
+          },
+          "output_token_details": {
+            "reasoning": 39
+          }
+        }
+      }
+    ],
+    "customer_brief": "CUSTOMER\nYou are speaking with Helena Hol\u00fd in Czech Republic. Greet them by first name once, then stop \u2014 repeating their details back at them reads as a script, not service. Never state their email or address unless they ask for it.\nTheir account is assigned to Steve Johnson. You may share that name if asked. Knowing it does not mean you have contacted them \u2014 only a successful escalate_to_human call does that."
+  },
+  "tools_called": [],
+  "child_runs": [
+    {
+      "name": "HumanInTheLoopMiddleware.after_model",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "ToolCallLimitMiddleware.after_model",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "PIIMiddleware[credit_card].after_model",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "RefundApprovalPreflight.after_model",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "ChatOpenAI",
+      "type": "llm",
+      "error": null
+    },
+    {
+      "name": "CustomerContextMiddleware.awrap_model_call",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "ModelRetryMiddleware.awrap_model_call",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "model",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "PIIMiddleware[credit_card].before_model",
+      "type": "chain",
+      "error": null
+    },
+    {
+      "name": "CustomerContextMiddleware.before_agent",
+      "type": "chain",
+      "error": null
+    }
+  ]
+}

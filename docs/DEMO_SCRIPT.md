@@ -168,9 +168,13 @@ The hedge is not weakness. Overclaiming here is what makes a director quietly di
 
 ### 2c. Refund, and the human gate (2:00)
 
-> **"Actually there's a track on invoice 404 I never downloaded. I want a refund."**
+> **"Actually there's a track on invoice 404 I never downloaded — The Woman King. I want a refund."**
 
-Expect the agent to gather detail, draft the request, and **stop** at the human-in-the-loop interrupt.
+Expect the agent to look up the line, draft the request, and **stop** at the human-in-the-loop interrupt. The card reads: *Refund $1.99 · The Woman King by Battlestar Galactica · Invoice #404 (2025-11-13) · Line #2190.*
+
+> ⚠️ **Name the track in the utterance.** Recorded without it, the agent replies *"Which track on invoice #404 would you like a refund for?"* and the gate doesn't fire until you answer. That's correct behavior — it won't guess which of fourteen lines you meant — but it costs a turn, and 2c has a two-minute budget. **If you do get the question live, don't treat it as a stumble**: "good — it won't pick a line for me, because it would be guessing which purchase to refund," then name the track and continue. That recovery is stronger than the clean path.
+
+> ⚠️ **"by Battlestar Galactica" is not a bug.** Chinook models TV episodes as tracks with the show in the artist field. If someone squints at it, say that in one sentence and move on; being caught unaware by your own demo data is the version that costs you.
 
 > "Two things. It stopped — anything touching money is gated, the agent prepares the action and a human approves. That's one line of middleware and it's usually the difference between a pilot that ships and one that dies in legal review. I'd add that the framework makes the *gate* concise; production still needs policy, audit, identity, and idempotency around it.
 >
@@ -480,6 +484,10 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 ⚠️ **Screenshot all of these today.** Base traces on the free plan are retained **14 days**, and these were recorded on 3 August, so they expire around **17 August**. The narrative in 5.3 is the strongest thing in the demo and it currently rests on data with an expiry date. A PNG in the repo has no expiry.
 
+> ✅ **Contents already exported** — `reports/traces/` holds one JSON per run plus [`SUMMARY.md`](../reports/traces/SUMMARY.md), pulled from the API by `scripts/export_traces.py`. That covers the *substance* if retention lapses or the network fails: the export re-derives each trajectory from LangSmith rather than restating this document, and it confirms the claim 5.3 rests on — **all three before-traces called zero tools**, the after-trace called `escalate_to_human`. What it does not give you is something to put on screen. **The screenshots are still yours to take**, and they're a two-minute job.
+>
+> Worth knowing from the export: `before-account-deletion` has the fabricated handoff sentence **duplicated verbatim** in one reply. Don't read the whole thing aloud — quote the first sentence and move to the tool list, which is the point.
+
 **Before — the fabricated handoff.** Reply claims the handoff; tool list is empty. Verified: zero tool runs in each trace.
 
 | Case | Trace |
@@ -496,7 +504,21 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 **Dataset:** [`chinook-support-v1`](https://smith.langchain.com/datasets/37b06b66-dfd9-4cdf-a6a8-8e9f2556b6c7) — 30 examples, six splits matching the eval slices.
 
-Still to capture: the Block 2 multi-turn customer thread, the injection attempt, and the flat-vs-supervisor experiment comparison.
+**Block 2 — the customer thread.** One thread, recorded 4 Aug via `scripts/capture_demo_traces.py`. Re-run it to refresh. Thread `019fcb48-9d4a`.
+
+| Turn | Trace |
+|---|---|
+| Billing — spend + latest invoice | [`019fcb48-9d4d`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-9d4d-7901-b046-6f34870b65ea) |
+| Discovery — recommendations | [`019fcb48-c4ab`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-c4ab-7eb1-bcce-b06288d832bc) |
+| Refund, vague — **asks which track** | [`019fcb48-e427`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-e427-7f23-814e-37fd0305d1d9) |
+
+**Block 3 — the injection attempt.** Reply: *"I can only access the account you're signed in to, not Richard Cunningham's invoices."*
+
+| Case | Trace |
+|---|---|
+| Cross-tenant request refused | [`019fcb48-f004`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-f004-77b1-8583-9d452eeef096) |
+
+Still to capture: the flat-vs-supervisor experiment comparison view.
 
 ---
 
