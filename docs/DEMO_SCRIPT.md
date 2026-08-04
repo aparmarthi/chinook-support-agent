@@ -524,7 +524,19 @@ Still to capture: the flat-vs-supervisor experiment comparison view.
 
 ## 12. Pre-flight
 
-- [ ] `langgraph dev` running, graph loaded, Studio open
+**The whole loop, in order — there is no front end and there shouldn't be one (ADR-008):**
+
+1. `langgraph dev` — port 2024.
+2. `python scripts/setup_studio_assistants.py` — **required after every restart.** Assistants live in the dev server's store, so a restart loses them.
+3. Open `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`.
+4. Select **"Helena Holý (customer 6)"** in the assistant dropdown. Identity comes from the assistant; the context panel stays empty.
+5. Type the utterance. Studio streams the reply, the graph view, tool calls, and the approval card. The trace lands in the `chinook-support-agent` project on its own — `LANGSMITH_TRACING=true` in `.env` is the only wiring.
+
+Two tabs, and know which one does what: **Studio** carries Block 2 and the HITL pause, **LangSmith** carries Block 5. Switching tenant for Block 3 is the dropdown, not a form.
+
+> ⚠️ **Third entry in that dropdown.** The server auto-creates a bare assistant per graph, it sorts *above* the two named ones, and it used to throw `AuthContext.__init__() missing 1 required positional argument` — a traceback, mid-demo, from a misclick. `setup_studio_assistants.py` now patches it to carry customer 6 and renames it **"chinook_support (defaults to Helena)"**, so an accident lands on the wrong tenant instead of a stack trace. It reverts on restart, which is the real reason step 2 is not optional.
+
+- [ ] `langgraph dev` running, assistants re-provisioned, Studio open
 - [ ] Five tabs staged in presentation order
 - [ ] **Before/after traces open in two tabs, side by side** — 5.3 is the block that cannot be improvised
 - [ ] **Screenshots of both traces saved in the repo**, in case retention or the network fails you

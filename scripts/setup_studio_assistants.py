@@ -107,6 +107,46 @@ def _stale_demo_assistants(keep: set[str]) -> list[dict]:
     ]
 
 
+def defuse_default_assistant() -> str | None:
+    """Give the auto-created `chinook_support` assistant a fallback identity.
+
+    The server mints one assistant per graph with empty context, it sorts above
+    the named ones in Studio's dropdown, and selecting it raises
+    ``AuthContext.__init__() missing 1 required positional argument`` from deep
+    inside the framework (see FRICTION_LOG). It cannot be deleted for good —
+    restarting `langgraph dev` recreates it — so the next best thing is to make
+    a misclick behave as Helena rather than end the demo.
+
+    Identity on the Studio path is configuration either way; this changes which
+    configuration an accident lands on, not whether the boundary exists.
+    """
+    everything = requests.post(
+        f"{BASE_URL}/assistants/search",
+        json={"limit": 100},
+        timeout=30,
+        headers=AUTH,
+    ).json()
+    default = next(
+        (
+            a
+            for a in everything
+            if a.get("graph_id") == GRAPH_ID and "(customer " not in (a.get("name") or "")
+        ),
+        None,
+    )
+    if default is None:
+        return None
+
+    name = f"{GRAPH_ID} (defaults to Helena)"
+    requests.patch(
+        f"{BASE_URL}/assistants/{default['assistant_id']}",
+        json={"name": name, "context": {"customer_id": DEMO_CUSTOMERS[0]}},
+        timeout=30,
+        headers=AUTH,
+    ).raise_for_status()
+    return name
+
+
 def main() -> None:
     try:
         requests.get(f"{BASE_URL}/ok", timeout=5).raise_for_status()
@@ -116,6 +156,10 @@ def main() -> None:
     keep = {assistant_id_for(cid) for cid in DEMO_CUSTOMERS}
     for customer_id in DEMO_CUSTOMERS:
         print(f"  ready: {upsert_assistant(customer_id)}")
+
+    defused = defuse_default_assistant()
+    if defused:
+        print(f"  defused: {defused}")
 
     for stale in _stale_demo_assistants(keep):
         requests.delete(
