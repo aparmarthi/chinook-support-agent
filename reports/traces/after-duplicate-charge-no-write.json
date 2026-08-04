@@ -1,7 +1,7 @@
 {
-  "label": "after-duplicate-charge",
-  "run_id": "019fce2d-5809-7971-b630-4b7601ac4c59",
-  "recorded": "2026-08-04 19:08:26.542483+00:00",
+  "label": "after-duplicate-charge-no-write",
+  "run_id": "019fc63e-9d5b-7222-923e-58db84179650",
+  "recorded": "2026-08-03 06:10:20.123829+00:00",
   "inputs": {
     "messages": [
       {
@@ -11,12 +11,12 @@
     ]
   },
   "outputs": {
-    "customer_brief": "CUSTOMER\nYou are speaking with Helena Hol\u00fd in Czech Republic. Greet them by first name once, then stop \u2014 repeating their details back at them reads as a script, not service. Never state their email or address unless they ask for it.\nTheir account is assigned to Steve Johnson. You may share that name if asked. Knowing it does not mean you have contacted them \u2014 only a successful escalate_to_human call does that.",
+    "customer_brief": "CUSTOMER\nYou are speaking with Helena Hol\u00fd in Czech Republic. Their assigned support representative is Steve Johnson. Greet them by first name once, then stop \u2014 repeating their details back at them reads as a script, not service. Never state their email or address unless they ask for it.",
     "messages": [
       {
         "additional_kwargs": {},
         "content": "I think I was charged twice for the same album last year.",
-        "id": "89adad74-cf26-48e6-8195-b79d12132b39",
+        "id": "6fd59ea8-9b0c-46e0-8ac7-396edae52076",
         "response_metadata": {},
         "type": "human"
       },
@@ -25,26 +25,26 @@
         "content": [
           {
             "content": [],
-            "encrypted_content": "gAAAAABqcjis0Fo1n4svBL3s01nk6w_t6DQMVyDUqmn-S37NOJ_kiZ19ib9m6FihMJAnut5lwGgzxqH6pkMVSYYQHcwNsnIB_S8QontlbZvtdscI95p-ZlWMJBxcK8eiH-HtyqU4AwIlLEqcowCJD11tsgzny5IuxVT5f8_s1eC56W4AHq6KeFTA0GFhgxZCUIgLsbn7mMK8e3p_nv4L-Ws_Df4b4Zx_UBTVL-Wq34Akokg61fP0hZvd6jz43zyNqxm51sH-CsKbZ49OpXkUrmn1_dSQjbpln66yj0ZwfrwfCBtIOpFYct3YeQBP4ga2AGEg_0tTvL53W5kFvZBuXtmt2RdpDSVX_VLCRX1xT5tdDOwVUNw7QCF1ZsDcIlPYmowjllB89W_Yp6aZsM8eNmlFc0kwTWejt0RyRvq67cEDSFXlGkUdtUqmu2c-DoyImski1tm1fVnvS00eWZCQlY6BaNMYz0nTaVIJNWzPGPqd9XsLsjrzt9zGzMPLYaPEo3ODGVRh_jxpBUwya5zdIcJxKjiBscZ3kBCaVer_vBEgnHhtmfyhHlkQBHG-OcOC9HvmL2OosWRs32R4aFBxweuCBeoeRuq1sV5avd77j6y2Tc_qiSmuwZSFFL9rxg7_7TT8CyxgBVH5Zb9WVuTM-HIVZsclmnXeoJOhjaXGWZfkHmXFTvPR7D4ge_L80gC-_1KQHpOVv-DQd2ALmwb7Txq9TcSgiwfH7-pvTgZG9t3nrV4r001mupN3Rm9T1LIcCVhfR5U_i5yOZVXynr1xR_xNgqMJVVQxOZr_drbD4QGQy116ddhq8d231-600Rz69_-g5Upg5gAfd8tEKlrpBvJC_u-vWhRsbMoCmmdaasvooJvnkR8iDfOg6O6NMdSlrENqW5ayyEVBJlyYzN9wjCHVB3q75MJ6KV-QSkK3PvNk9slRgSYGfwtC7veVkqY7Hvc-ZJshy6DBqINgB4DWr669g94sFEcG50O_pzAoGfO3qjl7FEIXrifcsk7djB9EkpY78U-f2PwDtVzeO_oZc1C5UigMVHQOVeNk7terpk8i97iWkS9ot-W2uJWAy7LTcy6mTFHOUcNCVO5UVvZCTLyhTBjyzq93me5rfDDYDLjxT9jxchtPLSOfLUa36efmJrbYUi1GxpZMHjft-F0nZp6GRNREixEtvA==",
-            "id": "rs_0976c700010eda6a006a7238ab1ae88198a474042c72c959c5",
+            "encrypted_content": "gAAAAABqcDDP5dXgrFP_Dxc596snhIRm5iuFiPVHsizUx-EKaM9mCGrkrsrZWlt5zWvoTSswRQb0iln5KsqEHRQKX0TCmB-fjJ-xqHKwlJlTa0qRrN9wLuE-NWe2i_sEUv9PzMMI5dZp94qaVh2dkIoeTsg1Ib7KjBCy7jb06ZDX0lTJdZQIkVJUA9XT5hvQN1U2tfjnEl3QTCN3xgZzbAL3gfitTV9QPiTs31Jw9r7-TJ0myf86Wh8U7-AeQs6DA7OThdEzikhAcxAPX-59W1FhMJauv-H-FfFHjiOy0JQ_GyK3PIrkqBLuVVBDhu5952ea10eZFPuyE51ZWaGF6t-Iji_8Z94egm1gRkrsRXOvMquqC9IvZgPHuFV5JM3jZ-1CVHxPY6RQ8zBhRjrGN2qyYyntb67S-UZECTKyEGHVRi6rym8gZmonO6QzrYEDSsNByR3pyeKyEWXMBgVZJnnpzgOjhrSiC2D8xbogQY-5qpBEdiNI7mDeQuS3jSmKwDxN4vUAJo1OF4a4x8-7gug8QVmuPOxPrPFGbua01gYFgpJdAjcOMtUAkLlEXCTNKW2FNHiBafH9AL8GSprZHb3fw2enY1feUdd_BVWi7J480E3CN6kXGUpodr6tzhMLZRD3UdsO7wFqDn965WRt_W7h6GGoc5v44p_4U0EM71szTQvf5LA7WSU8RlBAkErUkN-jhaq-ncX67S2i1L3mscFFg4ZuKvXKHUiCRZki51Vdr68JOV3RDNW_AfBa59ZHGbu15xcPcZeo8LYC20bqe8A53J2ZtOlEuXY7WCap-pHyYjnQyQxAC7jQFjWGht7HoIkavlHn1wVyMdY-5e7veEJI-7_of_HuAS6jPrl191Xi9Vw_brsh6PV_qnVITMF4pcR2Ij4NMjJMupWARrmha-HenFVFJILK52fTY2GqgIRjmqlFgwb_kPYX0eS0b8zrbkQ-U_BbJoLMLEL3zmERzBuMV0R0Gb1L-Z7N6GJ7JNZcrsIH1qiBBgsvES-ggev9fd6q_duRm1jtQSAt1PlB47MJVr5lAmxPQyEprA9NOsyHB7iOjLPhfv2QZoz4MhmqjDMfAcaTf4KDAdCbdofMdT3sI8A1qSgRMMj5u_ghw4zzQ1EnCt5KSXsp6N-NfbnN6QIJbIXehCwmQpm5v9bRcegTJkfByrSd0bc39zcp214ZQ3Sh-WkYWDqJVuw41VLdlrPrNH459OY4m1R-3SaSl7TC-84ZsELfScvO5n1jtYBNJPPXS8zmx5ctnyYtMicfYnIQqqLpj4T3BVKTFgoNM66Q1WuAQFdbJQ==",
+            "id": "rs_043436a7d639d99e006a7030ce3540819884c4a98edd40b881",
             "summary": [],
             "type": "reasoning"
           },
           {
-            "arguments": "{\"summary\":\"Customer Helena Hol\u00fd believes she was charged twice for the same album last year and needs the duplicate-charge concern investigated.\",\"urgency\":\"normal\"}",
-            "call_id": "call_wn541YqEUiway9nVpFgsdrcC",
-            "id": "fc_0976c700010eda6a006a7238aba2f88198b27e6be8f124d33a",
+            "arguments": "{\"summary\":\"Customer believes they were charged twice for the same album last year and needs a colleague to investigate possible duplicate billing. Please review the account and contact Helena with the findings.\",\"urgency\":\"normal\"}",
+            "call_id": "call_RpxLVOgcoT2DESfzeKGsrboR",
+            "id": "fc_043436a7d639d99e006a7030cf56a08198aad1e357e2679c5a",
             "name": "escalate_to_human",
             "status": "completed",
             "type": "function_call"
           }
         ],
-        "id": "resp_0976c700010eda6a006a7238aaa4d481989d649413596302db",
+        "id": "resp_043436a7d639d99e006a7030cc44d081989e8e8f8526ce3dca",
         "invalid_tool_calls": [],
         "name": "chinook_support",
         "response_metadata": {
-          "created_at": 1785870506.0,
-          "id": "resp_0976c700010eda6a006a7238aaa4d481989d649413596302db",
+          "created_at": 1785737420.0,
+          "id": "resp_043436a7d639d99e006a7030cc44d081989e8e8f8526ce3dca",
           "metadata": {},
           "model": "gpt-5.6-luna",
           "model_name": "gpt-5.6-luna",
@@ -56,10 +56,10 @@
         "tool_calls": [
           {
             "args": {
-              "summary": "Customer Helena Hol\u00fd believes she was charged twice for the same album last year and needs the duplicate-charge concern investigated.",
+              "summary": "Customer believes they were charged twice for the same album last year and needs a colleague to investigate possible duplicate billing. Please review the account and contact Helena with the findings.",
               "urgency": "normal"
             },
-            "id": "call_wn541YqEUiway9nVpFgsdrcC",
+            "id": "call_RpxLVOgcoT2DESfzeKGsrboR",
             "name": "escalate_to_human",
             "type": "tool_call"
           }
@@ -67,25 +67,25 @@
         "type": "ai",
         "usage_metadata": {
           "input_token_details": {
-            "cache_creation": 17,
-            "cache_read": 1470
+            "cache_creation": 0,
+            "cache_read": 1294
           },
-          "input_tokens": 1490,
+          "input_tokens": 1297,
           "output_token_details": {
-            "reasoning": 38
+            "reasoning": 57
           },
-          "output_tokens": 88,
-          "total_tokens": 1578
+          "output_tokens": 117,
+          "total_tokens": 1414
         }
       },
       {
         "additional_kwargs": {},
-        "content": "Handoff #2 queued for Steve Johnson, urgency normal. Status: queued. Tell the customer a colleague will pick this up \u2014 not that it is resolved, and not that anyone has been notified yet.\nCustomer: Helena Hol\u00fd (#6, Czech Republic).\nSummary: Customer Helena Hol\u00fd believes she was charged twice for the same album last year and needs the duplicate-charge concern investigated.",
-        "id": "62bdfa4c-9a23-4717-b991-e3eaa3af72ab",
+        "content": "Handoff prepared for Steve Johnson (steve@chinookcorp.com), urgency normal.\nCustomer: Helena Hol\u00fd (#6, Czech Republic).\nSummary: Customer believes they were charged twice for the same album last year and needs a colleague to investigate possible duplicate billing. Please review the account and contact Helena with the findings.",
+        "id": "3fbea0e3-6116-49d7-8211-3640eaf8deac",
         "name": "escalate_to_human",
         "response_metadata": {},
         "status": "success",
-        "tool_call_id": "call_wn541YqEUiway9nVpFgsdrcC",
+        "tool_call_id": "call_RpxLVOgcoT2DESfzeKGsrboR",
         "type": "tool"
       },
       {
@@ -93,18 +93,18 @@
         "content": [
           {
             "annotations": [],
-            "id": "msg_0976c700010eda6a006a7238ad29d48198ab4ed91f8f2e252f",
+            "id": "msg_043436a7d639d99e006a7030d19678819896e3c6da7b7e258c",
             "phase": "final_answer",
-            "text": "I\u2019ve passed this to Steve Johnson for investigation as a possible duplicate charge from last year. It isn\u2019t resolved yet; a colleague will review it and follow up.",
+            "text": "Hi Helena \u2014 I\u2019m handing this to Steve Johnson to investigate the possible duplicate charge from last year. He\u2019ll review your account and follow up with you.",
             "type": "text"
           }
         ],
-        "id": "resp_0976c700010eda6a006a7238ac7bb08198b916065ea8e967c6",
+        "id": "resp_043436a7d639d99e006a7030d0a54c8198ba5688e2024ab371",
         "invalid_tool_calls": [],
         "name": "chinook_support",
         "response_metadata": {
-          "created_at": 1785870508.0,
-          "id": "resp_0976c700010eda6a006a7238ac7bb08198b916065ea8e967c6",
+          "created_at": 1785737424.0,
+          "id": "resp_043436a7d639d99e006a7030d0a54c8198ba5688e2024ab371",
           "metadata": {},
           "model": "gpt-5.6-luna",
           "model_name": "gpt-5.6-luna",
@@ -117,15 +117,15 @@
         "type": "ai",
         "usage_metadata": {
           "input_token_details": {
-            "cache_creation": 180,
-            "cache_read": 1487
+            "cache_creation": 196,
+            "cache_read": 1294
           },
-          "input_tokens": 1670,
+          "input_tokens": 1493,
           "output_token_details": {
             "reasoning": 0
           },
-          "output_tokens": 37,
-          "total_tokens": 1707
+          "output_tokens": 35,
+          "total_tokens": 1528
         }
       }
     ]
@@ -160,12 +160,12 @@
       "error": null
     },
     {
-      "name": "CustomerContextMiddleware.awrap_model_call",
+      "name": "CustomerContextMiddleware.wrap_model_call",
       "type": "chain",
       "error": null
     },
     {
-      "name": "ModelRetryMiddleware.awrap_model_call",
+      "name": "ModelRetryMiddleware.wrap_model_call",
       "type": "chain",
       "error": null
     },
@@ -185,12 +185,12 @@
       "error": null
     },
     {
-      "name": "ToolRetryMiddleware.awrap_tool_call",
+      "name": "ToolRetryMiddleware.wrap_tool_call",
       "type": "chain",
       "error": null
     },
     {
-      "name": "TenantResultGuard.awrap_tool_call",
+      "name": "TenantResultGuard.wrap_tool_call",
       "type": "chain",
       "error": null
     },
@@ -225,12 +225,12 @@
       "error": null
     },
     {
-      "name": "CustomerContextMiddleware.awrap_model_call",
+      "name": "CustomerContextMiddleware.wrap_model_call",
       "type": "chain",
       "error": null
     },
     {
-      "name": "ModelRetryMiddleware.awrap_model_call",
+      "name": "ModelRetryMiddleware.wrap_model_call",
       "type": "chain",
       "error": null
     },

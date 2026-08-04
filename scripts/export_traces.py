@@ -32,11 +32,15 @@ RUNS: dict[str, str] = {
     "before-duplicate-charge": "019fc63c-4062-7032-8fc2-7dffc5ce4798",
     "before-missing-download": "019fc63c-47dd-7483-a7d2-f4f96c3130bf",
     "before-account-deletion": "019fc63c-5df2-7c83-9c5a-56875f0fa3c7",
-    "after-duplicate-charge": "019fc63e-9d5b-7222-923e-58db84179650",
-    "block2-billing": "019fcb48-9d4d-7901-b046-6f34870b65ea",
-    "block2-discovery": "019fcb48-c4ab-7eb1-bcce-b06288d832bc",
-    "block2-refund-asks-first": "019fcb48-e427-7f23-814e-37fd0305d1d9",
-    "block3-injection": "019fcb48-f004-77b1-8583-9d452eeef096",
+    # Superseded 4 Aug: recorded when escalate_to_human wrote nothing, so it
+    # shows the tool call without the row behind it (ADR-024). Kept because the
+    # comparison between the two after-traces is itself the point.
+    "after-duplicate-charge-no-write": "019fc63e-9d5b-7222-923e-58db84179650",
+    "after-duplicate-charge": "019fce2d-5809-7971-b630-4b7601ac4c59",
+    "block2-billing": "019fce2c-fccd-7843-81ca-ac3011e137b3",
+    "block2-discovery": "019fce2d-14eb-7a42-8f5c-4a4ace3c9392",
+    "block2-refund-approval-gate": "019fce2d-24aa-7f50-a95c-1aa8455eaf91",
+    "block3-injection": "019fce2d-3c5b-7fb1-9ca7-7f6da30e2605",
 }
 
 

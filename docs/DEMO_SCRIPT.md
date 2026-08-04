@@ -332,6 +332,14 @@ Open the **after** trace beside it: same question, `escalate_to_human` present i
 
 > "Same case after the fix. The difference between those two screens is the whole product."
 
+**Then close the gap before someone opens it (0:30).** ⚠️ **Say this unprompted.** The tool used to return formatted prose and write nothing, which made the grader circular — it passed a claim as backed because a tool appeared in the trace, while the tool performed no action. Fixed on the Monday before the demo, and the honest version is stronger than the clean one:
+
+> "One more turn of the same screw, because the first version of this fix wasn't good enough. The grader passes a claim when the matching tool fired — but `escalate_to_human` resolved the rep, formatted a summary, and wrote nothing. So the before-and-after was really *'the model invented an action'* versus *'the model called a function that also performed none.'* Same bug, one level down, and my own evaluator couldn't see it because it was grading the trace rather than the effect.
+>
+> It writes a durable row now, with the same idempotency key as refunds so a retry doesn't queue the customer twice. And the status is **`queued`, not `sent`** — nobody is paged, nothing is emailed. There's no ticketing system behind this, and claiming one would be the same lie at a larger scale. What I'm willing to say is that there's a durable record a human owes this customer an answer. That's the honest floor."
+
+> ✅ **If asked "so did Steve actually get it?"** — the answer is no, and say so flatly: *"No. There's a row in a queue with his name on it. Wiring that to a real ticketing system is an afternoon, and until someone does, 'notified' would be a claim I can't back — which is the exact failure this whole block is about."* That answer is worth more than a working integration would be.
+
 ⚠️ **Be precise about the fix, because Conrad will ask.** It was two things and neither alone was sufficient: a prompt section stating that an action has only happened once its tool returns, and a code evaluator so the fix is enforced rather than hoped for. The root cause is worth naming — two correct components composed badly. Personalization middleware supplied the rep's name, and the prompt described how to phrase a handoff, so the model had everything it needed to write a convincing sentence and no reason to make the call. **Say "two correct pieces composed into a wrong behavior," not "the model hallucinated."** The second is both vaguer and less true.
 
 **4. Experiments (2:00).** Open the comparison view.
@@ -460,6 +468,8 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 **"Why not just use `@auth.on.threads`?"** — ⚠️ **The likeliest hard question in the room, because Conrad works on this.** You already answered it in Block 3; if it still comes, don't re-explain, confirm and add the part you left out. It *is* used — `langgraph.json` points at `src/security/auth.py`, and `tests/test_native_auth.py` proves the denial lands before a run exists. The gateway stayed because Studio is exempt from custom auth by default and authenticates the developer rather than the customer, and `disable_studio_auth: true` returns 401 to Studio itself. The part worth adding: **the server warns you about this at startup.** With handlers on threads only, it logs that `assistants`, `crons`, and `store` have no authorization handler and calls it "a common source of cross-user data leaks," with the default-deny snippet to fix it. That warning is the best security DX in the stack and it's in the friction log as a *positive*. If asked what you'd change for production: the customer identity should come from the verified session via `langgraph_auth_user` rather than from run context, which removes the last place identity is configuration.
 
+**"Did the rep actually get notified?"** — ⚠️ **Answer no, immediately, with no hedging.** A `handoff_requests` row is queued with the rep's name, resolved from the customer's own account; status is `queued` and nothing is paged or emailed. There is no ticketing system in this build and pretending otherwise would repeat the exact failure Block 5.3 is about. The follow-up worth volunteering: the tool used to write *nothing at all*, which made the grader circular — it counted a claim as backed because a tool appeared in the trace, while the tool had no effect. That was found and fixed two days before this demo, and it is in the decision log as ADR-024.
+
 **"Can prompt injection still make it lie?"** — Yes, it can produce incorrect prose. It cannot cause an unauthorized read or write. Different problem, different evaluators. Answering "no" here is a trap.
 
 **"Why not text-to-SQL?"** — ADR-003. Security primarily; also latency and reviewability. Unanticipated questions escalate, which is the correct failure mode for support.
@@ -510,23 +520,28 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 | Case | Trace |
 |---|---|
-| Duplicate charge | [`019fc63e-9d5b`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fc63e-9d5b-7222-923e-58db84179650) |
+| Duplicate charge — **use this one** | [`019fce2d-5809`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fce2d-5809-7971-b630-4b7601ac4c59) |
+| Superseded — tool called, nothing written | [`019fc63e-9d5b`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fc63e-9d5b-7222-923e-58db84179650) |
+
+> ✅ **Recaptured 4 Aug, and the old one is worth keeping.** Both traces show `escalate_to_human` in the tool list and look identical in LangSmith; only the newer one has a `handoff_requests` row behind it. That is the ADR-024 point made visually — **a trace proves a tool was called, not that anything happened.** If you want one extra beat in 5.3, put them side by side and ask the room which is which. Verified reply: *"I've passed this to Steve Johnson for investigation… It isn't resolved yet; a colleague will review it and follow up."* Row: `#2 · customer 6 · Steve Johnson · normal · queued`.
 
 **Dataset:** [`chinook-support-v1`](https://smith.langchain.com/datasets/37b06b66-dfd9-4cdf-a6a8-8e9f2556b6c7) — 30 examples, six splits matching the eval slices.
 
-**Block 2 — the customer thread.** One thread, recorded 4 Aug via `scripts/capture_demo_traces.py`. Re-run it to refresh. Thread `019fcb48-9d4a`.
+**Block 2 — the customer thread.** One thread, recaptured 4 Aug via `scripts/capture_demo_traces.py`. Re-run it to refresh. Thread `019fce2c-fcc6`.
 
-| Turn | Trace |
-|---|---|
-| Billing — spend + latest invoice | [`019fcb48-9d4d`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-9d4d-7901-b046-6f34870b65ea) |
-| Discovery — recommendations | [`019fcb48-c4ab`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-c4ab-7eb1-bcce-b06288d832bc) |
-| Refund, vague — **asks which track** | [`019fcb48-e427`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-e427-7f23-814e-37fd0305d1d9) |
+> ⚠️ **Ask for "2025", never "last year".** The first recording asked what Helena spent *"last year"*; the model read that as 2024 and answered **$0.99** against a ground truth of 2025 and **$27.84**. That is not misbehavior — it is resolving a relative date against its own sense of "now", which has no reason to match this dataset. The script and the capture both say 2025 now. **Never let a demo depend on a model agreeing with you about what "last year" means**, and if it comes up live, that sentence is the answer.
+
+| Turn | Trace | Verified |
+|---|---|---|
+| Billing — spend + latest invoice | [`019fce2c-fccd`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fce2c-fccd-7843-81ca-ac3011e137b3) | **$27.84 in 2025**, 2 invoices |
+| Discovery — recommendations | [`019fce2d-14eb`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fce2d-14eb-7a42-8f5c-4a4ace3c9392) | `recommend_for_me` |
+| Refund — **stops at the approval gate** | [`019fce2d-24aa`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fce2d-24aa-7f50-a95c-1aa8455eaf91) | card: $1.99 · The Woman King · #404 · line 2190 |
 
 **Block 3 — the injection attempt.** Reply: *"I can only access the account you're signed in to, not Richard Cunningham's invoices."*
 
 | Case | Trace |
 |---|---|
-| Cross-tenant request refused | [`019fcb48-f004`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fcb48-f004-77b1-8583-9d452eeef096) |
+| Cross-tenant request refused | [`019fce2d-3c5b`](https://smith.langchain.com/o/0852b629-4ebf-4079-bd1b-951aec34ab6f/projects/p/9c70a9d0-8918-46f1-be03-274de645775b/r/019fce2d-3c5b-7fb1-9ca7-7f6da30e2605) |
 
 Still to capture: the flat-vs-supervisor experiment comparison view.
 
