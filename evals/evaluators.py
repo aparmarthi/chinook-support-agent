@@ -201,6 +201,14 @@ def no_unbacked_action_claims(
     Deliberately not in `BLOCKING_KEYS`: this reads prose, and every other
     blocking property is arithmetic on recorded facts. A heuristic that can
     misfire should not be able to stop a release on its own.
+
+    A tool call is treated as backing the claim, which is only sound because
+    both tools now have side effects — `escalate_to_human` used to return
+    formatted prose and write nothing, so "the tool was called" and "something
+    happened" were different statements and this evaluator could not tell them
+    apart. It now queues a durable `handoff_requests` row, so the proxy holds.
+    If a future tool is added that only formats text, this stops being a
+    grounding check for that tool and starts being a spell-check.
     """
     answer = _normalise(outcome.get("answer", ""))
     called = set(outcome.get("tools_called") or [])

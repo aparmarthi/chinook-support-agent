@@ -110,6 +110,82 @@ def test_the_refused_resume_creates_no_run(helenas_thread: str) -> None:
     assert runs == []
 
 
+def _start_run(customer_id: int, thread_id: str, **payload: object) -> requests.Response:
+    return requests.post(
+        f"{BASE_URL}/threads/{thread_id}/runs",
+        json={
+            "assistant_id": GRAPH_ID,
+            "input": {"messages": [{"role": "user", "content": "what is my name?"}]},
+            **payload,
+        },
+        headers=_auth(customer_id),
+    )
+
+
+# Owning the thread was never sufficient. The graph reads `customer_id` from run
+# context, and for a while nothing tied that value to the credential — so a
+# customer could hold a valid token, use a thread the server agreed was theirs,
+# and still run the graph as someone else. Measured before the fix: Helena's
+# token returned Richard's real 2025 spend. Scoped repositories cannot help
+# when the caller chooses the scope. See ADR-023.
+
+
+def test_run_context_cannot_claim_a_different_customer(helenas_thread: str) -> None:
+    response = _start_run(HELENA, helenas_thread, context={"customer_id": RICHARD})
+    assert response.status_code == 403
+
+
+def test_the_legacy_configurable_is_closed_too(helenas_thread: str) -> None:
+    """The second door, which is the one a partial fix leaves open.
+
+    ``config.configurable`` predates ``context`` and still populates
+    ``AuthContext``. A handler that validates only ``context`` looks correct,
+    passes a review, and enforces nothing.
+    """
+    response = _start_run(
+        HELENA, helenas_thread, config={"configurable": {"customer_id": RICHARD}}
+    )
+    assert response.status_code == 403
+
+
+def test_a_stateless_run_cannot_claim_a_different_customer() -> None:
+    """No thread to own, so thread ownership proves nothing here."""
+    response = requests.post(
+        f"{BASE_URL}/runs",
+        json={
+            "assistant_id": GRAPH_ID,
+            "input": {"messages": [{"role": "user", "content": "what is my name?"}]},
+            "context": {"customer_id": RICHARD},
+        },
+        headers=_auth(HELENA),
+    )
+    assert response.status_code == 403
+
+
+def test_identity_is_taken_from_the_credential_not_the_assistant() -> None:
+    """Absent context resolves to the caller, not to the assistant's default.
+
+    Rejecting mismatches alone would leave this open: the default
+    ``chinook_support`` assistant carries customer 6 so that a misclick in
+    Studio degrades instead of crashing, and a request that claims nothing
+    would otherwise inherit it. Richard, sending no context at all, must still
+    be Richard.
+
+    Asserted on the stored run rather than on the reply, so it is deterministic
+    and costs no tokens.
+    """
+    thread_id = requests.post(
+        f"{BASE_URL}/threads", json={}, headers=_auth(RICHARD)
+    ).json()["thread_id"]
+    run_id = _start_run(RICHARD, thread_id).json()["run_id"]
+
+    run = requests.get(
+        f"{BASE_URL}/threads/{thread_id}/runs/{run_id}", headers=_auth(RICHARD)
+    ).json()
+    assert run["kwargs"]["context"]["customer_id"] == RICHARD
+    assert run["kwargs"]["config"]["configurable"]["customer_id"] == RICHARD
+
+
 def test_studio_is_exempt_and_that_is_why_the_gateway_stays() -> None:
     """The finding that decides where the boundary can live.
 

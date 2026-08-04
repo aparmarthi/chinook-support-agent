@@ -155,13 +155,13 @@ Five layers, defense in depth:
 2. **The scoped repository takes no customer identifier.** `get_my_invoices()` has no `customer_id` parameter — it reads identity from `ToolRuntime`. The model *cannot express* "fetch customer 26"; there's no argument to put it in. Load-bearing layer: a capability restriction, not a rule the model is asked to follow.
 3. **Tenant-bound threads, checked before the checkpoint loads.** Every `thread_id` is bound to one `customer_id` server-side at creation and validated **before the checkpointer reads state** — not after, and not inside the graph. The ordering *is* the control: once a checkpoint is loaded, the other tenant's messages are already in memory. Switching customers means a new thread.
 4. **Parameterized queries, split read/write stores.** No free-form SQL. `chinook.db` opens read-only for all reads; refund tickets go to a separate writable `support.db`, so the agent has no write path into customer data at all. This is why the SQL toolkit is rejected (ADR-003): text-to-SQL makes the LLM the author of the query, which makes injection an exfiltration path.
-5. **Fail-closed guard + PII redaction + HITL.** Scoped functions emit audit metadata naming the tenants they actually read; a guard asserts that set matches context and raises otherwise. `PIIMiddleware` on egress. `HumanInTheLoopMiddleware` on every write.
+5. **Fail-closed guard + PII redaction + HITL.** Scoped functions emit audit metadata naming the tenants they actually read; a guard asserts that set matches context and raises otherwise. `PIIMiddleware` redacts card numbers on *input*, so they never enter the checkpoint — not an egress control, and the distinction matters when someone asks what the traces contain. `HumanInTheLoopMiddleware` on every write.
 
 ### Say it precisely
 
 The accurate claim is narrower than "the model can't leak," and the precision is what makes it credible:
 
-> The model cannot select a tenant through the tool interface. Tenant-bound threads and scoped queries enforce the boundary. The deterministic suite gives regression coverage for these specific failure modes.
+> The model cannot select a tenant through the tool interface, and neither can the caller: runtime identity is derived from the authenticated principal at the server boundary. Tenant-bound threads and scoped queries enforce the boundary below that. The deterministic suite gives regression coverage for these specific failure modes.
 
 Two things that deliberately are **not** claimed. Derived customer context — name, tier, purchase profile — *is* injected into the prompt by `CustomerContextMiddleware`, so identity isn't literally invisible to the model; it is **not model-controlled**, which is the property that matters. And a successful injection can still make the agent *say* something wrong. What it cannot do is cause an unauthorized read or write. Semantic correctness is a separate problem with separate evaluators, and conflating the two is how a security claim gets picked apart.
 

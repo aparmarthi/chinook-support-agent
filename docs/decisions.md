@@ -416,7 +416,7 @@ The second half of that inference was wrong. "Middleware is too late" rules out 
 
 **Decision.** Configure the native handlers (`src/security/auth.py`) and keep `SupportGateway` for the Studio path only.
 
-**Evidence.** `tests/test_native_auth.py` runs against a live `langgraph dev`. Unauthenticated requests get 401; a thread is stamped `metadata.owner` by the server rather than by the caller; a second customer reading the thread gets **404 rather than 403**, so the error cannot be used to confirm the thread exists; a second customer starting a run gets 404 and **zero runs are created**. That last one is the ordering claim: the server's log shows the denial with `run_id=None`, so nothing resolved the thread and no checkpoint was read. Removing the `auth` key turns five of the six red.
+**Evidence.** `tests/test_native_auth.py` runs against a live `langgraph dev`. Unauthenticated requests get 401; a thread is stamped `metadata.owner` by the server rather than by the caller; a second customer reading the thread gets **404 rather than 403**, so the error cannot be used to confirm the thread exists; a second customer starting a run gets 404 and **zero runs are created**. That last one is the ordering claim: the server's log shows the denial with `run_id=None`, so nothing resolved the thread and no checkpoint was read. Removing the `auth` key turns nine of the ten red. **This was necessary and not sufficient — see ADR-023.**
 
 **Why the gateway survives, and it is not sentiment.** Studio is exempt from custom auth by default, and a Studio request authenticates the *developer* — `ctx.user` is a `StudioUser`. Filtering by `ctx.user.identity` would bind demo threads to whoever opened the browser, which is not the tenant being isolated. `disable_studio_auth: true` closes the exemption and was tried: Studio then gets 401, because it cannot present a bearer token. There is no configuration in which Studio both authenticates as Helena and remains usable. So the server is the boundary for every caller holding a credential, and the gateway is the boundary for the one path that cannot hold one. It also keeps `thread_id` behind a `conversation_id`, which the server does not do.
 
@@ -425,3 +425,45 @@ The second half of that inference was wrong. "Middleware is too late" rules out 
 **What this costs to admit.** The demo now shows a wrong turn in its strongest block. That is the point: "I built the wrapper, then found the server had the hook, and here is the one reason the wrapper stayed" is a better answer to *"why didn't you use `@auth.on.threads`?"* than a clean design that never considered it — and that question was coming regardless.
 
 **Would change our mind.** If Studio gains a way to present application credentials, the gateway's remaining job is id indirection alone, and the ownership logic in it should be deleted rather than left as duplicate enforcement.
+
+---
+
+## ADR-023 — Thread ownership was never sufficient, because the caller chose the scope
+
+**Status.** Accepted. Amends ADR-022, which was correct and incomplete.
+
+**Context.** ADR-022 configured the Agent Server's native authorization and proved a thread cannot be resumed by another tenant. That property is real and the tests behind it hold. It was also load-bearing for a claim it does not support.
+
+The graph takes `customer_id` from run context. Nothing tied that value to the credential. So a caller could hold Helena's valid token, use a thread the server agreed was Helena's, and pass `context.customer_id = 26` — and the graph would run as Richard. Measured, before the fix: *"Your name is Richard, and you spent $8.91 in 2025."* Helena's credential, Richard's money.
+
+Every layer below behaved correctly. The repository was scoped, the SQL was parameterized, the audit assertion passed — all of them scoped to the identity they were handed. **A scoped query is only as good as the scope, and the scope was an argument.** That is the same shape as the bug ADR-013 fixed one level up, which is the part worth sitting with: the lesson had already been learned once and was re-learned in a different coordinate system.
+
+**Three doors, not one.** `context`, the legacy `config.configurable`, and stateless `/runs` all reached `AuthContext`. A fix that closed only the first would have looked complete and left two open. Borrowing another customer's preset assistant was already refused by the assistants handler, which is the one thing the previous design got right for free.
+
+**Decision.** The principal is the only source of runtime identity. `@auth.on.threads.create_run` derives `customer_id` from the authenticated identity and stamps it into both holders; a request claiming a *different* id is refused with 403 rather than quietly corrected, because a mismatch is either a bug or an attack and neither should be answered with data.
+
+**Evidence.** Four tests in `tests/test_native_auth.py`, all red when the derivation is removed. The fourth is the non-obvious one: rejecting mismatches alone is not enough, because a request that claims *nothing* would inherit the assistant's default — and the default `chinook_support` assistant carries customer 6 so a Studio misclick degrades instead of crashing. Richard, sending no context, must still be Richard. Under mutation that test reads `assert 6 == 26`, which is the leak stated as plainly as it can be.
+
+**What this cost, and it is the honest part.** The leak was introduced by a demo-safety change made the same evening — giving the default assistant a fallback identity so a misclick would not throw. A convenience default became an identity default, and there was no test that would have noticed. The fix is not "be more careful"; it is that identity must never come from configuration that a request can select.
+
+**What is still true.** Studio remains exempt, so identity on the Studio path is configuration rather than a credential, and the demo must keep saying so. The production hardening step is unchanged from ADR-022: derive the customer from the verified session. The server already injects `langgraph_auth_user_id` into `configurable`, so the remaining work is small.
+
+**Would change our mind.** Nothing about the decision. If the Agent Server ever validates run context against the published `context_schema` at the boundary, the stamping becomes redundant — the rejection should stay.
+
+---
+
+## ADR-024 — The escalation tool had to actually escalate
+
+**Status.** Accepted.
+
+**Context.** The demo's strongest narrative is a fabricated handoff: the agent said *"I'm handing this to Steve Johnson"* while calling no tools, caught in a trace, converted into an evaluator and a dataset example. The fix was a prompt change; the after-trace shows `escalate_to_human` called.
+
+But `escalate_to_human` resolved the customer's rep, formatted a summary, and returned a string. It created no ticket, wrote no row, and notified nobody. So the before/after was weaker than it sounded: not *"the model invented an action"* versus *"the model performed one"*, but *"the model invented an action"* versus *"the model called a function that also performed none."* The `no_unbacked_action_claims` evaluator grades a claim as backed when the tool appears in the trace, which made the grading circular for this tool.
+
+**Decision.** `escalate_to_human` writes a `handoff_requests` row and returns its id, under the same idempotency key discipline as refunds (`thread_id:tool_call_id`, `UNIQUE`), so a retried tool call does not queue the same conversation twice.
+
+**Status is `queued`, not `sent`.** No rep is paged, emailed, or assigned — there is no downstream system here to integrate with, and inventing one would repeat the original sin at a larger scale. The tool's return string tells the model what it is allowed to claim, and the demo says the row is a queue entry rather than a notification. A durable record that a human owes this customer an answer is the honest floor.
+
+**Consequence.** The tool stays outside the human-in-the-loop gate. Gating it would put an approval step in front of something that moves no money, which trains reviewers to click through — and the one gate that matters is the one that must not be reflexive.
+
+**Would change our mind.** A real ticketing integration, at which point `queued` becomes `sent` and the status column starts earning its keep.

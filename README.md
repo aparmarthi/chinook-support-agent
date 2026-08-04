@@ -2,7 +2,7 @@
 
 A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built for the final round of the LangChain Deployed Engineer process — the deliverable is a live 35-minute demo to a mixed business/technical audience.
 
-**Status:** planning complete; data setup validated (row counts and demo facts verified against the built database); agent build not started.
+**Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 135 deterministic tests, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
 
 ---
 
@@ -38,7 +38,7 @@ Full reasoning in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/deci
 | [`docs/BRIEF.md`](docs/BRIEF.md) | **The brief verbatim + compliance matrix** — source of truth for every "the brief says…" claim |
 | [`docs/PRD.md`](docs/PRD.md) | Problem, users, scope, success metrics, security model, ROI |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Cognitive architecture, tools, middleware, evaluation matrix, data layer |
-| [`docs/decisions.md`](docs/decisions.md) | 15 ADRs — the choices, the reversals, and what would change our mind |
+| [`docs/decisions.md`](docs/decisions.md) | 24 ADRs — the choices, the reversals, and what would change our mind |
 | [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md) | Day-by-day plan, budget, cut order, risk register |
 | [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | Audience read, run of show, hot takes, statements to avoid, Q&A prep |
 | [`docs/COMPETITIVE.md`](docs/COMPETITIVE.md) | Positioning and objection handling — read the morning of |

@@ -339,7 +339,29 @@ def test_escalation_names_the_customers_own_rep(temp_support_db, run_tool) -> No
     assert "Helena" in output
 
 
-def test_escalation_writes_nothing(temp_support_db, run_tool) -> None:
+def test_escalation_queues_a_durable_handoff(temp_support_db, run_tool) -> None:
+    """The claim in the reply has to have a row behind it.
+
+    This tool used to return prose and write nothing, which made the
+    escalation eval weaker than it looked: it graded "a tool was called", so
+    "I've handed this to Steve" passed while nothing existed anywhere. The
+    fabricated-handoff story in the demo is about exactly that gap, one level
+    up, so leaving it here would have been the same bug in the fix.
+    """
+    output = run_tool(
+        [escalate_to_human],
+        "escalate_to_human",
+        {"summary": "Please refund everything.", "urgency": "high"},
+        HELENA.customer_id,
+    )
+
+    repo = CustomerRepository(6)
+    assert repo.count_handoff_requests() == 1
+    assert "queued" in output
+
+
+def test_escalation_still_files_no_refund(temp_support_db, run_tool) -> None:
+    """Queuing a handoff is not a money-touching write, so it stays ungated."""
     run_tool(
         [escalate_to_human],
         "escalate_to_human",
@@ -348,6 +370,21 @@ def test_escalation_writes_nothing(temp_support_db, run_tool) -> None:
     )
 
     assert CustomerRepository(6).count_refund_requests() == 0
+
+
+def test_a_retried_escalation_does_not_queue_twice(temp_support_db, run_tool) -> None:
+    """Same idempotency discipline as refunds, for the same reason."""
+    args = {"summary": "Charged twice.", "urgency": "normal"}
+    first = run_tool(
+        [escalate_to_human], "escalate_to_human", args, HELENA.customer_id
+    )
+    second = run_tool(
+        [escalate_to_human], "escalate_to_human", args, HELENA.customer_id
+    )
+
+    assert CustomerRepository(6).count_handoff_requests() == 1
+    assert "No duplicate was created" in second
+    assert "No duplicate" not in first
 
 
 def test_the_model_never_sees_a_customer_id_field() -> None:

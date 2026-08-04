@@ -56,6 +56,12 @@ def sql_dump_path() -> Path:
 # Status starts at 'open' because the row only exists after a human approved
 # filing the request. Approval of the refund itself happens downstream.
 #
+# handoff_requests exists because the agent used to *say* a colleague had been
+# contacted while writing nothing anywhere — the same fabrication the escalation
+# eval was built to catch, one level down: the tool call was real and its effect
+# was not. 'queued' rather than 'sent' is deliberate. A row in a table nobody
+# drains is not a notification, and the demo says so.
+#
 # thread_owner binds each conversation to exactly one customer. SupportGateway
 # reads it before the graph is invoked, so a mismatched tenant is rejected
 # before the checkpointer ever loads state (ARCHITECTURE §4, layer 2).
@@ -85,6 +91,20 @@ CREATE TABLE IF NOT EXISTS refund_requests (
 
 CREATE INDEX IF NOT EXISTS idx_refund_customer
     ON refund_requests (CustomerId);
+
+CREATE TABLE IF NOT EXISTS handoff_requests (
+    HandoffRequestId INTEGER PRIMARY KEY AUTOINCREMENT,
+    CustomerId       INTEGER NOT NULL,
+    SupportRepName   TEXT,
+    Summary          TEXT    NOT NULL,
+    Urgency          TEXT    NOT NULL DEFAULT 'normal',
+    Status           TEXT    NOT NULL DEFAULT 'queued',
+    IdempotencyKey   TEXT    NOT NULL UNIQUE,
+    CreatedAt        TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_handoff_customer
+    ON handoff_requests (CustomerId);
 """
 
 # Row counts verified against the upstream dump; a mismatch means the source

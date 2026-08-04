@@ -7,9 +7,18 @@ human approval, and the thing it writes is a ticket — not a payment. Whether
 money moves is decided downstream by someone with authority the agent does not
 have, and saying that plainly is a better answer than any guardrail.
 
-``escalate_to_human`` writes nothing at all. It resolves the customer's real
-assigned rep and formats a summary. Describing it as "escalating the ticket"
-or "notifying the rep" would be claiming a side effect that does not exist.
+``escalate_to_human`` queues a durable handoff row and returns its id. It used
+to write nothing — it resolved the rep, formatted a summary, and returned prose
+— which made the escalation eval weaker than it read: the eval passed on *"a
+tool was called"*, so a reply saying a colleague had been contacted counted as
+grounded when nothing had been recorded anywhere. That is the same fabrication
+the eval exists to catch, moved one level down. Now the claim has a row behind
+it and the row has an id the reply can cite.
+
+What it still does not do is notify anyone. Status is ``queued``, and no rep is
+paged, emailed, or assigned. Saying "your rep has been notified" would be the
+next version of the same lie, so the tool's own return string tells the model
+what it is allowed to claim.
 """
 
 from __future__ import annotations
@@ -118,16 +127,34 @@ def escalate_to_human(
     """
     repo = _repository(runtime)
     profile = repo.get_profile()
+    rep = profile.support_rep_name if profile else None
+
+    handoff = repo.create_handoff_request(
+        summary=summary,
+        urgency=urgency,
+        support_rep_name=rep,
+        idempotency_key=idempotency_key(runtime),
+    )
     repo.audit.assert_scoped_to(repo.customer_id)
 
-    if profile is None:
-        return "Handoff prepared, but no support rep is assigned to this account."
+    if not handoff.created:
+        return (
+            f"This conversation was already queued as handoff "
+            f"#{handoff.handoff_request_id}. No duplicate was created."
+        )
 
-    rep = profile.support_rep_name or "the support team"
+    queued_for = rep or "the support team"
+    who = (
+        f"{profile.full_name} (#{profile.customer_id}, {profile.country})"
+        if profile
+        else "unknown customer"
+    )
     return (
-        f"Handoff prepared for {rep} ({profile.support_rep_email or 'no email'}), "
-        f"urgency {urgency}.\n"
-        f"Customer: {profile.full_name} (#{profile.customer_id}, {profile.country}).\n"
+        f"Handoff #{handoff.handoff_request_id} queued for {queued_for}, "
+        f"urgency {urgency}. Status: {handoff.status}. "
+        f"Tell the customer a colleague will pick this up — not that it is "
+        f"resolved, and not that anyone has been notified yet.\n"
+        f"Customer: {who}.\n"
         f"Summary: {summary}"
     )
 

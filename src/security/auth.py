@@ -157,20 +157,78 @@ async def threads_are_private(
     return {"owner": owner}
 
 
+def _customer_id(identity: str) -> int | None:
+    """The customer number in a ``customer:N`` identity, if it is one."""
+    prefix, _, number = identity.partition(":")
+    if prefix != "customer" or not number.isdigit():
+        return None
+    return int(number)
+
+
+def _identity_holders(value: dict[str, Any]) -> list[dict[str, Any]]:
+    """The dicts inside a create_run payload that can carry ``customer_id``.
+
+    Both reach ``AuthContext``, and both live under ``kwargs`` rather than at
+    the top level of the authorization payload — the top level holds routing
+    fields (``thread_id``, ``assistant_id``, ``metadata``). Checking only the
+    top level silently finds nothing and passes everything, which is precisely
+    how the first version of this handler looked correct and enforced nothing.
+    """
+    kwargs = value.get("kwargs")
+    if not isinstance(kwargs, dict):
+        return []
+    holders = []
+    context = kwargs.setdefault("context", {})
+    if isinstance(context, dict):
+        holders.append(context)
+    configurable = kwargs.setdefault("config", {}).setdefault("configurable", {})
+    if isinstance(configurable, dict):
+        holders.append(configurable)
+    return holders
+
+
 @auth.on.threads.create_run
 async def runs_inherit_thread_ownership(
     ctx: Auth.types.AuthContext, value: Auth.types.on.threads.create_run.value
 ) -> Any:
-    """Authorize the run against the thread's owner before the run exists.
+    """Authorize the run, and make the principal the only source of identity.
 
-    This is the handler the cross-tenant resume test exercises: the denial has
-    to land here, because one step later the checkpoint is in memory and the
-    conversation has already been reconstituted.
+    Two separate jobs, and the second one was missing long enough to be worth
+    naming. Thread ownership is checked here because one step later the
+    checkpoint is in memory and the conversation has already been
+    reconstituted — that is the ordering the cross-tenant resume test asserts.
+
+    But owning the thread was never sufficient. The graph takes ``customer_id``
+    from run context, and nothing tied that value to the credential, so
+    Helena's token on Helena's own thread could run the graph as Richard and
+    read his invoices. Scoped repositories do not help when the scope itself is
+    caller-supplied. So the id is **derived** from the principal rather than
+    trusted, and a request that claims a different one is refused rather than
+    quietly corrected — a mismatch is a bug or an attack, and neither should
+    return data.
+
+    Studio keeps its exemption: identity there comes from the assistant, and
+    the principal is the developer rather than any customer (ADR-022, ADR-023).
     """
     if is_studio_user(ctx.user):
         return {}
 
     owner = ctx.user.identity
+    customer_id = _customer_id(owner)
+    if customer_id is None:
+        raise Auth.exceptions.HTTPException(
+            status_code=403, detail="only a customer principal can start a run"
+        )
+
+    for holder in _identity_holders(value):
+        claimed = holder.get("customer_id")
+        if claimed is not None and claimed != customer_id:
+            logger.warning("refusing run: %s claimed customer_id=%r", owner, claimed)
+            raise Auth.exceptions.HTTPException(
+                status_code=403, detail="run context does not match the credential"
+            )
+        holder["customer_id"] = customer_id
+
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = owner
     logger.info("authorizing run on thread %s for %s", value.get("thread_id"), owner)

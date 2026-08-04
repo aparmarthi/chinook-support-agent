@@ -214,6 +214,14 @@ Run `pytest tests/test_native_auth.py -v` against the running dev server. Then l
 
 > "A thread belongs to one authenticated tenant. That's the bug a real multi-tenant deployment ships with, and it's not the one people test for."
 
+**Then the second bug, which is the better one (1:00).** ⚠️ **Do not cut this to save time.** Found on the Monday before the demo, by review rather than by testing — and it invalidated a sentence this block used to say out loud:
+
+> "There's a second failure here, and I found it two days ago. Thread ownership was enforced. The credential was checked. And it still leaked, because the graph took the customer id from *run context*, and nothing tied that to the credential. So I could hold Helena's valid token, use a thread the server agreed was Helena's, and pass customer 26 in the request body. It answered: *'Your name is Richard, and you spent $8.91 in 2025.'* Helena's credential, Richard's money.
+>
+> Every layer below did its job. The repository was scoped, the SQL was parameterized, the audit check passed — all of them scoped to the identity they were handed. **A scoped query is only as good as the scope, and the scope was an argument.** The fix is that the id is now derived from the credential and a request claiming a different one is refused, not corrected. Three doors, not one: run context, the legacy configurable, and stateless runs all reached the same field."
+
+> ✅ **The strongest part is the last bit — say it.** "The leak was introduced by a convenience I added the same evening: I gave the default assistant a fallback identity so a misclick in Studio wouldn't throw a traceback mid-demo. A convenience default became an identity default. That's the test that reads `assert 6 == 26` when I mutate the fix — the wrong customer, inherited from a dropdown."
+
 **Then tell them you got this wrong the first time.** This is the strongest thirty seconds in the block — do not skip it to save time:
 
 > "I'll show you the wrong turn, because it's more useful than the answer. I knew graph middleware was too late — by the time `before_agent` runs, the checkpoint is loaded and you're guarding a door someone already walked through. So I built a gateway in front of the server and enforced ownership there. Correct, and unnecessary. The Agent Server has authorization handlers that run before a run is even created, and I hadn't configured them. One key in `langgraph.json`.
@@ -222,11 +230,11 @@ Run `pytest tests/test_native_auth.py -v` against the running dev server. Then l
 
 > ✅ **Why this is worth the time:** it answers the question a LangChain engineer is most likely to ask — *"why didn't you just use `@auth.on.threads`?"* — before it gets asked, and it demonstrates the thing the role is actually for: reading the platform's own primitives and correcting your design when they turn out to be better than what you built. Rehearse the phrase **"correct, and unnecessary."**
 
-> ⚠️ **Do not overclaim the mutation check unless asked.** If someone probes whether the tests are real: removing the `auth` key from `langgraph.json` turns five of the six red. Have that ready; don't volunteer it.
+> ⚠️ **Do not overclaim the mutation check unless asked.** If someone probes whether the tests are real, two measured answers are ready — don't volunteer either. Removing the `auth` key from `langgraph.json` turns **nine of the ten red**. Removing only the identity derivation turns **four** red, and one of them fails as `assert 6 == 26`.
 
 **The precise claim (1:00).** Say it carefully — the accuracy is what makes it credible:
 
-> "What I'm claiming is narrow. The model cannot select a tenant through the tool interface. Tenant-bound threads and scoped queries enforce the boundary, and the test suite covers these specific failure modes.
+> "What I'm claiming is narrow. The model cannot select a tenant through the tool interface, and neither can the caller — identity is derived from the credential at the server boundary. Tenant-bound threads and scoped queries enforce the boundary below that, and the test suite covers these specific failure modes.
 >
 > What I'm *not* claiming: this doesn't make the agent unfoolable. A clever injection might still make it say something wrong. What it can't do is cause an unauthorized read or write. Those are different problems and I'd rather be precise about which one I've solved."
 
@@ -240,7 +248,9 @@ Run `pytest tests/test_native_auth.py -v` against the running dev server. Then l
 
 **Shape (1:00).** Show `graph.py`. One agent, six tools, middleware stack. Then the security layering:
 
-> "The thing I'd point at is where authorization lives. It's not in the prompt and it's not in middleware — it's in the data layer. Every scoped function binds the customer ID from runtime context and there's no code path that accepts a different one. Reads go through a read-only connection to Chinook; refund tickets go to a separate writable database, so the agent has no write path into customer data at all.
+> "The thing I'd point at is where authorization lives. It's not in the prompt and it's not in middleware — it's in the data layer. Every scoped function binds the customer ID from runtime context, and the model has no parameter to pass a different one. Reads go through a read-only connection to Chinook; refund tickets go to a separate writable database, so the agent has no write path into customer data at all.
+>
+> The part I'd flag is that this is necessary and not sufficient, which I learned the hard way — scoping every query means nothing if the *scope itself* arrives in the request. That's fixed at the server boundary now, and it's the second bug I showed you.
 >
 > I put it there deliberately, and I'll tell you why in a second — it's the most interesting thing I got wrong."
 

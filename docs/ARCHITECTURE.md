@@ -29,7 +29,7 @@ Start flat. One `create_agent`, six tools, middleware that can actually see ever
    │   1. CustomerContextMiddleware @dynamic_prompt│
    │   2. HumanInTheLoopMiddleware  (refund tool) │
    │   3. ToolCallLimitMiddleware   (built-in)    │
-   │   4. PIIMiddleware             (egress)      │
+   │   4. PIIMiddleware        (card, on input)   │
    │   5. ModelRetry / ToolRetry    (transient)   │
    │                                              │
    │  tools: 4 read + 1 gated write + 1 handoff   │
@@ -145,7 +145,13 @@ request ──▶ @auth.authenticate        credential ──▶ principal
 | Richard reads Helena's thread | `404` — filtered to invisible, so the error can't confirm the thread exists |
 | Richard starts a run on Helena's thread | `404`, and **zero runs created** |
 
-That last row is the whole property. The server's own log shows the denial with `run_id=None`, so nothing was resolved and no checkpoint was read. Removing the `auth` key from `langgraph.json` turns five of those six tests red, which is what keeps them from being decoration.
+That last row is the whole property. The server's own log shows the denial with `run_id=None`, so nothing was resolved and no checkpoint was read. Removing the `auth` key from `langgraph.json` turns nine of the ten tests red, which is what keeps them from being decoration.
+
+##### And it was still not enough — the scope was an argument
+
+Everything above is true and did not prevent a cross-tenant read. Thread ownership answers *"whose conversation is this?"*. It says nothing about *"who is this turn running as"*, and the graph took that from run context, which the caller supplies. Helena's token, Helena's thread, `context.customer_id = 26` → *"Your name is Richard, and you spent $8.91 in 2025."*
+
+The data layer was not bypassed. It was scoped, correctly, to an identity chosen by the request. `customer_id` is now derived from the authenticated principal and stamped into both `context` and the legacy `config.configurable`; a request claiming a different one gets 403. See ADR-023, and note the shape of the mistake — it is ADR-013's lesson recurring one layer down.
 
 ##### Why `SupportGateway` still exists
 
@@ -164,7 +170,7 @@ Say the correction out loud in the demo rather than presenting only the end stat
 
 **4. Audit metadata + result guard.** Scoped functions record which tenant IDs they actually touched. A guard asserts the set is empty or exactly the runtime tenant, and fails closed. Placement depends on topology (§2); the boundary does not.
 
-**5. PII redaction on egress and HITL on writes.**
+**5. Card redaction on input and HITL on writes.**
 
 ### ⚠️ Studio's config panel is a simulation of authenticated identity
 
@@ -180,7 +186,9 @@ Rehearse this. It costs fifteen seconds and it's the single most attackable-look
 
 The precise claim is narrower than "the model can't leak," and the precision is the point:
 
-> The model cannot select a tenant through the tool interface. Tenant-bound threads and ownership-enforcing queries enforce the boundary. The test suite provides regression coverage for known failure modes.
+> The model cannot select a tenant through the tool interface, and neither can the caller: runtime identity is derived from the authenticated principal at the server boundary, and a request claiming a different customer is refused. Tenant-bound threads and ownership-enforcing queries enforce the boundary below that. The test suite provides regression coverage for known failure modes.
+>
+> The middle clause is new, and it was added because it was false: query scoping is worthless if the scope arrives in the request body (ADR-023).
 
 Two things this deliberately does *not* claim. Derived customer context (name, tier, purchase profile) **is** injected into the prompt by `CustomerContextMiddleware`, so identity is not literally invisible to the model — it is *not model-controlled*, which is the property that matters. And a successful injection can still make the agent say something wrong; what it cannot do is cause an unauthorized read or write. Semantic correctness is a separate problem addressed by grounding evaluators.
 

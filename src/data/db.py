@@ -162,6 +162,24 @@ class RefundRequest:
 
 
 @dataclass(frozen=True)
+class HandoffRequest:
+    """A queued handoff to the customer's assigned rep.
+
+    Attributes:
+        created: ``False`` when this call resolved to a handoff already queued
+            under the same idempotency key, so a retried tool call does not
+            queue the same conversation twice.
+    """
+
+    handoff_request_id: int
+    support_rep_name: str | None
+    summary: str
+    urgency: str
+    status: str
+    created: bool
+
+
+@dataclass(frozen=True)
 class GenreAffinity:
     """How many tracks the customer has bought in one genre."""
 
@@ -497,6 +515,82 @@ class CustomerRepository:
             status=row["Status"],
             created=False,
         )
+
+    def create_handoff_request(
+        self,
+        summary: str,
+        urgency: str,
+        support_rep_name: str | None,
+        idempotency_key: str,
+    ) -> HandoffRequest:
+        """Queue a handoff for this customer's rep, at most once per key.
+
+        Args:
+            summary: What the customer needs, written for a rep to read cold.
+            urgency: ``low``, ``normal``, or ``high``.
+            support_rep_name: The rep resolved from the customer's profile.
+            idempotency_key: ``f"{thread_id}:{tool_call_id}"``, from the
+                runtime. Never generate this locally.
+
+        Returns:
+            The queued handoff, or the one an identical call queued earlier.
+        """
+        insert = """
+            INSERT INTO handoff_requests
+                (CustomerId, SupportRepName, Summary, Urgency, IdempotencyKey)
+            VALUES (?, ?, ?, ?, ?)
+        """
+        with support_connection() as conn:
+            try:
+                cursor = conn.execute(
+                    insert,
+                    (
+                        self._customer_id,
+                        support_rep_name,
+                        summary,
+                        urgency,
+                        idempotency_key,
+                    ),
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                return self._existing_handoff(conn, idempotency_key)
+            return HandoffRequest(
+                handoff_request_id=int(cursor.lastrowid or 0),
+                support_rep_name=support_rep_name,
+                summary=summary,
+                urgency=urgency,
+                status="queued",
+                created=True,
+            )
+
+    @staticmethod
+    def _existing_handoff(
+        conn: sqlite3.Connection, idempotency_key: str
+    ) -> HandoffRequest:
+        """Return the handoff a duplicate submission collided with."""
+        row = conn.execute(
+            "SELECT HandoffRequestId, SupportRepName, Summary, Urgency, Status "
+            "FROM handoff_requests WHERE IdempotencyKey = ?",
+            (idempotency_key,),
+        ).fetchone()
+        return HandoffRequest(
+            handoff_request_id=row["HandoffRequestId"],
+            support_rep_name=row["SupportRepName"],
+            summary=row["Summary"],
+            urgency=row["Urgency"],
+            status=row["Status"],
+            created=False,
+        )
+
+    def count_handoff_requests(self) -> int:
+        """How many handoffs this customer has queued. Used by the evals."""
+        with support_connection() as conn:
+            row = conn.execute(
+                "SELECT count(*) AS n FROM handoff_requests WHERE CustomerId = ?",
+                (self._customer_id,),
+            ).fetchone()
+        return int(row["n"])
 
     def count_refund_requests(self) -> int:
         """How many tickets this customer has open. Used by the HITL tests."""
