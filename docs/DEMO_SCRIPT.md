@@ -198,23 +198,27 @@ It declines. Explain *why*, precisely:
 >
 > That's also why I didn't use a text-to-SQL agent, which is the obvious thing to reach for with this dataset and probably what most people would demo. The moment the model writes the WHERE clause, every prompt injection becomes a possible breach, and you're relying on the model's good manners as a security control."
 
-**Test 2 — cross-tenant thread resume (1:30). This is the better one — and it does *not* run in Studio.**
+**Test 2 — cross-tenant thread resume (1:30). This is the better one, and it now runs against the live server.**
 
-> ⚠️ **This was scripted as a live Studio demo and that was wrong.** The ownership check lives in `SupportGateway`, which sits *outside* the graph; Studio talks to the Agent Server directly and almost certainly bypasses it. Switching context on a live Studio thread would therefore **succeed** — a live, unrecoverable contradiction of the claim you just made, in the block where credibility matters most. Run it as a test.
+Set up the failure first:
 
-Default version — run the deterministic test:
+> "But here's the failure I actually care about, because scoped queries alone don't save you. This thread already contains Helena's invoice data in its history, so if someone resumes it as Richard, he reads her data without a single unauthorized query ever running."
 
-> "But here's the failure I actually care about, because scoped queries alone don't save you. This thread already contains Helena's invoice data in its history, so if someone resumes it as Richard, he reads her data without a single unauthorized query ever running.
->
-> I'm going to show this one as a test rather than in Studio, and the reason is the interesting part. The check lives in the application layer that sits in front of the agent — it has to, because by the time any graph code runs, the checkpoint is already loaded and you're guarding a door someone walked through. Studio talks to the graph directly, so it bypasses that layer by design."
+Run `pytest tests/test_native_auth.py -v` against the running dev server. Then land the two assertions that make it more than a passing test:
 
-Run it. Then land the assertion that makes it more than a passing test:
-
-> "Note what this asserts — not just that the request was rejected, but that **the checkpointer's read method was never called.** Rejected *before* state loads. If I only checked afterwards, the data would already be in memory and I'd be describing a control I don't have. That's also why there's no trace for this run: nothing was invoked."
+> "Two things are being asserted here. Richard gets a 404, not a 403 — the thread is filtered to invisible, so he can't even use the error to confirm it exists. And the second one is the one I care about: **zero runs were created.** Not 'the run failed' — the run never existed. Nothing resolved the thread, nothing read the checkpoint. That's also why there's no trace for this: there was nothing to trace."
 
 > "A thread belongs to one authenticated tenant. That's the bug a real multi-tenant deployment ships with, and it's not the one people test for."
 
-**Live version — only if Day 0 task 0.13 proved Studio genuinely traverses the gateway.** If it does, run it live and keep the test as the backup. Don't decide this on demo day; decide it on Day 0 and rehearse whichever one is real.
+**Then tell them you got this wrong the first time.** This is the strongest thirty seconds in the block — do not skip it to save time:
+
+> "I'll show you the wrong turn, because it's more useful than the answer. I knew graph middleware was too late — by the time `before_agent` runs, the checkpoint is loaded and you're guarding a door someone already walked through. So I built a gateway in front of the server and enforced ownership there. Correct, and unnecessary. The Agent Server has authorization handlers that run before a run is even created, and I hadn't configured them. One key in `langgraph.json`.
+>
+> The gateway didn't get deleted, and the reason is the honest part: Studio is exempt from custom auth by default. A Studio request authenticates *me*, the developer, not Helena — so the customer identity in what you just watched is configuration, not a credential. I tried closing the exemption. Studio gets a 401, because it has no way to send a bearer token. So the server enforces this for every real caller, and the gateway covers the one path that can't hold a credential."
+
+> ✅ **Why this is worth the time:** it answers the question a LangChain engineer is most likely to ask — *"why didn't you just use `@auth.on.threads`?"* — before it gets asked, and it demonstrates the thing the role is actually for: reading the platform's own primitives and correcting your design when they turn out to be better than what you built. Rehearse the phrase **"correct, and unnecessary."**
+
+> ⚠️ **Do not overclaim the mutation check unless asked.** If someone probes whether the tests are real: removing the `auth` key from `langgraph.json` turns five of the six red. Have that ready; don't volunteer it.
 
 **The precise claim (1:00).** Say it carefully — the accuracy is what makes it credible:
 
@@ -439,6 +443,8 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 **"Only six tools?"** — Take it as a compliment and answer with the brief. It says don't go for breadth of tools, so the count is a designed constraint, not a shortfall. Then name what you cut and why: two helpers folded into `recommend_for_me`, `search_catalog` dropped once the recommendation tool covered the catalog, and `find_duplicate_charges` scoped and rejected because Chinook has no payment events and the tool's best outcome was still an escalation.
 
 **"How do you know the customer only sees their own data?"** — Block 3. Structural, not instructional. Note the two invariants: scoped queries *and* tenant-bound threads.
+
+**"Why not just use `@auth.on.threads`?"** — ⚠️ **The likeliest hard question in the room, because Conrad works on this.** You already answered it in Block 3; if it still comes, don't re-explain, confirm and add the part you left out. It *is* used — `langgraph.json` points at `src/security/auth.py`, and `tests/test_native_auth.py` proves the denial lands before a run exists. The gateway stayed because Studio is exempt from custom auth by default and authenticates the developer rather than the customer, and `disable_studio_auth: true` returns 401 to Studio itself. The part worth adding: **the server warns you about this at startup.** With handlers on threads only, it logs that `assistants`, `crons`, and `store` have no authorization handler and calls it "a common source of cross-user data leaks," with the default-deny snippet to fix it. That warning is the best security DX in the stack and it's in the friction log as a *positive*. If asked what you'd change for production: the customer identity should come from the verified session via `langgraph_auth_user` rather than from run context, which removes the last place identity is configuration.
 
 **"Can prompt injection still make it lie?"** — Yes, it can produce incorrect prose. It cannot cause an unauthorized read or write. Different problem, different evaluators. Answering "no" here is a trap.
 

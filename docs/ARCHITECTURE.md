@@ -101,7 +101,7 @@ The load-bearing ones are 1 and 2 — everything else is defense in depth.
 
 This is separate from query scoping and it's the layer originally missed: scoped queries don't help if Helena's thread — with her invoice data already in the message history — is resumed under Richard's context.
 
-#### Where that check actually runs — and why it can't be middleware
+#### Where that check actually runs — and where it should have run first
 
 Saying "validate before the checkpoint loads" is only an invariant if some named component executes first. **`before_agent` hooks and middleware are too late**: by the time either runs, the Agent Server has resolved the thread and materialized its state. A check there would be inspecting data it has already loaded, while the write-up claims pre-load enforcement. That gap between claim and mechanism is precisely the kind of thing this plan exists to catch.
 
@@ -121,9 +121,44 @@ authenticated request ──▶ SupportGateway
 
 Thread ownership lives in `support.db` (the writable store) and is written once at thread creation. Steps 3-4 complete before step 5 exists, which is what makes the ordering claim structurally true rather than asserted.
 
-⚠️ **Studio probably cannot exercise this**, because Studio talks to the Agent Server directly and the gateway sits in front of it. Do not paper over that. Show the cross-tenant rejection through a deterministic test, and say plainly: *"Studio is exercising the graph. The auth boundary lives one layer out, in the application that calls it — here's the test that proves the ordering."* **Never simulate a post-load check and narrate it as pre-load enforcement**; that's the one version of this that's worse than not having the control at all.
+##### The correction: the server already had this, and it is better
 
-This is a **Day 0 spike** (task 0.13), because if the gateway can't be wired cleanly the demo needs to know on day one, not day three.
+The reasoning above is sound and the conclusion drawn from it was half wrong. "Middleware is too late" is true. "So the check has to live outside the server" does not follow — it only rules out *graph* code. The Agent Server has its own authorization layer that runs before a run is created, and this repo simply had not configured it:
+
+```
+request ──▶ @auth.authenticate        credential ──▶ principal
+               │
+               ▼
+           @auth.on.threads.*         does this principal own the thread?
+               │                      no ──▶ denied. No run, no checkpoint.
+               ▼
+           run created ──▶ checkpoint loaded ──▶ graph executes
+```
+
+`langgraph.json` now points at `src/security/auth.py`. Measured against the running server (`tests/test_native_auth.py`, and `scripts/probe_native_auth.py` for the narrated version):
+
+| Request | Result |
+| --- | --- |
+| No credential | `401` |
+| Unknown credential | `401` |
+| Thread created by Helena | server stamps `metadata.owner = customer:6` |
+| Richard reads Helena's thread | `404` — filtered to invisible, so the error can't confirm the thread exists |
+| Richard starts a run on Helena's thread | `404`, and **zero runs created** |
+
+That last row is the whole property. The server's own log shows the denial with `run_id=None`, so nothing was resolved and no checkpoint was read. Removing the `auth` key from `langgraph.json` turns five of those six tests red, which is what keeps them from being decoration.
+
+##### Why `SupportGateway` still exists
+
+Because Studio is exempt from custom auth by default, and the demo runs in Studio.
+
+A Studio request authenticates the *developer*, not a customer — `ctx.user` is a `StudioUser`. Filtering it by `ctx.user.identity` would bind demo threads to whoever opened the browser, which is not the tenant this system isolates. Setting `disable_studio_auth: true` closes the exemption and was tried: Studio then gets `401`, because it has no way to present a bearer token. There is no configuration where Studio both authenticates as Helena and remains usable.
+
+So the honest division, and it is a real one rather than a rescue of the original design:
+
+- **`@auth.on.threads` is the boundary for anything holding a credential.** That is every production caller. Proven against the live server.
+- **`SupportGateway` is the boundary for the Studio path**, where the customer identity is configuration rather than a credential and something above the server has to bind it to a conversation. It also keeps `thread_id` server-side behind a `conversation_id`, which the server does not do for you.
+
+Say the correction out loud in the demo rather than presenting only the end state. "I built the wrapper first, then found the server had the hook" is the more credible story, and it is what happened. See ADR-022.
 
 **3. Separate read and write stores.** `chinook.db` opens with a read-only URI for all catalog and account reads. Refund tickets are inserted into `support.db`. The agent has no write path into Chinook at all. Refund inserts carry an idempotency key so an interrupt resume or retry can't create duplicates.
 
@@ -162,6 +197,8 @@ No claim without a test behind it. If a row here has no passing test by Day 2, t
 | No oracle leaks existence | `test_auth_no_oracle` | Same status, message, and latency class for "not yours" vs. "not real" |
 | A thread cannot be resumed by another tenant | `test_thread_ownership_rejected` | `SupportGateway` raises on mismatch |
 | The check happens *before* state loads | `test_thread_ownership_precedes_load` | Patch the checkpointer's read method; assert it is **never called** on a mismatched tenant. This is the assertion that makes the ordering claim real rather than asserted. |
+| The same holds for callers who skip the gateway | `test_another_customer_cannot_resume_the_thread` | Live server returns 404 — filtered to invisible, not merely forbidden |
+| …and nothing was resolved before the refusal | `test_the_refused_resume_creates_no_run` | **Zero runs created.** Stronger than patching a read: the run never existed, so there was nothing to load state for. |
 | Injection cannot cause an unauthorized read | `test_injection_no_query` | Audit metadata records zero foreign tenant IDs |
 | Another customer's data never appears in output | `test_canary_absent` | Seeded canary facts on customer #26 never surface for #6 |
 | Identity confusion is refused, not relabeled | `test_semantic_scope_refusal` | Asked about Richard while authed as Helena → explicit scope refusal, not Helena's data relabeled |
@@ -322,8 +359,9 @@ Verified: 59 customers · 275 artists · 347 albums · 3,503 tracks · 25 genres
 
 ```
 .
-├── langgraph.json
-├── src/gateway.py            # SupportGateway — ownership check BEFORE the graph  ← outermost boundary
+├── langgraph.json            # `auth` key wires the server-level boundary below
+├── src/security/auth.py      # @auth.authenticate + @auth.on.threads  ← the real boundary, runs before a run exists
+├── src/gateway.py            # SupportGateway — same check for the Studio path, which is exempt from custom auth
 ├── src/agent/
 │   ├── graph.py              # flat baseline  ← the file to show
 │   ├── graph_supervisor.py   # variant, only if it wins
@@ -345,6 +383,6 @@ Verified: 59 customers · 275 artists · 347 albums · 3,503 tracks · 25 genres
 
 No `notebooks/`, `artifacts/`, or `serving/` — nothing is trained and Studio is the interface (ADR-008).
 
-**Note `gateway.py` sits in `src/`, not `src/agent/`.** That's deliberate and worth being able to explain: it is not part of the agent, it's the thing that decides whether the agent gets invoked at all. Putting it inside the agent package would be the same category error as putting the ownership check in middleware.
+**Note `gateway.py` and `security/` sit in `src/`, not `src/agent/`.** That's deliberate and worth being able to explain: neither is part of the agent, they're what decides whether the agent gets invoked at all. Putting either inside the agent package would be the same category error as putting the ownership check in middleware — which is the error this design started with, one layer up (ADR-022).
 
 **Naming:** the runtime context object is **`AuthContext`** everywhere. Earlier drafts called it `SupportContext` in the diagram and ADR-007 while the security chain called it `AuthContext` — two names for one object, which is a small thing that gets embarrassing when you're explaining code live and the file disagrees with your sentence. `AuthContext` won because it names what the object *is* rather than what app it belongs to.

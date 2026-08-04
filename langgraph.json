@@ -3,5 +3,8 @@
   "graphs": {
     "chinook_support": "./src/agent/graph.py:agent"
   },
+  "auth": {
+    "path": "./src/security/auth.py:auth"
+  },
   "env": ".env"
 }

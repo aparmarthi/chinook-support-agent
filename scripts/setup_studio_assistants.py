@@ -18,6 +18,7 @@ Assistants live in the dev server's store, so re-run this after restarting
 
 from __future__ import annotations
 
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -31,6 +32,13 @@ from src.data.db import CustomerRepository  # noqa: E402
 BASE_URL = "http://127.0.0.1:2024"
 GRAPH_ID = "chinook_support"
 ASSISTANT_NAMESPACE = uuid.UUID("6f0d4f52-0f5a-4b3e-9a1f-2c7d5e8a1b40")
+
+# Provisioning assistants is an operator action. Authentication applies to
+# every route once src/security/auth.py is wired up, so this script needs its
+# own credential rather than borrowing a customer's.
+AUTH = {
+    "Authorization": f"Bearer {os.getenv('DEMO_TOKEN_OPERATOR', 'demo-operator')}"
+}
 
 # Helena has the November invoice the refund walkthrough uses. Richard is the
 # second tenant, for demonstrating that a thread cannot cross between them.
@@ -65,6 +73,7 @@ def upsert_assistant(customer_id: int) -> str:
             "if_exists": "do_nothing",
         },
         timeout=30,
+        headers=AUTH,
     )
     response.raise_for_status()
 
@@ -74,6 +83,7 @@ def upsert_assistant(customer_id: int) -> str:
         f"{BASE_URL}/assistants/{assistant_id}",
         json={"name": name, "context": {"customer_id": customer_id}},
         timeout=30,
+        headers=AUTH,
     ).raise_for_status()
     return name
 
@@ -85,7 +95,10 @@ def _stale_demo_assistants(keep: set[str]) -> list[dict]:
     `chinook_support` assistant and anything created by hand is left alone.
     """
     everything = requests.post(
-        f"{BASE_URL}/assistants/search", json={"limit": 100}, timeout=30
+        f"{BASE_URL}/assistants/search",
+        json={"limit": 100},
+        timeout=30,
+        headers=AUTH,
     ).json()
     return [
         a
@@ -105,7 +118,11 @@ def main() -> None:
         print(f"  ready: {upsert_assistant(customer_id)}")
 
     for stale in _stale_demo_assistants(keep):
-        requests.delete(f"{BASE_URL}/assistants/{stale['assistant_id']}", timeout=30)
+        requests.delete(
+            f"{BASE_URL}/assistants/{stale['assistant_id']}",
+            timeout=30,
+            headers=AUTH,
+        )
         print(f"  removed duplicate: {stale['name']}")
 
     print("\nPick one from the assistant dropdown in Studio. No context panel needed.")

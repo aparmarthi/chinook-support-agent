@@ -17,14 +17,16 @@ The two hard rules:
 
 If you can't build that, nothing else matters. If you can, everything else is addition. This is the Day 0 exit criterion and the thing to protect on every subsequent day.
 
-⚠️ **Two evidence paths, and they are not the same run.** The earlier phrasing implied a single invocation demonstrating both, which it can't — Studio talks to the Agent Server directly and bypasses the gateway. Keep them separate in your own head or the demo will promise something the architecture doesn't do:
+⚠️ **Two evidence paths, and they are not the same run.** Keep them separate in your own head or the demo will promise something the architecture doesn't do:
 
 | Path | What it proves | How you see it |
 |---|---|---|
 | **A — Studio** | The agent answers correctly and scoped | Live response in Studio, plus a LangSmith trace |
-| **B — Gateway test** | Ownership is enforced *before* state loads | A passing test. **No trace by design** — nothing was invoked. |
+| **B — Server auth tests** | Ownership is enforced *before a run exists* | `tests/test_native_auth.py` against the live server. **No trace by design** — nothing was invoked. |
 
 Path A is the demo. Path B is the proof. Conflating them is how a security claim quietly becomes a security story.
+
+**Updated (ADR-022).** Path B was originally a `SupportGateway` unit test, on the reasoning that Studio bypasses the gateway so the boundary can't be shown server-side. Half of that was wrong: the Agent Server has `@auth.on.threads.*`, which runs before run creation and now enforces this for real. Path B is an integration test against the running server, and the cross-tenant denial is a genuine 404 with zero runs created. The gateway remains only for the Studio path, which is exempt from custom auth by default.
 
 ## Planning is complete when
 
@@ -176,6 +178,8 @@ A second provider is tempting — Google Cloud credit would effectively extend t
 | 0.16 | **Wire the LangChain docs MCP server** into the coding agent (https://docs.langchain.com/use-these-docs). Bookmark chat.langchain.com. | Both explicitly suggested in the brief. Use them as the first stop for API questions — and log how well they worked, because time-to-answer in your own docs is exactly the friction a customer hits. |
 
 **0.13 is the newest and least certain item.** The ordering claim in ARCHITECTURE §4 is only true if a real component enforces it. If the gateway can't be wired cleanly in an hour, fall back to proving the ordering in a deterministic harness and say explicitly that Studio exercises the graph while the auth boundary sits one layer out. What you must not do is run the check somewhere convenient and describe it as pre-load enforcement.
+
+> **Resolved, and not the way 0.13 assumed (ADR-022).** The component that runs before the Agent Server resolves a thread already existed: `@auth.on.threads.*`, configured via the `auth` key in `langgraph.json`. The task's premise — that it had to be something outside the server — was wrong, and the gateway built against that premise is now scoped to the Studio path alone. The exit criterion is met more strongly than written: not "the checkpointer's read was never called" via patching, but **no run was ever created**, observed on the live server.
 
 **0.11 is the critical path.** The entire security demo depends on switching identity live. If it's awkward, you need the workaround on Day 0, not Wednesday night. Fallback: read `config["configurable"]` too and take whichever is present. Either way **log it** — this is exactly the integration friction the exercise asks you to report.
 

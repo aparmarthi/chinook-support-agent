@@ -404,3 +404,24 @@ And answering the invitation with "I didn't need to invent one" is itself the de
 **The upside is real rather than consoling.** Engine automates the loop of spot-the-failure, root-cause, dataset example, evaluator. This build walked that loop by hand and has the artifact to show for it. Having done it manually is a better basis for talking about the automation than having watched the automation run.
 
 **Would change our mind.** Access to a non-personal workspace before demo day. Worth accepting if offered, but not worth soliciting — a feature learned the night before is not one to demo.
+---
+
+## ADR-022 — The gateway was reimplementing a boundary the server already had
+
+**Status.** Accepted. Amends ADR-005 (thread ownership) and corrects a claim in `ARCHITECTURE.md` §4.
+
+**Context.** ADR-005 established that thread ownership must be validated before the checkpoint loads, and correctly ruled out graph middleware: by the time `before_agent` runs, the Agent Server has resolved the thread and materialized its state. From there the design concluded that the check had to live *outside* the server, and `SupportGateway` was built to hold it.
+
+The second half of that inference was wrong. "Middleware is too late" rules out graph code. It says nothing about the server, which has its own authorization layer — `@auth.authenticate` for identity and `@auth.on.threads.*` for resource access — running before a run is created. This repo's `langgraph.json` had no `auth` key, so the Studio path was unprotected by omission rather than by any property of Studio.
+
+**Decision.** Configure the native handlers (`src/security/auth.py`) and keep `SupportGateway` for the Studio path only.
+
+**Evidence.** `tests/test_native_auth.py` runs against a live `langgraph dev`. Unauthenticated requests get 401; a thread is stamped `metadata.owner` by the server rather than by the caller; a second customer reading the thread gets **404 rather than 403**, so the error cannot be used to confirm the thread exists; a second customer starting a run gets 404 and **zero runs are created**. That last one is the ordering claim: the server's log shows the denial with `run_id=None`, so nothing resolved the thread and no checkpoint was read. Removing the `auth` key turns five of the six red.
+
+**Why the gateway survives, and it is not sentiment.** Studio is exempt from custom auth by default, and a Studio request authenticates the *developer* — `ctx.user` is a `StudioUser`. Filtering by `ctx.user.identity` would bind demo threads to whoever opened the browser, which is not the tenant being isolated. `disable_studio_auth: true` closes the exemption and was tried: Studio then gets 401, because it cannot present a bearer token. There is no configuration in which Studio both authenticates as Helena and remains usable. So the server is the boundary for every caller holding a credential, and the gateway is the boundary for the one path that cannot hold one. It also keeps `thread_id` behind a `conversation_id`, which the server does not do.
+
+**Consequence.** Two side effects worth recording. Authentication applies to *every* route, so `scripts/setup_studio_assistants.py` began returning 401 and needed an operator credential of its own — provisioning is not a customer action and should not borrow a customer's token. And the server warns at startup that `assistants`, `crons`, and `store` have no authorization handler, calling it "a common source of cross-user data leaks" and supplying the default-deny snippet; that gap is now closed and the warning is logged in the friction log as a positive.
+
+**What this costs to admit.** The demo now shows a wrong turn in its strongest block. That is the point: "I built the wrapper, then found the server had the hook, and here is the one reason the wrapper stayed" is a better answer to *"why didn't you use `@auth.on.threads`?"* than a clean design that never considered it — and that question was coming regardless.
+
+**Would change our mind.** If Studio gains a way to present application credentials, the gateway's remaining job is id indirection alone, and the ownership logic in it should be deleted rather than left as duplicate enforcement.
