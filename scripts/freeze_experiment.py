@@ -127,6 +127,29 @@ def _prior_runs(exclude: set[Path]) -> list[dict]:
     return runs
 
 
+def _margin_reading(flat: dict, supervisor: dict) -> str:
+    """Read the headline gap against that sensitivity — including when it is zero.
+
+    Written because the tie case printed "a one-example margin between 30/30 and
+    30/30", which is not a sentence. A generated report that only phrases one
+    outcome well is a report that will embarrass you on the outcome it did not
+    anticipate.
+    """
+    gap = abs(flat["passed"] - supervisor["passed"])
+    if gap == 0:
+        return (
+            f"**The arms tie at {flat['passed']}/30 here**, and against that "
+            "sensitivity a margin of an example either way would not have "
+            "established a quality difference in the first place."
+        )
+    noun = "a one-example margin" if gap == 1 else f"a {gap}-example margin"
+    return (
+        f"So {noun} between **{flat['passed']}/30 and {supervisor['passed']}/30 "
+        "is not enough to establish a quality difference**, and should not be "
+        "presented as one."
+    )
+
+
 def _variance_section(prior: list[dict], flat: dict, supervisor: dict) -> str:
     if not prior:
         return (
@@ -152,23 +175,24 @@ def _variance_section(prior: list[dict], flat: dict, supervisor: dict) -> str:
         if both_arms_vary
         else "The resolved count is not stable across these runs"
     )
-    return f"""**Other full-dataset runs on disk**, for variance only. These are at
-different commits with different code, so they are *not* controlled
-comparisons between the arms — they bound how much a single run wobbles.
+    return f"""**Other full-dataset runs on disk.** These are at different commits
+with different prompt and evaluator code, so they are *not* controlled
+comparisons — of the arms against each other, or of either arm against itself.
+They show the resolved count is **sensitive**. They do not measure run-to-run
+variance, because nothing pins the code between them.
 
 | Run | Arm | Commit | Resolved | Failed |
 |---|---|---|---|---|
 {rows}
 
 {reading}, and the example that fails is not the same one twice
-({", ".join(f"`{c}`" for c in culprits)}). A one-example gap on a
-thirty-example set sits inside that wobble, so
-**{flat["passed"]}/30 against {supervisor["passed"]}/30 is not a quality
-difference** and should not be presented as one.
+({", ".join(f"`{c}`" for c in culprits)}). {_margin_reading(flat, supervisor)}
+Say "sensitive", not "inside the noise" — the second claims a measurement
+nothing here supports.
 
-**What is not noise is the cost of the extra hop.** The supervisor's median
-latency and tool-call count are higher by margins no single example can
-explain, and that is the finding the verdict rests on.
+**The overhead is what the verdict rests on.** The supervisor's median latency
+and tool-call count are higher by margins no single example can explain, and
+unlike the resolved count they reproduce in the same direction every time.
 """
 
 

@@ -131,7 +131,11 @@ def main() -> None:
     ratio = sup_cost / flat_cost if flat_cost else 0.0
     results.append(
         (
-            "Cost per conversation (<= +50%)",
+            # Pre-registered as "cost per conversation" and the bar is unchanged,
+            # but the metric averages over eval rows and 29 of 30 examples are
+            # single-turn. Renamed to describe what is actually computed; a real
+            # conversation costs several times this. See ARCHITECTURE.md §7.
+            "Cost per priced eval turn (<= +50%)",
             f"flat ${flat_cost:.4f}, supervisor ${sup_cost:.4f} "
             f"({ratio:.2f}x)",
             ratio <= 1.5,

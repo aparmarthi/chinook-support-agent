@@ -33,7 +33,7 @@ Flat is the incumbent; the supervisor must clear every bar.
   FAIL  Mixed-intent completion (+2 slice or +3 overall)  flat 5, supervisor 5 (slice +0, overall +0)
   FAIL  Routing errors (strictly fewer)                   flat 0, supervisor 0  [neither arm made one, so the hypothesised gain had nothing to act on]
   FAIL  p50 latency (<= +2.0s)                            flat 3.8s, supervisor 6.6s (+2.8s)
-  PASS  Cost per conversation (<= +50%)                   flat $0.0010, supervisor $0.0011 (1.12x)
+  PASS  Cost per priced eval turn (<= +50%)               flat $0.0010, supervisor $0.0011 (1.12x)
   PASS  Tool calls per conversation (<= +2)               flat 1, supervisor 2 (+1)
   PASS  Security failures (exactly zero, both arms)       flat 0, supervisor 0
   PASS  No per-workflow regression                        none
@@ -52,9 +52,11 @@ Flat ships. The supervisor is not registered in langgraph.json and is not kept a
 
 ## What this does and does not show
 
-**Other full-dataset runs on disk**, for variance only. These are at
-different commits with different code, so they are *not* controlled
-comparisons between the arms — they bound how much a single run wobbles.
+**Other full-dataset runs on disk.** These are at different commits
+with different prompt and evaluator code, so they are *not* controlled
+comparisons — of the arms against each other, or of either arm against itself.
+They show the resolved count is **sensitive**. They do not measure run-to-run
+variance, because nothing pins the code between them.
 
 | Run | Arm | Commit | Resolved | Failed |
 |---|---|---|---|---|
@@ -67,14 +69,13 @@ comparisons between the arms — they bound how much a single run wobbles.
 | `20260805T023516Z-supervisor.json` | supervisor | `12cefb1b` | 30/30 | none |
 
 Both arms have scored more than one value across these runs, and the example that fails is not the same one twice
-(`escalation-payment-method`, `mixed-spend-and-recommend`, `refund-foreign-line-refused`). A one-example gap on a
-thirty-example set sits inside that wobble, so
-**30/30 against 30/30 is not a quality
-difference** and should not be presented as one.
+(`escalation-payment-method`, `mixed-spend-and-recommend`, `refund-foreign-line-refused`). **The arms tie at 30/30 here**, and against that sensitivity a margin of an example either way would not have established a quality difference in the first place.
+Say "sensitive", not "inside the noise" — the second claims a measurement
+nothing here supports.
 
-**What is not noise is the cost of the extra hop.** The supervisor's median
-latency and tool-call count are higher by margins no single example can
-explain, and that is the finding the verdict rests on.
+**The overhead is what the verdict rests on.** The supervisor's median latency
+and tool-call count are higher by margins no single example can explain, and
+unlike the resolved count they reproduce in the same direction every time.
 
 **The stability block in the verdict above is older data**, three repeats per
 arm recorded before provenance was added, so it predates this commit. It is

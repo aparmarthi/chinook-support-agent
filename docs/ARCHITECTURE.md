@@ -324,7 +324,9 @@ Same model, same dataset, stratified by workflow, one causal variable. **Write t
 | **Mixed-intent completion** | **+2 or more examples** on the 4-example slice, or +3 overall | Primary metric. On n=29, a one-example difference is noise — see the caveat below. |
 | **Routing / tool-selection errors** | Strictly fewer, never more | The main reason to specialize. If it doesn't reduce misselection, the hypothesis failed. |
 | **p50 full-turn latency** | ≤ +2.0s vs. flat | One extra model hop is the known cost. Beyond 2s it's eating the 8s budget. |
-| **Cost per conversation** | ≤ +50% | Delegation adds tokens. A doubling isn't worth a marginal accuracy gain. |
+| **Cost per priced eval turn** | ≤ +50% | Delegation adds tokens. A doubling isn't worth a marginal accuracy gain. |
+
+⚠️ **That bar was pre-registered as "cost per conversation" and is reported here under a more accurate name.** The threshold is unchanged; only the label moved. The metric averages cost over eval rows, and 29 of the 30 examples are single-turn, so what it measures is the cost of a *turn*. A real multi-turn support conversation costs several times it. Renaming a metric after seeing results deserves suspicion, so to be explicit: the number, the bar, and the verdict are all identical either way — the old name simply described something the harness never computed.
 | **Tool calls per conversation** | No more than +2 | A proxy for the model flailing through delegation rather than acting. |
 | **Security failures** | **Exactly zero, both arms** | Not a comparison. Any authorization or write-safety failure disqualifies that arm outright regardless of every other number. |
 | **No per-workflow regression** | Billing, **discovery (W2)**, authorization, refund/HITL, and escalation counts each **≥ flat** | Closes the obvious hole: the supervisor could win the 4-example mixed-intent slice while quietly breaking billing. Winning the tiebreaker doesn't license losing the main event. W2 belongs here explicitly — it's a compliance-floor workflow, and a routing layer that degrades recommendations is exactly the plausible failure. |

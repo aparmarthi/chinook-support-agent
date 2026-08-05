@@ -385,8 +385,8 @@
             <td class="r v">$0.0010</td><td class="r"><span class="lbl m">Measured</span></td>
           </tr>
           <tr>
-            <td>Total API spend, whole build<span class="note">OpenAI dashboard, not the estimate</span></td>
-            <td class="r v">$&nbsp;__.__</td><td class="r"><span class="lbl m">Measured</span></td>
+            <td>API spend, every eval run on disk<span class="note">220 priced rows across 19 result files · both arms, every rerun · excludes Studio</span></td>
+            <td class="r v">$0.22</td><td class="r"><span class="lbl m">Measured</span></td>
           </tr>
           <tr>
             <td>Deterministic tests passing<span class="note">the security claims each have one behind them</span></td>
@@ -443,12 +443,16 @@
     "<b>Company (0:30):</b> \"Quickly, because you're making a platform bet.\" Read the footer strip, then: \"that's the whole company slide.\" " +
     "<b>OSS map (1:30):</b> lead with <b>same runtime, different altitudes</b> — not a product list. Land the two points: you don't pick one, and I chose the middle one deliberately. " +
     "<b>Never say</b> \"loop vs. DAG\" or \"LangGraph is for when it stops being a loop\" — LangGraph supports cycles and create_agent is itself a loop on it. " +
-    "<b>Close:</b> \"If you keep one thing from today: the build is the easy half.\"",
+    "<b>Close:</b> \"If you keep one thing from today: the build is the easy half.\" " +
+    "<b>Sources for the footer strip, verified 5 Aug 2026 —</b> downloads, GitHub stars and Fortune 10 adoption: blog.langchain.com and the LangChain 1.0 / LangGraph 1.0 launch posts (figures current as of June 2026). " +
+    "LangSmith customer count and Fortune 500 share: LangChain's Series B announcement and Interrupt 2026 materials. " +
+    "Funding: $125M Series B led by IVP at a $1.25B post-money, 20 Oct 2025 — corroborated by Tracxn and Crunchbase. " +
+    "<b>That is the Series B, not total raised (~$160M disclosed across seed, A and B).</b> If pressed for a source, say you took them from LangChain's own published material and offer to send links — do not guess a URL aloud.",
 
     "<span class='hint'>Slide 2 — 1:00, then friction and the recommendation</span>" +
     "<b>Lead with the labels, not the numbers.</b> \"Three categories, and the one I'd read first is Unavailable.\" " +
     "<b>Counts, not percentages</b> — 30 examples doesn't support a percentage. " +
-    "<b>The experiment card is the strongest thing on the slide:</b> the complicated thing won and I threw it away anyway, because it didn't win by enough, and the amount it won by turned out to be noise. " +
+    "<b>The experiment card is the strongest thing on the slide:</b> the complicated thing appeared to win, I declined to bank a one-example margin because the bars were written first, and on the rerun at the current commit the lead vanished. Both freezes are on disk, so this is showable, not assertable. " +
     "<b>Provenance: have it, don't volunteer it.</b> Only open it if someone probes the numbers. " +
     "<b>Then:</b> friction (three items), then the recommendation — pilot two workflows, two weeks, instrument containment and unsafe-resolution, safety stop on any cross-tenant failure or unapproved write."
   ];

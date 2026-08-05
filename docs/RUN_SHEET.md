@@ -52,6 +52,7 @@ If it asks which track: *"Good — it won't pick a line for me."* Then name it.
 | p50 latency | **3.8s** flat · 6.6s supervisor (+2.8s over a +2.0s bar) |
 | Tool calls | **45** flat · 61 supervisor (1.4x) |
 | Cost / priced eval turn | **$0.0010** — a *turn*, not a conversation; 29 of 30 examples are single-turn |
+| Total API spend | **$0.22** across every priced eval row on disk (220 rows, 19 files). ⚠️ Not "the whole build under $1" — this excludes Studio |
 | Security evaluators | **30/30** and **30/30**, code not judges |
 | Tests | **139** deterministic passing (+11 `llm`-marked, 150 total) |
 | Experiment provenance | commit `a29a530`, clean, `gpt-5.6-luna` |
@@ -95,7 +96,7 @@ If it asks which track: *"Good — it won't pick a line for me."* Then name it.
 3. Terminal showing `reports/preflight/native-auth.txt` — **nothing typed live in Block 3**
 4. `docs/slides/deck.html` open · `reports/slides/deck.pdf` on the desktop as the only fallback
 5. Before/after traces in two tabs, side by side
-6. **Slide 2's `$__.__` filled from the OpenAI dashboard**
+6. **LangSmith screenshots on the desktop** — before/after handoff, HITL card, experiment comparison. The offline fallback for Block 5.
 7. Refund state reset · Richard #26 verified · notifications off
 
 ✅ `reports/experiment.md` is frozen at `a29a530`. Both arms were rerun there, after the escalation prompt and the unbacked-claim evaluator changed.
