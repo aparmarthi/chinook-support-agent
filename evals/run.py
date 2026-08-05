@@ -16,8 +16,10 @@ refund counts start from a known zero.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import subprocess
 import tempfile
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -38,6 +40,67 @@ def _isolate_databases() -> Path:
     (scratch / "chinook.db").symlink_to(real_chinook)
     os.environ["SUPPORT_DATA_DIR"] = str(scratch)
     return scratch
+
+
+def _git_commit() -> dict[str, str | bool]:
+    """The commit this run was produced from, and whether the tree was dirty.
+
+    A result file that cannot name its own commit is not evidence — two arms
+    compared across an edit are two different systems, and nothing in the JSON
+    would say so.
+    """
+    root = Path(__file__).resolve().parent.parent
+    try:
+        sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dirty = bool(
+            subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return {"commit": "unknown", "dirty": True}
+    return {"commit": sha, "dirty": dirty}
+
+
+def _digest(path: Path) -> str:
+    """Short content hash, so a silent edit to graders shows up as a diff."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+
+
+def _provenance(args, example_count: int) -> dict:
+    """Everything needed to say what produced these numbers.
+
+    Recorded because the comparison is the artifact: "flat beat supervisor" is
+    only a claim about this dataset, graded by these evaluators, on this model,
+    at this commit. Without those four, a headline number is a number.
+    """
+    from src.settings import agent_model, evaluator_model
+
+    here = Path(__file__).resolve().parent
+    return {
+        "git": _git_commit(),
+        "agent_model": agent_model(),
+        "evaluator_model": evaluator_model() if args.judge else None,
+        "dataset": {
+            "examples": example_count,
+            "slices": args.only or "all",
+            "digest": _digest(here / "dataset.py"),
+        },
+        "evaluators_digest": _digest(here / "evaluators.py"),
+        "repeat": args.repeat,
+        "judge": args.judge,
+        "dry_run": args.dry_run,
+    }
 
 
 def main() -> None:
@@ -145,7 +208,7 @@ def main() -> None:
                 }
             )
 
-    _report(rows, SLICE_SIZES, args)
+    _report(rows, SLICE_SIZES, args, _provenance(args, len(examples)))
 
 
 def _report_tone(rows: list[dict]) -> None:
@@ -187,7 +250,9 @@ def _unstable_examples(rows: list[dict]) -> list[tuple[str, int, int]]:
     ]
 
 
-def _report(rows: list[dict], slice_sizes: dict[str, int], args) -> None:
+def _report(
+    rows: list[dict], slice_sizes: dict[str, int], args, provenance: dict
+) -> None:
     """Print counts per slice and per evaluator, then save the run."""
     per_slice: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
@@ -253,9 +318,20 @@ def _report(rows: list[dict], slice_sizes: dict[str, int], args) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{stamp}-{args.arm}.json"
     path.write_text(
-        json.dumps({"generated": stamp, "arm": args.arm, "rows": rows}, indent=2)
+        json.dumps(
+            {
+                "generated": stamp,
+                "arm": args.arm,
+                "provenance": provenance,
+                "rows": rows,
+            },
+            indent=2,
+        )
     )
+    git = provenance["git"]
+    dirty = "  ** DIRTY TREE **" if git["dirty"] else ""
     print(f"\nsaved {path}")
+    print(f"  model {provenance['agent_model']}  commit {git['commit'][:8]}{dirty}")
 
 
 if __name__ == "__main__":
