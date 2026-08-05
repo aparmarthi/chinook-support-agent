@@ -338,25 +338,26 @@ Same model, same dataset, stratified by workflow, one causal variable. **Write t
 
 ### Result — flat ships
 
-Scored by `python -m evals.compare` and frozen in [`reports/experiment.md`](../reports/experiment.md), which is generated from the two result files and is the only place these numbers should be read from. Both arms ran at commit `12cefb1`, clean tree, same dataset digest, same evaluators, `gpt-5.6-luna`.
+Scored by `python -m evals.compare` and frozen in [`reports/experiment.md`](../reports/experiment.md), which is generated from the two result files and is the only place these numbers should be read from. Both arms ran at commit `a29a530`, clean tree, same dataset digest, same evaluators, `gpt-5.6-luna`.
 
 | | Flat | Supervisor |
 |---|---|---|
-| Resolved | 29/30 | **30/30** |
+| Resolved | 30/30 | 30/30 |
 | Mixed-intent | 5/5 | 5/5 |
-| p50 latency | 4.0s | 6.2s (**+2.2s**, over the +2.0s bar) |
-| Cost per conversation | $0.0010 | $0.0011 (1.12x) |
+| p50 latency | **3.8s** | 6.6s (**+2.8s**, over the +2.0s bar) |
+| Tool calls, total | **45** | 61 |
+| Cost per priced eval turn | $0.0010 | $0.0011 (1.12x) |
 | Security failures | 0 | 0 |
 
-The supervisor **won the headline number and still loses**, failing three bars: mixed-intent margin, routing errors, and latency. That is the pre-registration doing its job — a decision rule you cannot revise while looking at the results is the only defense against reading a +1 as vindication.
+The supervisor **buys nothing and costs 1.7x the median latency**, failing three bars: mixed-intent margin, routing errors, and latency.
 
-**A one-example margin does not establish a quality difference, and the demo should say exactly that.** Across the full-dataset runs in `evals/results/`, flat has scored both 29/30 and 30/30 and so has the supervisor, failing a different example each time — `mixed-spend-and-recommend` in one, `refund-foreign-line-refused` in another.
+**This table is the second freeze, and the first one is the more interesting artifact.** At commit `12cefb1` the supervisor led 30/30 against flat's 29/30, and flat shipped anyway, because a one-example margin on a thirty-example set is not a quality difference and the pre-registered bars said so before either number existed. Rerunning both arms at `a29a530` — after the escalation prompt and the unbacked-claim evaluator changed — the arms tie. **The margin that a weaker analysis would have called a win evaporated on the next run.** That is the whole argument for pre-registration, and it is now demonstrated rather than asserted.
 
-⚠️ **Do not call that "run-to-run variance."** Those earlier runs predate provenance capture and carry **no recorded commit**, so they differ in prompt and evaluator code as well as in sampling. They demonstrate that the resolution count is *sensitive*; they do not measure variance at fixed code, because nothing pins the code. The supportable sentence is: the one-example advantage is not enough to establish a quality difference, while the supervisor's latency and tool-call overhead are unambiguous in the controlled comparison.
+⚠️ **Do not call the older spread "run-to-run variance."** Runs before `12cefb1` predate provenance capture and carry **no recorded commit**, so they differ in prompt and evaluator code as well as in sampling. They demonstrate that the resolution count is *sensitive*; they do not measure variance at fixed code, because nothing pins the code. The supportable sentence is: the resolution count did not separate these architectures, while the supervisor's latency and tool-call overhead are unambiguous in the controlled comparison.
 
-⚠️ **An earlier version of this paragraph claimed a specific reversed pair — flat 30/30 against supervisor 29/30, both failing `escalation-payment-method`.** No such pair exists on disk. The variance conclusion survives; the evidence for it is the table above, not a remembered run. It is worth noting where the claim came from, because it is the same failure this document spends a section on: a number that sounded right, was never read off an artifact, and would have been said out loud to the people most likely to ask for the file.
+⚠️ **An earlier version of this paragraph claimed a specific reversed pair — flat 30/30 against supervisor 29/30, both failing `escalation-payment-method`.** No such pair existed on disk when it was written. It is worth noting where the claim came from, because it is the same failure this document spends a section on: a number that sounded right, was never read off an artifact, and would have been said out loud to the people most likely to ask for the file.
 
-What reproduces in the same direction every time is the cost of the extra hop: roughly half again the median latency and substantially more tool calls. **The verdict rests on that, not on the one-example gap**, which is what makes it a verdict rather than a reading.
+What reproduces in the same direction every time is the cost of the extra hop: 1.7x the median latency and 61 tool calls against 45. **The verdict rests on that, not on the resolution count**, which is what makes it a verdict rather than a reading.
 
 One bar was mis-specified: "routing errors, strictly fewer" is unreachable when flat commits zero. It is reported as a failure because that is how it was written, and the correction belongs in the next pre-registration, not in this one after seeing results. The verdict does not turn on it.
 

@@ -202,7 +202,10 @@ def main() -> None:
         print("VERDICT: supervisor clears every bar. Ship the supervisor.")
     else:
         print(f"VERDICT: supervisor fails {len(failed)} bar(s) — {', '.join(failed)}.")
-        print("Flat ships. The supervisor is deleted, not kept as a maybe.")
+        print(
+            "Flat ships. The supervisor is not registered in langgraph.json and is "
+            "not kept as a maybe — it stays on disk only so this comparison reruns."
+        )
 
 
 def _report_repeats(directory: Path) -> None:

@@ -7,21 +7,21 @@ below. Every number here is read out of them; nothing is retyped.
 
 | | |
 |---|---|
-| Commit | `12cefb1ba113d30ed7826cef05dc22745465ca38` (clean, both arms) |
+| Commit | `a29a530a97b083f146c01bceb35bfd9f7b9d8039` (clean, both arms) |
 | Agent model | `openai:gpt-5.6-luna` |
 | Dataset | 30 examples · digest `6ba144216f8d` |
-| Evaluators | digest `9e2516b82112` |
-| Flat run | `20260805T023104Z-flat.json` |
-| Supervisor run | `20260805T023516Z-supervisor.json` |
+| Evaluators | digest `decda2664959` |
+| Flat run | `20260805T064655Z-flat.json` |
+| Supervisor run | `20260805T065033Z-supervisor.json` |
 
 ## Headline
 
 | Metric | Flat | Supervisor |
 |---|---|---|
-| Resolved | **29/30** | **30/30** |
-| p50 latency | 4.0s | 6.2s |
-| Tool calls (total) | 46 | 70 |
-| Failed examples | escalation-payment-method | none |
+| Resolved | **30/30** | **30/30** |
+| p50 latency | 3.8s | 6.6s |
+| Tool calls (total) | 45 | 61 |
+| Failed examples | none | none |
 
 ## Verdict
 
@@ -30,14 +30,14 @@ below. Every number here is read out of them; nothing is retyped.
 FLAT vs SUPERVISOR — thresholds pre-registered in ARCHITECTURE.md §7
 Flat is the incumbent; the supervisor must clear every bar.
 ==============================================================================================
-  FAIL  Mixed-intent completion (+2 slice or +3 overall)  flat 5, supervisor 5 (slice +0, overall +1)
+  FAIL  Mixed-intent completion (+2 slice or +3 overall)  flat 5, supervisor 5 (slice +0, overall +0)
   FAIL  Routing errors (strictly fewer)                   flat 0, supervisor 0  [neither arm made one, so the hypothesised gain had nothing to act on]
-  FAIL  p50 latency (<= +2.0s)                            flat 4.0s, supervisor 6.2s (+2.2s)
+  FAIL  p50 latency (<= +2.0s)                            flat 3.8s, supervisor 6.6s (+2.8s)
   PASS  Cost per conversation (<= +50%)                   flat $0.0010, supervisor $0.0011 (1.12x)
   PASS  Tool calls per conversation (<= +2)               flat 1, supervisor 2 (+1)
   PASS  Security failures (exactly zero, both arms)       flat 0, supervisor 0
   PASS  No per-workflow regression                        none
-  PASS  Overall task resolution (non-decreasing)          flat 29/30, supervisor 30/30
+  PASS  Overall task resolution (non-decreasing)          flat 30/30, supervisor 30/30
 
 MIXED-INTENT STABILITY (3 runs per arm; variance, not significance)
   mixed-escalate-and-answer              flat 3/3   supervisor 3/3
@@ -47,7 +47,7 @@ MIXED-INTENT STABILITY (3 runs per arm; variance, not significance)
   mixed-vague-escalation-asks-first      flat 3/3   supervisor 3/3
 
 VERDICT: supervisor fails 3 bar(s) — Mixed-intent completion (+2 slice or +3 overall), Routing errors (strictly fewer), p50 latency (<= +2.0s).
-Flat ships. The supervisor is deleted, not kept as a maybe.
+Flat ships. The supervisor is not registered in langgraph.json and is not kept as a maybe — it stays on disk only so this comparison reruns.
 ```
 
 ## What this does and does not show
@@ -63,11 +63,13 @@ comparisons between the arms — they bound how much a single run wobbles.
 | `20260803T064113Z-flat.json` | flat | `unrecorded` | 29/30 | mixed-spend-and-recommend |
 | `20260803T064500Z-supervisor.json` | supervisor | `unrecorded` | 30/30 | none |
 | `20260803T173549Z-flat.json` | flat | `unrecorded` | 30/30 | none |
+| `20260805T023104Z-flat.json` | flat | `12cefb1b` | 29/30 | escalation-payment-method |
+| `20260805T023516Z-supervisor.json` | supervisor | `12cefb1b` | 30/30 | none |
 
 Both arms have scored more than one value across these runs, and the example that fails is not the same one twice
-(`mixed-spend-and-recommend`, `refund-foreign-line-refused`). A one-example gap on a
+(`escalation-payment-method`, `mixed-spend-and-recommend`, `refund-foreign-line-refused`). A one-example gap on a
 thirty-example set sits inside that wobble, so
-**29/30 against 30/30 is not a quality
+**30/30 against 30/30 is not a quality
 difference** and should not be presented as one.
 
 **What is not noise is the cost of the extra hop.** The supervisor's median

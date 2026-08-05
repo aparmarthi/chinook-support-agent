@@ -54,26 +54,26 @@ Third, and most important for this exercise: *"I measured it"* is a strictly bet
 
 Ran, scored by `evals/compare.py` against the thresholds in [`ARCHITECTURE.md`](ARCHITECTURE.md) §7, which were written before the supervisor existed.
 
-| Bar | Flat | Supervisor | |
-|---|---|---|---|
-Frozen in [`reports/experiment.md`](../reports/experiment.md). Both arms at commit `12cefb1`, clean tree, one dataset digest, one evaluator digest, `gpt-5.6-luna`.
+Frozen in [`reports/experiment.md`](../reports/experiment.md). Both arms at commit `a29a530`, clean tree, one dataset digest, one evaluator digest, `gpt-5.6-luna`.
 
 | Bar | Flat | Supervisor | |
 |---|---|---|---|
 | Mixed-intent completion (needs +2 slice or +3 overall) | 5/5 | 5/5 (+0) | FAIL |
 | Routing errors (needs strictly fewer) | 0 | 0 | FAIL — see below |
-| p50 latency (needs ≤ +2.0s) | 4.0s | 6.2s (+2.2s) | FAIL |
-| Cost per conversation (needs ≤ +50%) | $0.0010 | $0.0011 (1.12x) | PASS |
+| p50 latency (needs ≤ +2.0s) | 3.8s | 6.6s (+2.8s) | FAIL |
+| Cost per priced eval turn (needs ≤ +50%) | $0.0010 | $0.0011 (1.12x) | PASS |
 | Tool calls per conversation (needs ≤ +2) | 1 | 2 (+1) | PASS |
 | Security failures (needs zero, both) | 0 | 0 | PASS |
 | Per-workflow regression | — | none | PASS |
-| Overall resolution (needs non-decreasing) | 29/30 | 30/30 | PASS |
+| Overall resolution (needs non-decreasing) | 30/30 | 30/30 | PASS |
 
-**The supervisor is not worse. It won the headline number and regressed nothing, and it still does not ship.** It fails because "better" was defined in advance as a margin worth paying two-plus seconds a turn for, and it did not produce one.
+**The supervisor is not worse on quality. It is simply more expensive for nothing** — 1.7x the median latency, 61 tool calls against 45 — and "better" was defined in advance as a margin worth paying two-plus seconds a turn for.
 
-**The one-example gap is inside run-to-run variance, which is itself the result.** Across the full-dataset runs on disk, each arm has scored both 29/30 and 30/30, failing a different example each time (`mixed-spend-and-recommend`, `refund-foreign-line-refused`). One example on thirty is a coin. What reproduces in the same direction is the latency and tool-call cost of the extra hop, and **the verdict rests on that**, which is the only reason it is safe to report a headline that could have come out the other way.
+⚠️ **Correction, 5 Aug — and this one is worth reading, because the correction is the finding.** This entry previously reported flat 29/30 against supervisor 30/30 at commit `12cefb1`, and argued at length that the one-example gap sat inside run-to-run variance and so the verdict had to rest on latency instead. Both arms were then rerun at `a29a530`, after the escalation prompt and the `no_unbacked_action_claims` evaluator changed (ADR-024). **They tie at 30/30. The supervisor's lead did not survive a rerun.**
 
-⚠️ **Correction, 4 Aug.** This entry previously claimed a specific reversed pair — flat 30/30 against supervisor 29/30, both hinging on `escalation-payment-method`. That pair is not in `evals/results/`, and the paragraph asserting it was hardcoded into `scripts/freeze_experiment.py`, directly contradicting the same file's claim that every number is read from the result files. The variance section is now generated from whatever full-dataset runs exist. The conclusion did not change; the difference is that it can now be checked, and the version that could not be checked was two days from being said in a room.
+That is the second time this ADR has been corrected, and the two corrections are opposite in kind. On 4 Aug it was corrected for asserting a reversed pair that did not exist on disk — a number that sounded right and was never read off an artifact. Today it is corrected by an artifact that disagrees with a number that *was* real. The first correction is embarrassing; the second is the system working. **A pre-registered bar meant the un-bankable margin was never banked**, so no conclusion had to be withdrawn when it evaporated — only the sentence explaining why it didn't matter.
+
+**On the older runs:** those predating `12cefb1` carry no recorded commit and differ in code as well as sampling, so they show the resolution count is *sensitive*, not that it varies at fixed code. Do not describe them as run-to-run variance.
 
 **This is why provenance is recorded now.** Before this, a result file named no commit, model, dataset, or evaluator version, so two arms compared across an edit would have looked like a comparison. `scripts/freeze_experiment.py` refuses to publish arms that disagree on any of the four.
 

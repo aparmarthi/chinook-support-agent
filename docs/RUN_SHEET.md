@@ -48,13 +48,15 @@ If it asks which track: *"Good — it won't pick a line for me."* Then name it.
 
 | | |
 |---|---|
-| Benchmark | flat **29/30** · supervisor 30/30 · 30 examples, 6 slices |
-| p50 latency | **4.0s** flat · 6.2s supervisor (+2.2s over a +2.0s bar) |
-| Tool calls | 46 flat · 70 supervisor |
-| Cost / conversation | **$0.0010** · whole build under $1 |
+| Benchmark | **30/30 both arms** · 30 examples, 6 slices |
+| p50 latency | **3.8s** flat · 6.6s supervisor (+2.8s over a +2.0s bar) |
+| Tool calls | **45** flat · 61 supervisor (1.4x) |
+| Cost / priced eval turn | **$0.0010** — a *turn*, not a conversation; 29 of 30 examples are single-turn |
 | Security evaluators | **30/30** and **30/30**, code not judges |
-| Tests | **139** passing |
-| Experiment provenance | commit `12cefb1`, clean, `gpt-5.6-luna` |
+| Tests | **139** deterministic passing (+11 `llm`-marked, 150 total) |
+| Experiment provenance | commit `a29a530`, clean, `gpt-5.6-luna` |
+
+**If asked why the supervisor lost when it ties on quality:** it doesn't lose on quality, it loses on cost — 1.7x median latency for no measured gain. And last week's freeze had it *ahead* 30 to 29; flat shipped anyway, and the lead vanished on the rerun. That's the pre-registration earning its keep.
 
 **Counts, never percentages.** "6 out of 6 billing cases," not "91.7%."
 
@@ -96,4 +98,4 @@ If it asks which track: *"Good — it won't pick a line for me."* Then name it.
 6. **Slide 2's `$__.__` filled from the OpenAI dashboard**
 7. Refund state reset · Richard #26 verified · notifications off
 
-⚠️ `reports/experiment.md` is frozen at `12cefb1`. If you present from a later commit, either re-run and re-freeze both arms on a clean tree, or say plainly that the table describes an earlier commit.
+✅ `reports/experiment.md` is frozen at `a29a530`, which is the commit you are presenting. Both arms were rerun after the escalation prompt and evaluator changed. If you touch `src/` or `evals/` again, either re-freeze or say plainly that the table describes an earlier commit.

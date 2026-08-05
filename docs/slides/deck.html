@@ -361,8 +361,8 @@
             <th>Metric</th><th class="r">Value</th><th class="r" style="width:104px">Basis</th>
           </tr>
           <tr>
-            <td>Task resolution, benchmark<span class="note">30 examples · 6 slices · the one miss omitted the rep's name — content, not safety</span></td>
-            <td class="r v">29 / 30</td><td class="r"><span class="lbl m">Measured</span></td>
+            <td>Task resolution, benchmark<span class="note">30 examples · 6 slices · every slice clean at this commit</span></td>
+            <td class="r v">30 / 30</td><td class="r"><span class="lbl m">Measured</span></td>
           </tr>
           <tr>
             <td>Cross-tenant data access<span class="note">code evaluator, never a judge · hard gate</span></td>
@@ -377,8 +377,8 @@
             <td class="r v">4 / 4</td><td class="r"><span class="lbl m">Measured</span></td>
           </tr>
           <tr>
-            <td>Full-turn latency, p50<span class="note">p95 10.0s — directional only at n=30</span></td>
-            <td class="r v">4.0 s</td><td class="r"><span class="lbl m">Measured</span></td>
+            <td>Full-turn latency, p50<span class="note">p95 7.1s — directional only at n=30</span></td>
+            <td class="r v">3.8 s</td><td class="r"><span class="lbl m">Measured</span></td>
           </tr>
           <tr>
             <td>Cost per priced eval turn<span class="note">29 of 30 examples are single-turn · a real conversation costs several times more</span></td>
@@ -406,17 +406,17 @@
       <div>
         <div class="card">
           <h3>The experiment</h3>
-          <p class="verdict">The supervisor won <span>30/30</span> against flat's 29. I shipped <span>flat</span>.</p>
-          <p>Bars were pre-registered before the supervisor existed. It came in <strong>+2.2s on p50</strong> against a +2.0s ceiling, with <strong>no mixed-intent gain</strong>. One example out of thirty doesn't buy that.</p>
-          <p><strong>One example does not establish a quality difference.</strong> Older runs at unrecorded commits put each arm at both 29 and 30, failing a different example each time — not controlled variance, but enough to show the count is sensitive. What <em>is</em> clear in the controlled comparison is the overhead of the extra hop: <strong>~1.5x median latency, 70 tool calls against 46</strong>. The verdict rests on that, not on the one-example gap.</p>
+          <p class="verdict">Both arms resolved <span>30/30</span>. I shipped <span>flat</span>.</p>
+          <p>Bars were pre-registered before the supervisor existed. It came in <strong>+2.8s on p50</strong> against a +2.0s ceiling, with <strong>no mixed-intent gain</strong> and no quality gain to pay for it.</p>
+          <p><strong>Last week this said 30 against 29, in the supervisor's favour, and I shipped flat anyway</strong> — one example on thirty isn't a quality difference. Rerun at this commit, they tie. That is what a one-example margin was worth. What reproduced both times is the overhead of the extra hop: <strong>1.7x median latency, 61 tool calls against 45</strong>. The verdict rests on that.</p>
         </div>
 
         <div class="card">
           <h3>Provenance</h3>
-          <div class="kv"><span>Commit, both arms</span><b>12cefb1 · clean</b></div>
+          <div class="kv"><span>Commit, both arms</span><b>a29a530 · clean</b></div>
           <div class="kv"><span>Agent model</span><b>gpt-5.6-luna</b></div>
           <div class="kv"><span>Dataset digest</span><b>6ba144216f8d</b></div>
-          <div class="kv"><span>Evaluator digest</span><b>9e2516b82112</b></div>
+          <div class="kv"><span>Evaluator digest</span><b>decda2664959</b></div>
           <p style="margin-top:10px;font-size:12.5px">Generated into <code>reports/experiment.md</code>, not typed. The script refuses to publish two arms that disagree on commit, model, dataset, or evaluators.</p>
         </div>
       </div>
