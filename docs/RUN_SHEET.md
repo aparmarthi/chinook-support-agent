@@ -101,4 +101,11 @@ If it asks which track: *"Good — it won't pick a line for me."* Then name it.
 
 ✅ `reports/experiment.md` is frozen at `a29a530`. Both arms were rerun there, after the escalation prompt and the unbacked-claim evaluator changed.
 
-**If someone notices HEAD is `d64e6c0` and the table says `a29a530`:** the only code difference is one print string in `compare.py`. The evaluator and dataset digests at HEAD are byte-identical to the frozen ones — `decda2664959` and `6ba144216f8d` — and you can show that in two seconds. If you touch `src/` or `evals/` again before Thursday, re-freeze.
+**If someone notices HEAD is ahead of `a29a530`:** every commit since touches only docs and the *labels* `compare.py` prints — no agent code, no evaluator, no dataset. The digests at HEAD are byte-identical to the frozen ones, `decda2664959` and `6ba144216f8d`, and you can show that in two seconds:
+
+```
+python -c "from pathlib import Path; from evals.run import _digest; \
+print(_digest(Path('evals/evaluators.py')), _digest(Path('evals/dataset.py')))"
+```
+
+If you change anything under `src/` or `evals/` before Thursday, re-freeze both arms rather than explaining the gap.
