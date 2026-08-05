@@ -58,15 +58,17 @@ def _git_commit() -> dict[str, str | bool]:
             text=True,
             check=True,
         ).stdout.strip()
-        dirty = bool(
-            subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                check=True,
-            ).stdout.strip()
-        )
+        # Results are outputs of this command, so the first arm's file would
+        # otherwise mark the second arm dirty and the comparison would carry a
+        # warning about itself. Inputs only.
+        status = subprocess.run(
+            ["git", "status", "--porcelain", ":!evals/results"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dirty = bool(status)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return {"commit": "unknown", "dirty": True}
     return {"commit": sha, "dirty": dirty}
