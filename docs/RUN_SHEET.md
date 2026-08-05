@@ -98,4 +98,6 @@ If it asks which track: *"Good — it won't pick a line for me."* Then name it.
 6. **Slide 2's `$__.__` filled from the OpenAI dashboard**
 7. Refund state reset · Richard #26 verified · notifications off
 
-✅ `reports/experiment.md` is frozen at `a29a530`, which is the commit you are presenting. Both arms were rerun after the escalation prompt and evaluator changed. If you touch `src/` or `evals/` again, either re-freeze or say plainly that the table describes an earlier commit.
+✅ `reports/experiment.md` is frozen at `a29a530`. Both arms were rerun there, after the escalation prompt and the unbacked-claim evaluator changed.
+
+**If someone notices HEAD is `d64e6c0` and the table says `a29a530`:** the only code difference is one print string in `compare.py`. The evaluator and dataset digests at HEAD are byte-identical to the frozen ones — `decda2664959` and `6ba144216f8d` — and you can show that in two seconds. If you touch `src/` or `evals/` again before Thursday, re-freeze.

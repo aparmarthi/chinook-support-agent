@@ -1,8 +1,8 @@
 # Full test suite — evidence for the '139 deterministic tests' claim
-# Generated 2026-08-05T06:39:33Z at commit 3ccd6d2
+# Generated 2026-08-05T06:56:08Z at commit d64e6c0
 
 $ pytest tests/            # default: -m 'not llm'  <-- backs the slide
-139 passed, 11 deselected in 5.63s
+139 passed, 11 deselected in 5.93s
 
 $ pytest tests/ -o addopts='--strict-markers'   # including the 11 llm-marked tests
-============================= 150 passed in 29.12s =============================
+============================= 150 passed in 25.32s =============================
