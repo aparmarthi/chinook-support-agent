@@ -71,7 +71,9 @@ Frozen in [`reports/experiment.md`](../reports/experiment.md). Both arms at comm
 
 **The supervisor is not worse. It won the headline number and regressed nothing, and it still does not ship.** It fails because "better" was defined in advance as a margin worth paying two-plus seconds a turn for, and it did not produce one.
 
-**Re-run 4 Aug and the numbers moved, which is itself the result.** An earlier pair at the previous commit had flat 30/30 against supervisor 29/30 — the reverse of what is tabled above. The same single example, `escalation-payment-method`, intermittently omits the rep's name and fails whichever arm misses it. One example on thirty is a coin. What reproduced in the same direction across both pairs is the latency and tool-call cost of the extra hop, and **the verdict is unchanged under either pairing**, which is the only reason it is safe to report a table that could have come out the other way.
+**The one-example gap is inside run-to-run variance, which is itself the result.** Across the full-dataset runs on disk, each arm has scored both 29/30 and 30/30, failing a different example each time (`mixed-spend-and-recommend`, `refund-foreign-line-refused`). One example on thirty is a coin. What reproduces in the same direction is the latency and tool-call cost of the extra hop, and **the verdict rests on that**, which is the only reason it is safe to report a headline that could have come out the other way.
+
+⚠️ **Correction, 4 Aug.** This entry previously claimed a specific reversed pair — flat 30/30 against supervisor 29/30, both hinging on `escalation-payment-method`. That pair is not in `evals/results/`, and the paragraph asserting it was hardcoded into `scripts/freeze_experiment.py`, directly contradicting the same file's claim that every number is read from the result files. The variance section is now generated from whatever full-dataset runs exist. The conclusion did not change; the difference is that it can now be checked, and the version that could not be checked was two days from being said in a room.
 
 **This is why provenance is recorded now.** Before this, a result file named no commit, model, dataset, or evaluator version, so two arms compared across an edit would have looked like a comparison. `scripts/freeze_experiment.py` refuses to publish arms that disagree on any of the four.
 
@@ -474,4 +476,16 @@ But `escalate_to_human` resolved the customer's rep, formatted a summary, and re
 
 **Consequence.** The tool stays outside the human-in-the-loop gate. Gating it would put an approval step in front of something that moves no money, which trains reviewers to click through — and the one gate that matters is the one that must not be reflexive.
 
-**Would change our mind.** A real ticketing integration, at which point `queued` becomes `sent` and the status column starts earning its keep.
+**Amendment, 5 Aug — the claim outran the action again.** With the row being written, the agent's reply was *"I've passed this to Steve Johnson for investigation… a colleague will review it and follow up."* A `queued` row does not support that sentence: nothing was passed to anyone and no colleague has it. The action had been fixed and the *claim about* the action was still one step ahead of it — the same defect as the original, at the third depth.
+
+Three things changed, and the second is the one that matters:
+
+1. The tool's return string now dictates the phrasing — it states the request id and that the request is not assigned or sent, and explicitly forbids "passed to", "handed to", and "received by".
+2. `no_unbacked_action_claims` learned the new wording. Steering the model to say *"queued"* would otherwise have silently retired this evaluator on the escalation slice, since none of its patterns matched the new sentence — **a wording fix that blinds the grader watching the wording is a worse position than the overclaim.** While adding it, the pattern set turned out never to have matched `"I've passed this to Steve Johnson"` at all, because every variant required the word "along". The grader had been blind to the most natural phrasing of the exact claim it exists to catch.
+3. The prompt's `WHEN YOU CANNOT HELP` and `ACTIONS ARE REAL` sections distinguish queuing from delivery.
+
+Verified reply: *"I've queued request #3 for support review under Steve Johnson… It's currently waiting for review and hasn't been assigned or sent yet."* Backing row: `#3 · customer 6 · Steve Johnson · normal · queued`.
+
+**The four traces are kept as a series** (`reports/traces/`), because each stage passed the checks that existed when it shipped and none was caught by anything going red: claimed with no tool → tool with no write → write with an overstated claim → claim matching the row.
+
+**Would change our mind.** A real ticketing integration, at which point `queued` becomes `sent` and the status column starts earning its keep. ⚠️ Do not estimate how long that integration takes without knowing the system on the other side.

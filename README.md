@@ -2,7 +2,7 @@
 
 A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built for the final round of the LangChain Deployed Engineer process — the deliverable is a live 35-minute demo to a mixed business/technical audience.
 
-**Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 135 deterministic tests, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
+**Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 139 deterministic tests, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
 
 ---
 
@@ -40,6 +40,7 @@ Full reasoning in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/deci
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Cognitive architecture, tools, middleware, evaluation matrix, data layer |
 | [`docs/decisions.md`](docs/decisions.md) | 24 ADRs — the choices, the reversals, and what would change our mind |
 | [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md) | Day-by-day plan, budget, cut order, risk register |
+| [`docs/RUN_SHEET.md`](docs/RUN_SHEET.md) | **The one page presented from** — clock, exact utterances, numbers, cut ladder |
 | [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | Audience read, run of show, hot takes, statements to avoid, Q&A prep |
 | [`docs/COMPETITIVE.md`](docs/COMPETITIVE.md) | Positioning and objection handling — read the morning of |
 | [`docs/FRICTION_LOG.md`](docs/FRICTION_LOG.md) | Friction log — filled during the build |

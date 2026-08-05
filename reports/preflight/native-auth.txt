@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.14, pytest-9.1.1, pluggy-1.6.0 -- /Users/aparmarthi/Documents/Projects/Langchain Customer Support Agent/.venv/bin/python
+rootdir: /Users/aparmarthi/Documents/Projects/Langchain Customer Support Agent
+configfile: pytest.ini
+plugins: asyncio-1.4.0, langsmith-0.10.15, anyio-4.14.2
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 10 items
+
+tests/test_native_auth.py::test_a_request_without_a_credential_is_refused PASSED [ 10%]
+tests/test_native_auth.py::test_the_server_stamps_the_owner_rather_than_trusting_the_caller PASSED [ 20%]
+tests/test_native_auth.py::test_another_customer_cannot_see_the_thread PASSED [ 30%]
+tests/test_native_auth.py::test_another_customer_cannot_resume_the_thread PASSED [ 40%]
+tests/test_native_auth.py::test_the_refused_resume_creates_no_run PASSED [ 50%]
+tests/test_native_auth.py::test_run_context_cannot_claim_a_different_customer PASSED [ 60%]
+tests/test_native_auth.py::test_the_legacy_configurable_is_closed_too PASSED [ 70%]
+tests/test_native_auth.py::test_a_stateless_run_cannot_claim_a_different_customer PASSED [ 80%]
+tests/test_native_auth.py::test_identity_is_taken_from_the_credential_not_the_assistant PASSED [ 90%]
+tests/test_native_auth.py::test_studio_is_exempt_and_that_is_why_the_gateway_stays PASSED [100%]
+
+============================== 10 passed in 0.10s ==============================

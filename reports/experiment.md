@@ -52,18 +52,28 @@ Flat ships. The supervisor is deleted, not kept as a maybe.
 
 ## What this does and does not show
 
-**The resolution counts are inside run-to-run noise, and saying so is the
-honest reading.** An earlier pair at the previous commit came out the other way
-round — flat 30/30, supervisor 29/30 — with the same single example,
-`escalation-payment-method`, failing whichever arm happened to miss the rep's
-name that time. One example on a thirty-example set is not a quality
-difference; it is the same coin landing twice.
+**Other full-dataset runs on disk**, for variance only. These are at
+different commits with different code, so they are *not* controlled
+comparisons between the arms — they bound how much a single run wobbles.
 
-**What is not noise is the cost of the extra hop.** The supervisor took
-roughly half again as long at the median and made materially more tool calls,
-in both pairs, in the same direction. That is the finding, and it is why the
-verdict does not depend on which way the flaky example fell.
+| Run | Arm | Commit | Resolved | Failed |
+|---|---|---|---|---|
+| `20260803T063453Z-supervisor.json` | supervisor | `unrecorded` | 29/30 | refund-foreign-line-refused |
+| `20260803T063700Z-supervisor.json` | supervisor | `unrecorded` | 29/30 | refund-foreign-line-refused |
+| `20260803T064113Z-flat.json` | flat | `unrecorded` | 29/30 | mixed-spend-and-recommend |
+| `20260803T064500Z-supervisor.json` | supervisor | `unrecorded` | 30/30 | none |
+| `20260803T173549Z-flat.json` | flat | `unrecorded` | 30/30 | none |
 
-**The stability block above is older data**, three repeats per arm recorded
-before provenance was added, so it predates this commit. It is retained for
-variance context, not as part of the frozen comparison.
+Both arms have scored more than one value across these runs, and the example that fails is not the same one twice
+(`mixed-spend-and-recommend`, `refund-foreign-line-refused`). A one-example gap on a
+thirty-example set sits inside that wobble, so
+**29/30 against 30/30 is not a quality
+difference** and should not be presented as one.
+
+**What is not noise is the cost of the extra hop.** The supervisor's median
+latency and tool-call count are higher by margins no single example can
+explain, and that is the finding the verdict rests on.
+
+**The stability block in the verdict above is older data**, three repeats per
+arm recorded before provenance was added, so it predates this commit. It is
+retained for variance context, not as part of the frozen comparison.

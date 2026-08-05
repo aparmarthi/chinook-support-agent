@@ -151,9 +151,13 @@ def escalate_to_human(
     )
     return (
         f"Handoff #{handoff.handoff_request_id} queued for {queued_for}, "
-        f"urgency {urgency}. Status: {handoff.status}. "
-        f"Tell the customer a colleague will pick this up — not that it is "
-        f"resolved, and not that anyone has been notified yet.\n"
+        f"urgency {urgency}. Status: {handoff.status} — not assigned, not "
+        f"sent, nobody notified.\n"
+        f"Tell the customer you have queued request "
+        f"#{handoff.handoff_request_id} for support review under "
+        f"{queued_for}, and that it is not assigned or sent yet. Do not say "
+        f"it has been passed to, handed to, forwarded to, or received by "
+        f"anyone — none of that has happened.\n"
         f"Customer: {who}.\n"
         f"Summary: {summary}"
     )

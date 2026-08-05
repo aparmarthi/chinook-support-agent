@@ -1,14 +1,20 @@
 """The flat support agent — the baseline architecture (ADR-002).
 
 One `create_agent` loop with every tool attached. Official guidance is to use a
-single agent for a handful of tools, and this has five. The supervisor variant
-is built second and ships only if it beats this on a pre-registered set of
-thresholds; until then, this is the agent.
+single agent for a handful of tools, and this has six. The supervisor variant
+was built second and measured against a pre-registered set of thresholds; it
+failed three of them, so this is the agent (`reports/experiment.md`).
+`graph_supervisor.py` is retained as the experiment fixture — it is not shipped
+and not registered in `langgraph.json`, but deleting it would make the
+comparison unreproducible.
 
 Flat also has a security consequence worth knowing: middleware here observes
 every tool call, because there is no nesting for one to hide inside. That is
-defense in depth rather than the boundary itself — the boundary lives in
-`src/data` and `src/gateway.py` and holds regardless of topology (ADR-006).
+defense in depth rather than the boundary itself. The boundary is two layers
+above this file and holds regardless of topology: `src/security/auth.py` binds
+the runtime customer to the authenticated principal before a run exists
+(ADR-022, ADR-023), and `src/data` scopes every query to it (ADR-006). Nothing
+in this module is load-bearing for authorization, which is the point.
 """
 
 from __future__ import annotations
@@ -86,10 +92,13 @@ def build_agent(
             # First, so it is outermost: every tool call runs inside the guard,
             # including ones added later that forget to check themselves.
             TenantResultGuard(),
-            # The write is gated; nothing else is. escalate_to_human is
-            # deliberately ungated because it writes nothing — putting an
-            # approval step in front of a read would train reviewers to click
-            # through, which is how the one that matters gets approved blind.
+            # Only the refund is gated. escalate_to_human also writes now
+            # (ADR-024), and is still ungated on purpose: it queues a request
+            # for a human rather than committing anything on the customer's
+            # behalf, so approving it would mean asking a reviewer to authorize
+            # being asked. Gating the harmless call is how reviewers learn to
+            # click through, which is how the one that matters gets approved
+            # blind.
             HumanInTheLoopMiddleware(
                 interrupt_on={
                     "create_refund_request": {

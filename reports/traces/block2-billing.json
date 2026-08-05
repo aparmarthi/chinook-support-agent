@@ -1,7 +1,7 @@
 {
   "label": "block2-billing",
-  "run_id": "019fce2c-fccd-7843-81ca-ac3011e137b3",
-  "recorded": "2026-08-04 19:08:03.523074+00:00",
+  "run_id": "019fcfdd-3605-70d3-bc22-d5cafeb57522",
+  "recorded": "2026-08-05 03:00:09.415578+00:00",
   "inputs": {
     "messages": [
       {
@@ -16,7 +16,7 @@
       {
         "additional_kwargs": {},
         "content": "Hi \u2014 what did I spend with you in 2025, and can you show me my most recent invoice?",
-        "id": "42010333-e10b-4003-892f-6e8fbf707a0d",
+        "id": "9c155d23-54bd-458b-b020-031d642f6cb9",
         "response_metadata": {},
         "type": "human"
       },
@@ -25,34 +25,34 @@
         "content": [
           {
             "content": [],
-            "encrypted_content": "gAAAAABqcjiWnTHqROXLDwP9mBrh3WxSS5yiOlBvrT8xWLH1fbCABUKBrd2pcLus9cB000mA0jR4WTGrpMu5sREE_kN6U5jxbMjNVOfdI2LqFTiM1JMiPbPiI3Vgc-aSfL9hRa-44X1VBYoVl83WY5APr5n-goIK4AzTrdsuUapbG5v1zfnXwcMdTMJDQZYbptqrzwCsAu7MUf-R4LFvEr9lXyOfrSbubbMNlW4c4WR2quq-PWJTm1BlyaCdWpNDn9b7uUPMErJyC3TB8yW0ERs82y6jN4ssqqEOs5LsjNZ4Jy_oVf8WJ36Vz6FH1i1HAga6bLYdkEWcSMQchU53c3CScEVf4stbBOVNPGgY3HShGHOF1FpwRVGQbSXMSAxsBO_5W4AW6SToFfGR-VlGTGEoxobWYjP694mENSHW2AwzxdPrYklho5D25clcHiHg7qYSVDBb72RtFk3hE9a77dM4PWpNqMPSUk35NeuiPhj3xuS6rehnCkCR6FksuR0ssWAUBWgsJ8OjX8yx9v3rVBbY7GqWgMcLbjWCqxY1BtZskatLAFDepgLQwEPqu4lTmEfS_2mljYIORxQRP-1TT_UyDbjX0xgvn1BFJqOii8FJOdiC2r9KGOd8RICmPj0AYofxAVKRRVD5_cjjUAxwcoDNlRrinhkdcmGXm0bUhir0teMnLdF4lkiPpIhxXPpN2JbeSGIeG_P91khc4uEWjHpui0pDv-ss-aCbf94B3UX3btzd0_IkxauFpMdycKzCF3FovmAoM1MWUENHVTcIea0etp4XqbPmYFFBuo5ZlAypxfJAU6yULpPHYWNzyfaU4Ycj1d0FkdMeVQNGEsbfs586mPWYNo4alp5_3n8ZhS89Jue5RqYb0mubKRuefpclLVl5flAoobX04MN_tlI1JutrEV2Yh1LUAnOtbqkREh06tlzkfd2NTddnj6iBQ6bXw6UzsP-1OqE831-KyWJEK814K3Tn15SRB06kteGXHyPUUjtjZFowUDpnUOPy3TlKlqNY7_fz74eE",
-            "id": "rs_0b6f09b7f0f760d6006a72389593d881989ad564a673c3e677",
+            "encrypted_content": "gAAAAABqcqc7AsQ6LAD5NcJf8BVRNRLezclp7e298S4kTdxMPRb5NQLl0u4B1JnYFxv5mucetVJ458qMH8kLcXfqhs10nEZXxE4i69OzIgeKG-otJs_EBoeltO7XHc2GekE9smJ_E7wRpvuqV1JFefKp-P9Cm9Ns5CkGj5EDsdbG6Q2PehMmcwi3ADTRfB32l0zugGzjkZAeR0NhVtBCYeD_AmlQtstuLXoRTzBKM1y9H0MW9fT6KcYYeYRcBKek224rWGirIDHg_HJQzjPffYYNU7I5PwV2qwgKn1euk8JmR5x4jYOiI2Y77xj7hVBcu2QEnIyLrzNvnetLQPENIPRvpd-JIERpNv1OoyPkWI_BvgcLB4ZeB8qvAMsd_6Xs4YUafTp0JQ9Vd9YYQhFVSfXSJH1g-VUHf7g7phNgiJebPNsnhgxYOhDd4rDl8P3jALnYm2g4oGl4C6ztq9PTt35BlgAp5w38b5Jcavatcyh0WB14CwBmUxYMhZV8IccaNvGEBRejlSD211HIIbs0Ru2bCLj-86y-Ya7IRE7D4j-gC-5J5xRoPt9UfA0U4Ld_KdTlMdtWTBAGNnLkCQc1onU1wCq8c_I369bTQ_d28PnbvMrWgQVi_9j3t3cnVoNIxbCCYvRJFDs1jbUUadjCMZaImuWIc5rISac2R4eanaWtANBsA0ef63Bxf8HLMNQlFMmXUw9vbNquTs0a5V79jscgzlVWmDxXPPzdwh2RvwtECnLt1NsdLarZyKQDSIzqJyN8gs7Njrr6KeCat48FYvLr-2AmDGXMGGJxhcr5Uc-ifOOmRVeXj2qgqK_o_qbC3Xy8pLFgGNhz_r1-bEd073aIa-839mzyg_SijLcrrqrSBLwlpe-SV_oC_pzDO-oTKPUkxtQ9xjwV2oBcCh_0tTgo_u_eEFgSXRIAMLGqydSvBJKg6ZVdkTxnhFGcExazohpnFffzuz3qNnhNSdwrouQaLy0Hyy1so2zgApAprDvJYdw__3bX6UwWqQtZ-5C7JDEuGK64MLE0",
+            "id": "rs_06c43cdff01e70a7006a72a73aefa4819981a2b10ccbb3e57d",
             "summary": [],
             "type": "reasoning"
           },
           {
             "arguments": "{\"year\":2025}",
-            "call_id": "call_52I4o8g6XYtNF8aszzYtCW5B",
-            "id": "fc_0b6f09b7f0f760d6006a72389630c8819891e1eb31bf864336",
+            "call_id": "call_Dth0Nvseh7YPMSTqktMPKVkh",
+            "id": "fc_06c43cdff01e70a7006a72a73b6b6081998622a41ad83a7019",
             "name": "get_spend_summary",
             "status": "completed",
             "type": "function_call"
           },
           {
             "arguments": "{\"limit\":1}",
-            "call_id": "call_IgeZKJNpQXEulrVVyo4MS93z",
-            "id": "fc_0b6f09b7f0f760d6006a72389630d88198bf6127b42435f204",
+            "call_id": "call_iNqdaJsbiGo7GeyepRWhUp5D",
+            "id": "fc_06c43cdff01e70a7006a72a73b6b7c8199ac7fd6e03b2ad6e1",
             "name": "get_my_invoices",
             "status": "completed",
             "type": "function_call"
           }
         ],
-        "id": "resp_0b6f09b7f0f760d6006a723894cfb08198a0331f269241e478",
+        "id": "resp_06c43cdff01e70a7006a72a73a04f88199b757c56d34329558",
         "invalid_tool_calls": [],
         "name": "chinook_support",
         "response_metadata": {
-          "created_at": 1785870484.0,
-          "id": "resp_0b6f09b7f0f760d6006a723894cfb08198a0331f269241e478",
+          "created_at": 1785898810.0,
+          "id": "resp_06c43cdff01e70a7006a72a73a04f88199b757c56d34329558",
           "metadata": {},
           "model": "gpt-5.6-luna",
           "model_name": "gpt-5.6-luna",
@@ -66,7 +66,7 @@
             "args": {
               "year": 2025
             },
-            "id": "call_52I4o8g6XYtNF8aszzYtCW5B",
+            "id": "call_Dth0Nvseh7YPMSTqktMPKVkh",
             "name": "get_spend_summary",
             "type": "tool_call"
           },
@@ -74,7 +74,7 @@
             "args": {
               "limit": 1
             },
-            "id": "call_IgeZKJNpQXEulrVVyo4MS93z",
+            "id": "call_iNqdaJsbiGo7GeyepRWhUp5D",
             "name": "get_my_invoices",
             "type": "tool_call"
           }
@@ -82,35 +82,35 @@
         "type": "ai",
         "usage_metadata": {
           "input_token_details": {
-            "cache_creation": 1497,
+            "cache_creation": 1568,
             "cache_read": 0
           },
-          "input_tokens": 1500,
+          "input_tokens": 1571,
           "output_token_details": {
-            "reasoning": 21
+            "reasoning": 20
           },
-          "output_tokens": 76,
-          "total_tokens": 1576
+          "output_tokens": 75,
+          "total_tokens": 1646
         }
       },
       {
         "additional_kwargs": {},
         "content": "In 2025: 2 invoice(s), $27.84 total. First purchase 2025-10-03, most recent 2025-11-13.",
-        "id": "475f61d0-7c74-46ce-afad-ec7ddd240e0e",
+        "id": "5beac153-9627-429c-a67c-6b10e0cf7a12",
         "name": "get_spend_summary",
         "response_metadata": {},
         "status": "success",
-        "tool_call_id": "call_52I4o8g6XYtNF8aszzYtCW5B",
+        "tool_call_id": "call_Dth0Nvseh7YPMSTqktMPKVkh",
         "type": "tool"
       },
       {
         "additional_kwargs": {},
         "content": "1 most recent invoice(s):\n  Invoice #404 - 2025-11-13 - $25.86 - Prague, Czech Republic",
-        "id": "a8e65180-f57b-4b26-86ed-cf8b255a15ff",
+        "id": "492868ce-abe0-46ba-8a3d-e634424bdcdb",
         "name": "get_my_invoices",
         "response_metadata": {},
         "status": "success",
-        "tool_call_id": "call_IgeZKJNpQXEulrVVyo4MS93z",
+        "tool_call_id": "call_iNqdaJsbiGo7GeyepRWhUp5D",
         "type": "tool"
       },
       {
@@ -118,18 +118,18 @@
         "content": [
           {
             "annotations": [],
-            "id": "msg_0b6f09b7f0f760d6006a7238978b14819880ebbb27319600e7",
+            "id": "msg_06c43cdff01e70a7006a72a73d223081999686ec0a76156eba",
             "phase": "final_answer",
-            "text": "Hi Helena \u2014 you spent **$27.84 in 2025** across **2 invoices**.\n\nYour most recent invoice is:\n\n- **Invoice #404**\n- **Date:** November 13, 2025\n- **Total:** **$25.86**\n- **Location:** Prague, Czech Republic",
+            "text": "Hi Helena \u2014 in 2025, you spent **$27.84** across **2 invoices**.\n\nYour most recent invoice is:\n\n- **Invoice #404**\n- **Date:** November 13, 2025\n- **Total:** $25.86\n- **Location:** Prague, Czech Republic",
             "type": "text"
           }
         ],
-        "id": "resp_0b6f09b7f0f760d6006a723896e2c881988acd798c05b7c79b",
+        "id": "resp_06c43cdff01e70a7006a72a73c6e9c8199bbbcfeac64179744",
         "invalid_tool_calls": [],
         "name": "chinook_support",
         "response_metadata": {
-          "created_at": 1785870486.0,
-          "id": "resp_0b6f09b7f0f760d6006a723896e2c881988acd798c05b7c79b",
+          "created_at": 1785898812.0,
+          "id": "resp_06c43cdff01e70a7006a72a73c6e9c8199bbbcfeac64179744",
           "metadata": {},
           "model": "gpt-5.6-luna",
           "model_name": "gpt-5.6-luna",
@@ -142,15 +142,15 @@
         "type": "ai",
         "usage_metadata": {
           "input_token_details": {
-            "cache_creation": 164,
-            "cache_read": 1497
+            "cache_creation": 163,
+            "cache_read": 1568
           },
-          "input_tokens": 1664,
+          "input_tokens": 1734,
           "output_token_details": {
             "reasoning": 0
           },
           "output_tokens": 67,
-          "total_tokens": 1731
+          "total_tokens": 1801
         }
       }
     ]

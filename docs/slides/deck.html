@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chinook Support Agent — LangChain Deployed Engineer</title>
+<style>
+  :root {
+    --bg: #0a0d10;
+    --panel: #12171c;
+    --line: #232c34;
+    --ink: #f2f5f7;
+    --dim: #93a1ad;
+    --faint: #6b7986;
+    --accent: #1fb8a6;
+    --warn: #e5a33a;
+    --bad: #d4636b;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    font-family: var(--sans);
+    color: var(--ink);
+    overflow: hidden;
+  }
+
+  #stage {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 1280px; height: 720px;
+    transform-origin: center center;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    padding: 40px 56px 0;
+    display: none;
+    flex-direction: column;
+  }
+  .slide.on { display: flex; }
+
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /* ---------- shared chrome ---------- */
+
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 650;
+  }
+  h1 {
+    font-size: 38px;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    font-weight: 680;
+    margin-top: 9px;
+  }
+  h1 .sub {
+    display: block;
+    font-size: 17px;
+    font-weight: 420;
+    color: var(--dim);
+    letter-spacing: 0;
+    margin-top: 8px;
+  }
+
+  .footer {
+    border-top: 1px solid var(--line);
+    padding: 12px 0 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--faint);
+  }
+  .footer.facts span { white-space: nowrap; }
+  .footer .dot { color: var(--line); }
+  .footer b { color: var(--dim); font-weight: 600; }
+
+  .pageno {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--line);
+    white-space: nowrap;
+  }
+
+  /* ---------- slide 1 ---------- */
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 26px;
+  }
+  .col {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 18px 20px;
+    position: relative;
+  }
+  .col.here {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .col .tag {
+    position: absolute;
+    top: -9px; left: 18px;
+    background: var(--accent);
+    color: #04120f;
+    font-size: 10.5px;
+    font-weight: 750;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 2.5px 8px;
+    border-radius: 3px;
+  }
+  .col h2 {
+    font-size: 21px;
+    font-weight: 660;
+    letter-spacing: -.01em;
+  }
+  .col .what {
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: var(--ink);
+    margin-top: 9px;
+  }
+  .col .when {
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--dim);
+    margin-top: 13px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .col .when em {
+    color: var(--faint);
+    font-style: normal;
+    display: block;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .band {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .band > div {
+    border-left: 2px solid var(--accent);
+    padding-left: 14px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--dim);
+  }
+  .band strong { color: var(--ink); font-weight: 640; }
+  code {
+    font-family: var(--mono);
+    font-size: .9em;
+    color: var(--accent);
+  }
+
+  /* ---------- slide 2 ---------- */
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1.32fr 1fr;
+    gap: 18px;
+    margin-top: 20px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 650;
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  th.r, td.r { text-align: right; }
+  td {
+    font-size: 14px;
+    padding: 7px 0;
+    border-bottom: 1px solid #191f25;
+    color: var(--dim);
+  }
+  td.v {
+    font-family: var(--mono);
+    font-size: 14.5px;
+    color: var(--ink);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td .note { display: block; font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+
+  .lbl {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 750;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    vertical-align: 1.5px;
+  }
+  .lbl.m { background: rgba(31,184,166,.14); color: var(--accent); border: 1px solid rgba(31,184,166,.35); }
+  .lbl.d { background: rgba(229,163,58,.13); color: var(--warn); border: 1px solid rgba(229,163,58,.34); }
+  .lbl.u { background: rgba(212,99,107,.12); color: var(--bad); border: 1px solid rgba(212,99,107,.32); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 15px 17px;
+  }
+  .card + .card { margin-top: 14px; }
+  .card h3 {
+    font-size: 11px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 650;
+    margin-bottom: 10px;
+  }
+  .card p {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--dim);
+  }
+  .card p + p { margin-top: 9px; }
+  .card strong { color: var(--ink); font-weight: 640; }
+  .verdict {
+    font-size: 15px;
+    color: var(--ink);
+    font-weight: 640;
+    line-height: 1.4;
+  }
+  .verdict span { color: var(--accent); }
+
+  .kv { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: var(--dim); }
+  .kv b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
+
+  /* ---------- speaker notes ---------- */
+
+  #notes {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: rgba(6,9,11,.97);
+    border-top: 2px solid var(--accent);
+    padding: 16px 56px 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--dim);
+    display: none;
+  }
+  #notes.on { display: block; }
+  #notes b { color: var(--ink); }
+  #notes .hint { color: var(--faint); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 7px; }
+
+  /* ---------- print ---------- */
+
+  @page { size: 1280px 720px; margin: 0; }
+  @media print {
+    html, body { background: #fff; overflow: visible; height: auto; }
+    #stage { position: static; width: auto; height: auto; transform: none !important; }
+    .slide { position: relative; display: flex !important; width: 1280px; height: 720px; page-break-after: always; }
+    #notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+
+  <!-- ============================ SLIDE 1 ============================ -->
+  <section class="slide on">
+    <div class="eyebrow">Chinook Digital Music &nbsp;·&nbsp; Support Agent</div>
+    <h1>Same runtime, different altitudes
+      <span class="sub">The three things are not a product menu. They are one stack, and you can move between them without a rewrite.</span>
+    </h1>
+
+    <div class="body">
+    <div class="cols">
+      <div class="col here">
+        <div class="tag">Built here</div>
+        <h2>LangChain</h2>
+        <div class="what">The framework. Building blocks and <code>create_agent</code> — a configurable model-and-tool harness with middleware.</div>
+        <div class="when"><em>When you reach for it</em>Default starting point. Nearly every agent, including this one.</div>
+      </div>
+      <div class="col">
+        <h2>LangGraph</h2>
+        <div class="what">The runtime underneath. Durable execution, state, checkpointing, streaming, human-in-the-loop.</div>
+        <div class="when"><em>When you reach for it</em>Directly, when you need explicit state transitions, deterministic routing, or parallel branches.</div>
+      </div>
+      <div class="col">
+        <h2>Deep Agents</h2>
+        <div class="what">An opinionated harness on top. Planning, subagents, virtual filesystem, skills.</div>
+        <div class="when"><em>When you reach for it</em>Long-horizon work where the context outgrows the window.</div>
+      </div>
+    </div>
+
+    <div class="band">
+      <div><strong>You don't pick one.</strong> <code>create_agent</code> returns a compiled LangGraph. What I built today drops into a <code>StateGraph</code> as a node tomorrow with its middleware intact — no rewrite at the boundary.</div>
+      <div><strong>LangSmith is the other half.</strong> The OSS is how you build the agent; LangSmith is how you find out whether it's any good. Framework-agnostic — it speaks OpenTelemetry.</div>
+    </div>
+    </div>
+
+    <!--
+      Company figures, verified 5 Aug 2026. Downloads (100M+/mo) and GitHub stars
+      current as of June 2026; LangSmith customers (6,000+), 5 of the Fortune 10
+      and ~35% of the Fortune 500 reported mid-2026. Funding is the Oct 2025
+      Series B: $125M at a $1.25B valuation, led by IVP — NOT total raised, which
+      is ~$160M disclosed across seed, A and B. Re-check the morning of; a stale
+      number quoted back to the company that published it is the worst version.
+    -->
+    <div class="footer facts">
+      <span><b>Open source since 2022</b></span><span class="dot">·</span>
+      <span><b>100M+</b> monthly downloads</span><span class="dot">·</span>
+      <span><b>6,000+</b> LangSmith customers</span><span class="dot">·</span>
+      <span><b>5 of the Fortune 10</b> · ~1/3 of the Fortune 500</span><span class="dot">·</span>
+      <span><b>$125M Series B</b> at $1.25B — IVP, Sequoia, Benchmark, CapitalG</span>
+      <span class="pageno">1 / 2</span>
+    </div>
+  </section>
+
+  <!-- ============================ SLIDE 2 ============================ -->
+  <section class="slide">
+    <div class="eyebrow">Results</div>
+    <h1>Every number labeled
+      <span class="sub">Measured on this build · Modeled from assumptions · Unavailable until real traffic. The third category is the one worth reading.</span>
+    </h1>
+
+    <div class="body">
+    <div class="grid2">
+      <div>
+        <table>
+          <tr>
+            <th>Metric</th><th class="r">Value</th><th class="r" style="width:104px">Basis</th>
+          </tr>
+          <tr>
+            <td>Task resolution, benchmark<span class="note">30 examples · 6 slices · the one miss omitted the rep's name — content, not safety</span></td>
+            <td class="r v">29 / 30</td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Cross-tenant data access<span class="note">code evaluator, never a judge · hard gate</span></td>
+            <td class="r v">0 &nbsp;<span style="color:var(--faint);font-weight:400">(30/30)</span></td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Unapproved writes<span class="note">no refund ticket without a human click</span></td>
+            <td class="r v">0 &nbsp;<span style="color:var(--faint);font-weight:400">(30/30)</span></td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Escalation decisions correct<span class="note">unsafe-resolution rate 0 · 4 labeled cases, so a percentage would be dishonest</span></td>
+            <td class="r v">4 / 4</td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Full-turn latency, p50<span class="note">p95 10.0s — directional only at n=30</span></td>
+            <td class="r v">4.0 s</td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Cost per priced eval turn<span class="note">29 of 30 examples are single-turn · a real conversation costs several times more</span></td>
+            <td class="r v">$0.0010</td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Total API spend, whole build<span class="note">OpenAI dashboard, not the estimate</span></td>
+            <td class="r v">$&nbsp;__.__</td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Deterministic tests passing<span class="note">the security claims each have one behind them</span></td>
+            <td class="r v">139</td><td class="r"><span class="lbl m">Measured</span></td>
+          </tr>
+          <tr>
+            <td>Deflected labor / month<span class="note">1,200 contacts · 60% billing-class · 70% containment · 6 min at $0.60/min</span></td>
+            <td class="r v">~$1,800</td><td class="r"><span class="lbl d">Modeled</span></td>
+          </tr>
+          <tr>
+            <td>Containment rate <span style="color:var(--faint)">· recommendation attach rate</span><span class="note">the North Star and the upsell line — both need production traffic</span></td>
+            <td class="r v" style="color:var(--bad)">not known</td><td class="r"><span class="lbl u">Unavailable</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3>The experiment</h3>
+          <p class="verdict">The supervisor won <span>30/30</span> against flat's 29. I shipped <span>flat</span>.</p>
+          <p>Bars were pre-registered before the supervisor existed. It came in <strong>+2.2s on p50</strong> against a +2.0s ceiling, with <strong>no mixed-intent gain</strong>. One example out of thirty doesn't buy that.</p>
+          <p><strong>One example does not establish a quality difference.</strong> Older runs at unrecorded commits put each arm at both 29 and 30, failing a different example each time — not controlled variance, but enough to show the count is sensitive. What <em>is</em> clear in the controlled comparison is the overhead of the extra hop: <strong>~1.5x median latency, 70 tool calls against 46</strong>. The verdict rests on that, not on the one-example gap.</p>
+        </div>
+
+        <div class="card">
+          <h3>Provenance</h3>
+          <div class="kv"><span>Commit, both arms</span><b>12cefb1 · clean</b></div>
+          <div class="kv"><span>Agent model</span><b>gpt-5.6-luna</b></div>
+          <div class="kv"><span>Dataset digest</span><b>6ba144216f8d</b></div>
+          <div class="kv"><span>Evaluator digest</span><b>9e2516b82112</b></div>
+          <p style="margin-top:10px;font-size:12.5px">Generated into <code>reports/experiment.md</code>, not typed. The script refuses to publish two arms that disagree on commit, model, dataset, or evaluators.</p>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="footer">
+      <span><b>Inference is not the binding cost.</b> Even at the modeled full-conversation rate, deflecting 500 contacts is single-digit dollars of tokens against ~$1,800 of labor. I'm not leading with that ratio — the real cost here is engineering and the review loop, not the model.</span>
+      <span class="pageno">2 / 2</span>
+    </div>
+  </section>
+
+</div>
+
+<div id="notes"></div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const notesEl = document.getElementById('notes');
+  let i = 0, notesOn = false;
+
+  const NOTES = [
+    "<span class='hint'>Slide 1 — 2:00 total, then stop talking and go to the product</span>" +
+    "<b>Company (0:30):</b> \"Quickly, because you're making a platform bet.\" Read the footer strip, then: \"that's the whole company slide.\" " +
+    "<b>OSS map (1:30):</b> lead with <b>same runtime, different altitudes</b> — not a product list. Land the two points: you don't pick one, and I chose the middle one deliberately. " +
+    "<b>Never say</b> \"loop vs. DAG\" or \"LangGraph is for when it stops being a loop\" — LangGraph supports cycles and create_agent is itself a loop on it. " +
+    "<b>Close:</b> \"If you keep one thing from today: the build is the easy half.\"",
+
+    "<span class='hint'>Slide 2 — 1:00, then friction and the recommendation</span>" +
+    "<b>Lead with the labels, not the numbers.</b> \"Three categories, and the one I'd read first is Unavailable.\" " +
+    "<b>Counts, not percentages</b> — 30 examples doesn't support a percentage. " +
+    "<b>The experiment card is the strongest thing on the slide:</b> the complicated thing won and I threw it away anyway, because it didn't win by enough, and the amount it won by turned out to be noise. " +
+    "<b>Provenance: have it, don't volunteer it.</b> Only open it if someone probes the numbers. " +
+    "<b>Then:</b> friction (three items), then the recommendation — pilot two workflows, two weeks, instrument containment and unsafe-resolution, safety stop on any cross-tenant failure or unapproved write."
+  ];
+
+  function fit() {
+    const s = Math.min(innerWidth / 1280, innerHeight / 720);
+    document.getElementById('stage').style.transform =
+      `translate(-50%, -50%) scale(${s})`;
+  }
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('on', k === i));
+    notesEl.innerHTML = NOTES[i];
+    history.replaceState(null, '', '#' + (i + 1));
+  }
+
+  addEventListener('resize', fit);
+  addEventListener('keydown', e => {
+    if (['ArrowRight', ' ', 'PageDown', 'ArrowDown'].includes(e.key)) { show(i + 1); e.preventDefault(); }
+    if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(e.key)) { show(i - 1); e.preventDefault(); }
+    if (e.key === 'n') { notesOn = !notesOn; notesEl.classList.toggle('on', notesOn); }
+  });
+  addEventListener('click', () => show(i + 1));
+
+  fit();
+  show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+</script>
+</body>
+</html>

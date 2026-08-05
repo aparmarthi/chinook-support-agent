@@ -4,8 +4,9 @@
         --flat evals/results/<ts>-flat.json \
         --supervisor evals/results/<ts>-supervisor.json
 
-Writes ``reports/experiment.md``: provenance, the headline table, and the
-verdict as ``evals.compare`` computed it.
+Writes ``reports/experiment.md``: provenance, the headline table, the verdict
+as ``evals.compare`` computed it, and a variance section read off every other
+full-dataset run in ``evals/results/``.
 
 The point of this script is the refusal. Two arms are only comparable if they
 ran the same dataset through the same evaluators on the same model at the same
@@ -91,6 +92,86 @@ def _summary(payload: dict) -> dict:
     }
 
 
+def _prior_runs(exclude: set[Path]) -> list[dict]:
+    """Every other full-dataset run on disk, as variance context.
+
+    This section used to be a hardcoded paragraph describing an earlier pair
+    that came out the other way round. No such pair is on disk — the arms it
+    described do not exist in any tracked result file — so the document was
+    asserting a measurement it could not produce while claiming, two lines
+    above, that nothing here is retyped. Reading it off the directory is the
+    only version of that claim that survives someone checking.
+
+    These runs are at different commits and are not controlled comparisons.
+    They bound run-to-run variance; they do not compare the two arms.
+    """
+    runs = []
+    for path in sorted((ROOT / "evals" / "results").glob("*.json")):
+        if path.resolve() in exclude:
+            continue
+        arm = next((a for a in ("flat", "supervisor") if path.stem.endswith(a)), None)
+        payload = json.loads(path.read_text())
+        rows = payload.get("rows", [])
+        if arm is None or len(rows) != 30:
+            continue  # unlabelled or a partial slice — not comparable to a full run
+        commit = payload.get("provenance", {}).get("git", {}).get("commit")
+        runs.append(
+            {
+                "file": path.name,
+                "arm": arm,
+                "commit": commit[:8] if commit else "unrecorded",
+                "passed": sum(1 for r in rows if not r["failed"]),
+                "failed": sorted(r["name"] for r in rows if r["failed"]),
+            }
+        )
+    return runs
+
+
+def _variance_section(prior: list[dict], flat: dict, supervisor: dict) -> str:
+    if not prior:
+        return (
+            "**No other full-dataset runs are on disk**, so this pair is the only "
+            "evidence here and the one-example gap between the arms is unbounded "
+            "by any variance estimate. Do not read it as a quality difference.\n"
+        )
+
+    rows = "\n".join(
+        f"| `{r['file']}` | {r['arm']} | `{r['commit']}` | {r['passed']}/30 | "
+        f"{', '.join(r['failed']) or 'none'} |"
+        for r in prior
+    )
+    spread = {
+        arm: sorted({r["passed"] for r in prior if r["arm"] == arm})
+        for arm in ("flat", "supervisor")
+    }
+    both_arms_vary = all(len(v) > 1 for v in spread.values() if v)
+    culprits = sorted({name for r in prior for name in r["failed"]})
+
+    reading = (
+        "Both arms have scored more than one value across these runs"
+        if both_arms_vary
+        else "The resolved count is not stable across these runs"
+    )
+    return f"""**Other full-dataset runs on disk**, for variance only. These are at
+different commits with different code, so they are *not* controlled
+comparisons between the arms — they bound how much a single run wobbles.
+
+| Run | Arm | Commit | Resolved | Failed |
+|---|---|---|---|---|
+{rows}
+
+{reading}, and the example that fails is not the same one twice
+({", ".join(f"`{c}`" for c in culprits)}). A one-example gap on a
+thirty-example set sits inside that wobble, so
+**{flat["passed"]}/30 against {supervisor["passed"]}/30 is not a quality
+difference** and should not be presented as one.
+
+**What is not noise is the cost of the extra hop.** The supervisor's median
+latency and tool-call count are higher by margins no single example can
+explain, and that is the finding the verdict rests on.
+"""
+
+
 def _verdict(flat_path: Path, supervisor_path: Path) -> str:
     result = subprocess.run(
         [
@@ -121,6 +202,7 @@ def main() -> None:
     flat, supervisor = _load(args.flat), _load(args.supervisor)
     provenance = _check_comparable(flat, supervisor)
     f, s = _summary(flat), _summary(supervisor)
+    prior = _prior_runs(exclude={args.flat.resolve(), args.supervisor.resolve()})
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
@@ -157,21 +239,10 @@ below. Every number here is read out of them; nothing is retyped.
 
 ## What this does and does not show
 
-**The resolution counts are inside run-to-run noise, and saying so is the
-honest reading.** An earlier pair at the previous commit came out the other way
-round — flat 30/30, supervisor 29/30 — with the same single example,
-`escalation-payment-method`, failing whichever arm happened to miss the rep's
-name that time. One example on a thirty-example set is not a quality
-difference; it is the same coin landing twice.
-
-**What is not noise is the cost of the extra hop.** The supervisor took
-roughly half again as long at the median and made materially more tool calls,
-in both pairs, in the same direction. That is the finding, and it is why the
-verdict does not depend on which way the flaky example fell.
-
-**The stability block above is older data**, three repeats per arm recorded
-before provenance was added, so it predates this commit. It is retained for
-variance context, not as part of the frozen comparison.
+{_variance_section(prior, f, s)}
+**The stability block in the verdict above is older data**, three repeats per
+arm recorded before provenance was added, so it predates this commit. It is
+retained for variance context, not as part of the frozen comparison.
 """,
         encoding="utf-8",
     )

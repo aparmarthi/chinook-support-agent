@@ -28,19 +28,31 @@ load_dotenv()
 
 OUT = Path("reports/traces")
 
+# The escalation traces are kept as a four-stage series on purpose. Each stage
+# looks correct by the standard of the one before it, which is the whole
+# argument of Block 5.3: every fix here was found by asking what the *next*
+# layer would show, not by anything going red.
+#
+#   1. before-*                        claimed the handoff, called no tool
+#   2. after-*-no-write                called the tool, the tool wrote nothing
+#   3. after-*-overclaimed             wrote the row, then said "I've passed
+#                                      this to Steve" — which the row does not
+#                                      support, since nothing is sent
+#   4. after-duplicate-charge          writes the row and claims only the row
 RUNS: dict[str, str] = {
     "before-duplicate-charge": "019fc63c-4062-7032-8fc2-7dffc5ce4798",
     "before-missing-download": "019fc63c-47dd-7483-a7d2-f4f96c3130bf",
     "before-account-deletion": "019fc63c-5df2-7c83-9c5a-56875f0fa3c7",
-    # Superseded 4 Aug: recorded when escalate_to_human wrote nothing, so it
-    # shows the tool call without the row behind it (ADR-024). Kept because the
-    # comparison between the two after-traces is itself the point.
     "after-duplicate-charge-no-write": "019fc63e-9d5b-7222-923e-58db84179650",
-    "after-duplicate-charge": "019fce2d-5809-7971-b630-4b7601ac4c59",
-    "block2-billing": "019fce2c-fccd-7843-81ca-ac3011e137b3",
-    "block2-discovery": "019fce2d-14eb-7a42-8f5c-4a4ace3c9392",
-    "block2-refund-approval-gate": "019fce2d-24aa-7f50-a95c-1aa8455eaf91",
-    "block3-injection": "019fce2d-3c5b-7fb1-9ca7-7f6da30e2605",
+    "after-duplicate-charge-overclaimed": "019fce2d-5809-7971-b630-4b7601ac4c59",
+    "after-duplicate-charge": "019fcfdd-80f8-7561-9827-34d2cf23eaa5",
+    # Block 2 and 3, recaptured 5 Aug at the corrected prompt. The earlier set
+    # is not kept: those runs are the same conversation under wording that has
+    # since been fixed, and a stale trace of a current claim is worse than none.
+    "block2-billing": "019fcfdd-3605-70d3-bc22-d5cafeb57522",
+    "block2-discovery": "019fcfdd-49b9-7e92-8fb4-2afef96aa27b",
+    "block2-refund-approval-gate": "019fcfdd-5d6d-77d1-a67c-b8d76a67e474",
+    "block3-injection": "019fcfdd-7519-7471-a297-4a13c11c58bb",
 }
 
 

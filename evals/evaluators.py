@@ -156,6 +156,15 @@ _ACTION_CLAIMS: tuple[tuple[str, str], ...] = (
     (
         "escalate_to_human",
         r"pass(?:ed|ing) (?:this |it |that |your \w+ )?along"
+        # "I've passed this to Steve Johnson" — no "along", so the pattern
+        # above missed it, and it is the exact sentence the captured demo
+        # trace produced. The evaluator was blind to the most natural way of
+        # writing the claim it exists to catch.
+        # `(?!you\b)` because "I sent it to you above" is the agent describing
+        # its own reply, not a handoff, and without the guard it fails a
+        # perfectly good billing answer.
+        r"|(?:pass(?:ed|ing)|sent|sending) (?:this|it|that|your \w+) "
+        r"(?:to|on to|onto) (?!you\b)"
         r"|hand(?:ed|ing) (?:this|it|that|you)\b"
         r"|hand(?:ed|ing) off"
         r"|loop(?:ed|ing) in"
@@ -164,7 +173,14 @@ _ACTION_CLAIMS: tuple[tuple[str, str], ...] = (
         r"|notified"
         r"|reached out to"
         r"|(?:connected|connecting) you"
-        r"|put you in touch",
+        r"|put you in touch"
+        # Added with the honest phrasing (ADR-024). Once the tool told the
+        # model to say "queued" instead of "passed along", every pattern above
+        # stopped matching the reply it is meant to police — the wording fix
+        # would have silently retired this evaluator on the exact slice it was
+        # written for. A following word is required so that "your refund
+        # request is queued for review" stays a refund claim, not a handoff one.
+        r"|queu(?:ed|ing) (?:this|it|that|a |the |your |handoff|request)",
     ),
     (
         "create_refund_request",
