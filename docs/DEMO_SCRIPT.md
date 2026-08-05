@@ -270,7 +270,15 @@ Run `pytest tests/test_native_auth.py -v` against the running dev server. Then l
 
 *Open the experiment comparison.*
 
-> "[Actual result.] So I shipped [the winner]. The official guidance says a single agent is usually fine for a small tool set, and six tools is comfortably inside that — I just didn't want to take it on faith in either direction."
+> "The supervisor **won**. Thirty out of thirty against flat's twenty-nine, and it regressed nothing. And I shipped flat anyway.
+>
+> That's not stubbornness, it's the pre-registration. I wrote the bars before the supervisor existed, and 'better' was defined as a margin worth paying for. It came in at plus-two-point-two seconds on median latency against a two-second ceiling, with no mixed-intent gain at all. One extra example out of thirty doesn't buy that.
+>
+> And the honest part: **that one example is noise.** I ran both arms again and it flipped — flat took 30/30 and the supervisor took 29. It's the same flaky example either way. So the quality difference isn't a difference. What *did* reproduce, in the same direction, both times, is the cost of the extra hop: half again the latency, roughly fifty percent more tool calls. The verdict doesn't depend on which way the coin fell, which is the only reason I'd put a table like that in front of you."
+
+> ✅ **This is now the strongest version of Block 4 and it is worth rehearsing verbatim.** "The complicated thing won and I threw it away anyway, because it didn't win by enough, and the amount it won by turned out to be noise" is a far better signal than a clean victory for either arm. It demonstrates pre-registration, honest variance reporting, and the discipline to not over-read a single run — which is most of what evaluation maturity actually is.
+
+> ⚠️ **Have the provenance ready, don't volunteer it.** Both arms: commit `12cefb1`, clean tree, same dataset digest, same evaluator digest, `gpt-5.6-luna`. Frozen in [`reports/experiment.md`](../reports/experiment.md), generated from the result files rather than typed. `scripts/freeze_experiment.py` refuses to publish two arms that disagree on commit, model, dataset, or evaluators — which is the mistake that produces most bad benchmark tables.
 
 **If flat wins, do not treat it as a lesser outcome.** "I built the complicated thing, measured it, and threw it away" is a better signal to a Deployed Engineer than shipping the complicated thing would have been.
 
@@ -346,7 +354,7 @@ Open the **after** trace beside it: same question, `escalate_to_human` present i
 
 Deterministic evaluators first:
 
-> "Authorization and write-safety: [n/n], and those are code evaluators, not LLM judges. Never let a probabilistic grader score a binary safety property. Anything with a ground truth gets a code evaluator; judges are for the genuinely subjective, like tone. Teams that use LLM-as-judge for everything end up unable to trust any of their numbers.
+> "Authorization and write-safety: **30/30 and 30/30**, and those are code evaluators, not LLM judges. Never let a probabilistic grader score a binary safety property. Anything with a ground truth gets a code evaluator; judges are for the genuinely subjective, like tone. Teams that use LLM-as-judge for everything end up unable to trust any of their numbers.
 >
 > I'm reporting counts rather than percentages on purpose — 30 examples across six slices. '6 out of 6 billing cases' is honest. A percentage implies a precision this sample size doesn't have."
 
@@ -478,7 +486,7 @@ Competitive and procurement objections are in [`COMPETITIVE.md`](COMPETITIVE.md)
 
 **"How do you know your evaluator predicts production quality?"** — You don't yet, and say so. Explain slice coverage, production feedback, annotation queues with real reps, drift monitoring, and how failures become examples. Pretending 30 examples predicts production is the wrong answer.
 
-**"What does this cost to run?"** — Now measured rather than estimated, so use the real numbers. Across 326 recorded eval conversations: **~$0.0011 each** on the cheap model, against a ~$3.60 loaded human touch. ⚠️ **Caveat it honestly** — most eval examples are single-turn, so a real multi-turn support conversation costs several times that; the planning estimate of ~$0.008 for a full conversation is the safer figure to quote, and the mid-tier model is roughly 10x either. Be explicit that per-conversation cost is *measured*, the $3.60 is an *assumption*, and this is inference-only — it excludes platform and engineering cost. Then the detail that lands: the entire build, every experiment and rerun included, came to **under $1** of API credit against a $21 budget. A prospect worried this is an expensive science project just watched someone build it for the price of a coffee.
+**"What does this cost to run?"** — Now measured rather than estimated, so use the real numbers, and quote the denominator you can actually defend. The results directory holds **420 recorded rows, 391 of which completed without error; 190 carry token counts** and are therefore the ones that can be priced — the rest are dry runs and early runs recorded before token capture. Across those 190: **$0.00105 each** (recompute with the snippet in this file's history rather than trusting this line), against a ~$3.60 loaded human touch. ⚠️ **Say "190 priced conversations", not "391 conversations"** — inflating a denominator by counting rows you cannot price is exactly the move that gets caught, and the smaller number is still overwhelming. ⚠️ **Caveat it honestly** — most eval examples are single-turn, so a real multi-turn support conversation costs several times that; the planning estimate of ~$0.008 for a full conversation is the safer figure to quote, and the mid-tier model is roughly 10x either. Be explicit that per-conversation cost is *measured*, the $3.60 is an *assumption*, and this is inference-only — it excludes platform and engineering cost. Then the detail that lands: the entire build, every experiment and rerun included, came to **under $1** of API credit against a $21 budget. A prospect worried this is an expensive science project just watched someone build it for the price of a coffee.
 
 **"What if it hallucinates a recommendation for a track you don't stock?"** — Structural, not graded: `recommend_for_me` returns rows from the catalog, so a recommendation the store doesn't carry would have to be invented outside the tool result. The discovery slice checks the recommended tracks came from the tool and excludes ones she already owns. ⚠️ **Do not claim a groundedness judge** — the only LLM judge here scores tone, and every other check is code. Claiming a grader that doesn't exist is exactly the kind of thing that unravels the rest of the session. Good place to volunteer that the recommender is a simple content-based heuristic on purpose — the demo point is orchestration, and a real ranking model drops in behind the same tool signature.
 

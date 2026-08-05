@@ -56,16 +56,24 @@ Ran, scored by `evals/compare.py` against the thresholds in [`ARCHITECTURE.md`](
 
 | Bar | Flat | Supervisor | |
 |---|---|---|---|
-| Mixed-intent completion (needs +2 slice or +3 overall) | 4/5 | 5/5 (+1) | FAIL |
+Frozen in [`reports/experiment.md`](../reports/experiment.md). Both arms at commit `12cefb1`, clean tree, one dataset digest, one evaluator digest, `gpt-5.6-luna`.
+
+| Bar | Flat | Supervisor | |
+|---|---|---|---|
+| Mixed-intent completion (needs +2 slice or +3 overall) | 5/5 | 5/5 (+0) | FAIL |
 | Routing errors (needs strictly fewer) | 0 | 0 | FAIL — see below |
-| p50 latency (needs ≤ +2.0s) | 4.2s | 6.8s (+2.6s) | FAIL |
-| Cost per conversation (needs ≤ +50%) | $0.0009 | $0.0011 (1.20x) | PASS |
+| p50 latency (needs ≤ +2.0s) | 4.0s | 6.2s (+2.2s) | FAIL |
+| Cost per conversation (needs ≤ +50%) | $0.0010 | $0.0011 (1.12x) | PASS |
 | Tool calls per conversation (needs ≤ +2) | 1 | 2 (+1) | PASS |
 | Security failures (needs zero, both) | 0 | 0 | PASS |
 | Per-workflow regression | — | none | PASS |
 | Overall resolution (needs non-decreasing) | 29/30 | 30/30 | PASS |
 
-**The supervisor is not worse. It is better on the primary metric and it did not regress anything.** It fails because "better" was defined in advance as a margin large enough to be worth 2.6 seconds per turn, and one example on a five-example slice is not that. Mixed-intent stability across three runs per arm: flat 14/15, supervisor 15/15 — the same +1, reproduced rather than luck, and still +1.
+**The supervisor is not worse. It won the headline number and regressed nothing, and it still does not ship.** It fails because "better" was defined in advance as a margin worth paying two-plus seconds a turn for, and it did not produce one.
+
+**Re-run 4 Aug and the numbers moved, which is itself the result.** An earlier pair at the previous commit had flat 30/30 against supervisor 29/30 — the reverse of what is tabled above. The same single example, `escalation-payment-method`, intermittently omits the rep's name and fails whichever arm misses it. One example on thirty is a coin. What reproduced in the same direction across both pairs is the latency and tool-call cost of the extra hop, and **the verdict is unchanged under either pairing**, which is the only reason it is safe to report a table that could have come out the other way.
+
+**This is why provenance is recorded now.** Before this, a result file named no commit, model, dataset, or evaluator version, so two arms compared across an edit would have looked like a comparison. `scripts/freeze_experiment.py` refuses to publish arms that disagree on any of the four.
 
 **A threshold of mine was badly specified, and it is reported as written.** "Routing errors: strictly fewer" cannot be met when the baseline commits zero, so the supervisor was scored against an unreachable bar. That is a flaw in my pre-registration, not in the supervisor, and the honest handling is to say so rather than quietly relax it after seeing the results. The verdict does not depend on it: latency and the primary metric fail independently. The lesson is that a pre-registered threshold needs a defined behaviour at the floor, and I would write it as "no more than flat, and strictly fewer if flat commits any."
 

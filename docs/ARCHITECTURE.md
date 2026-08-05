@@ -338,7 +338,19 @@ Same model, same dataset, stratified by workflow, one causal variable. **Write t
 
 ### Result — flat ships
 
-Scored by `python -m evals.compare`. The supervisor came out **better on the primary metric and regressed nothing**: 5/5 mixed-intent against flat's 4/5, 30/30 overall against 29/30, zero security failures in both arms, and only 1.20x the cost. It still loses, because the pre-registered bar asked for a margin worth paying 2.6 seconds a turn for, and +1 example on a five-example slice is not that margin. Three runs per arm reproduced the same +1 (flat 14/15, supervisor 15/15), which is what makes it a real but small effect rather than a lucky sample.
+Scored by `python -m evals.compare` and frozen in [`reports/experiment.md`](../reports/experiment.md), which is generated from the two result files and is the only place these numbers should be read from. Both arms ran at commit `12cefb1`, clean tree, same dataset digest, same evaluators, `gpt-5.6-luna`.
+
+| | Flat | Supervisor |
+|---|---|---|
+| Resolved | 29/30 | **30/30** |
+| Mixed-intent | 5/5 | 5/5 |
+| p50 latency | 4.0s | 6.2s (**+2.2s**, over the +2.0s bar) |
+| Cost per conversation | $0.0010 | $0.0011 (1.12x) |
+| Security failures | 0 | 0 |
+
+The supervisor **won the headline number and still loses**, failing three bars: mixed-intent margin, routing errors, and latency. That is the pre-registration doing its job — a decision rule you cannot revise while looking at the results is the only defense against reading a +1 as vindication.
+
+**The resolution counts are within run-to-run noise, and the demo should say so.** An earlier pair at the previous commit came out reversed, flat 30/30 against supervisor 29/30, with the same single example — `escalation-payment-method`, which intermittently omits the rep's name — failing whichever arm missed it that time. One example on thirty is a coin, not a quality difference. What reproduced in the same direction across both pairs is the cost of the extra hop: roughly half again the median latency and substantially more tool calls. **The verdict does not depend on which way the flaky example fell**, which is what makes it a verdict rather than a reading.
 
 One bar was mis-specified: "routing errors, strictly fewer" is unreachable when flat commits zero. It is reported as a failure because that is how it was written, and the correction belongs in the next pre-registration, not in this one after seeing results. The verdict does not turn on it.
 
