@@ -2,7 +2,7 @@
 
 Target stack (verified on PyPI, Aug 2026): `langchain 1.3.x`, `langgraph 1.2.x`, `deepagents 0.7.x`, `langsmith 0.10.x`, `langgraph-cli[inmem] 0.4.x`. Python 3.12 or 3.13 — **not 3.14**, see ADR-009.
 
-**Models:** OpenAI, tiered. `gpt-5.6-luna` ($0.20/$1.20 per 1M) for development, bulk seeding, and evaluator judges; `gpt-5.6-terra` ($2/$12) for the demo path. Read from environment variables so the tier swaps without code changes. Budget in [`BUILD_PLAN.md`](BUILD_PLAN.md).
+**Models:** OpenAI, environment-selected. The frozen comparison and current demo path use `gpt-5.6-luna`; a different tier can be tested without a code change. Model choice is an experiment variable, not an architectural commitment.
 
 > **Revised during design review.** The supervisor/subagent design is now a *hypothesis to be tested*, not a commitment, and the authorization boundary has moved out of agent middleware into the data layer. Full reasoning in the ADRs — [ADR-002](decisions.md) and [ADR-006](decisions.md).
 
@@ -17,20 +17,19 @@ Start flat. One `create_agent`, six tools, middleware that can actually see ever
           │
           ▼
    ┌──────────────────────────────────────────────┐
-   │  AuthContext (runtime context)               │
-   │    customer_id: int   ← verified by caller   │
-   │    thread_owner check before invoke          │
+   │  Agent Server auth → AuthContext             │
+   │    customer_id: int   ← credential-derived   │
+   │    thread_owner check before run creation    │
    └──────────────────┬───────────────────────────┘
                       ▼
    ┌──────────────────────────────────────────────┐
    │  create_agent  (flat baseline)               │
    │                                              │
    │  middleware                                  │
-   │   1. CustomerContextMiddleware @dynamic_prompt│
-   │   2. HumanInTheLoopMiddleware  (refund tool) │
-   │   3. ToolCallLimitMiddleware   (built-in)    │
-   │   4. PIIMiddleware        (card, on input)   │
-   │   5. ModelRetry / ToolRetry    (transient)   │
+   │   · TenantResultGuard        (defense)       │
+   │   · HumanInTheLoopMiddleware (refund tool)   │
+   │   · tool limit · PII · retries               │
+   │   · personalization · approval preflight     │
    │                                              │
    │  tools: 4 read + 1 gated write + 1 handoff   │
    └──────────────────┬───────────────────────────┘
@@ -39,7 +38,7 @@ Start flat. One `create_agent`, six tools, middleware that can actually see ever
    │  DATA LAYER — the security boundary          │
    │                                              │
    │  chinook.db   read-only URI, parameterized   │
-   │  support.db   writable, refund tickets only  │
+   │  support.db   refund + handoff queues         │
    │                                              │
    │  every scoped function binds customer_id     │
    │  from runtime context. No caller can pass    │
@@ -105,7 +104,7 @@ This is separate from query scoping and it's the layer originally missed: scoped
 
 Saying "validate before the checkpoint loads" is only an invariant if some named component executes first. **`before_agent` hooks and middleware are too late**: by the time either runs, the Agent Server has resolved the thread and materialized its state. A check there would be inspecting data it has already loaded, while the write-up claims pre-load enforcement. That gap between claim and mechanism is precisely the kind of thing this plan exists to catch.
 
-The component is a thin **`SupportGateway`** that sits *outside* the graph and owns the ordering:
+The first component built to prove that ordering was a thin **`SupportGateway`** outside the graph:
 
 ```
 authenticated request ──▶ SupportGateway
@@ -119,7 +118,7 @@ authenticated request ──▶ SupportGateway
                                        Agent Server loads the checkpoint
 ```
 
-Thread ownership lives in `support.db` (the writable store) and is written once at thread creation. Steps 3-4 complete before step 5 exists, which is what makes the ordering claim structurally true rather than asserted.
+For clients that use this wrapper, thread ownership lives in `support.db` and steps 3-4 complete before step 5 exists. The wrapper remains an executable proof and optional custom-client boundary. **Studio does not pass through it.** The production Agent Server path uses the native authorization layer below, which is the preferred enforcement point.
 
 ##### The correction: the server already had this, and it is better
 
@@ -153,18 +152,17 @@ Everything above is true and did not prevent a cross-tenant read. Thread ownersh
 
 The data layer was not bypassed. It was scoped, correctly, to an identity chosen by the request. `customer_id` is now derived from the authenticated principal and stamped into both `context` and the legacy `config.configurable`; a request claiming a different one gets 403. See ADR-023, and note the shape of the mistake — it is ADR-013's lesson recurring one layer down.
 
-##### Why `SupportGateway` still exists
+##### Why `SupportGateway` still exists — and what it does not cover
 
-Because Studio is exempt from custom auth by default, and the demo runs in Studio.
+Studio is exempt from custom auth by default and authenticates the *developer*, not a customer. Setting `disable_studio_auth: true` was tried; Studio then gets `401` because it cannot present the application bearer token. **`SupportGateway` does not front or intercept Studio.** Studio's customer selector is a developer-side simulation and is outside the production-auth claim.
 
-A Studio request authenticates the *developer*, not a customer — `ctx.user` is a `StudioUser`. Filtering it by `ctx.user.identity` would bind demo threads to whoever opened the browser, which is not the tenant this system isolates. Setting `disable_studio_auth: true` closes the exemption and was tried: Studio then gets `401`, because it has no way to present a bearer token. There is no configuration where Studio both authenticates as Helena and remains usable.
+The honest division is:
 
-So the honest division, and it is a real one rather than a rescue of the original design:
+- **`@auth.on.threads` is the production boundary for callers holding credentials.** It binds runtime identity and thread ownership before a run exists, proven against the live server.
+- **Studio is a trusted developer surface.** Its assistant context makes the demo reproducible; it does not demonstrate customer authentication.
+- **`SupportGateway` is an alternate wrapper and proof fixture.** A custom client could use it for public conversation-id indirection or to front an in-process runner, but the current Studio path does not.
 
-- **`@auth.on.threads` is the boundary for anything holding a credential.** That is every production caller. Proven against the live server.
-- **`SupportGateway` is the boundary for the Studio path**, where the customer identity is configuration rather than a credential and something above the server has to bind it to a conversation. It also keeps `thread_id` server-side behind a `conversation_id`, which the server does not do for you.
-
-Say the correction out loud in the demo rather than presenting only the end state. "I built the wrapper first, then found the server had the hook" is the more credible story, and it is what happened. See ADR-022.
+Say the correction out loud: "I built the wrapper first, then found the server had the better hook; the wrapper remains evidence, not a hidden Studio boundary." See ADR-022.
 
 **3. Separate read and write stores.** `chinook.db` opens with a read-only URI for all catalog and account reads. Refund tickets are inserted into `support.db`. The agent has no write path into Chinook at all. Refund inserts carry an idempotency key so an interrupt resume or retry can't create duplicates.
 
@@ -178,7 +176,7 @@ In the demo, `customer_id` is selected from Studio's config panel. **Say explici
 
 The framing that closes it:
 
-> "In production this comes from a verified session — the caller sets it after auth and the end user has no way to influence it. Studio's config panel is playing the role of that auth layer so I can switch identities in front of you. The property that matters is unchanged either way: whatever sets it, it is not reachable from anything the model or the user types."
+> "In production the Agent Server derives this from the verified credential, rejects a mismatched request body, and the end user has no identity selector. Studio is a trusted developer surface, so this assistant setting is only a simulation that lets me switch customers in front of you. I will use the live Agent Server tests—not this dropdown—as the production-auth proof."
 
 Rehearse this. It costs fifteen seconds and it's the single most attackable-looking thing in the demo.
 
@@ -230,16 +228,16 @@ Read that precisely — the 2-4 is **business problems**, not tools, so three wo
 | `get_invoice_detail` | `(invoice_id: int)` | W1 | Scoped in the `WHERE` clause. Not-found for others, no oracle. |
 | `get_spend_summary` | `(year: int \| None = None)` | W1 | Deterministic aggregate. |
 | `recommend_for_me` | `(seed_genre: str \| None, limit: int = 5)` | W2 | Computes purchase profile and track details internally; excludes owned tracks. |
-| `create_refund_request` | `(invoice_line_id: int, reason: str)` | W3 | ⚠️ HITL-gated. The only write. Inserts one ticket into `support.db`. Idempotent — see below. |
-| `escalate_to_human` | `(summary: str, urgency: Literal[...])` | W3 | **Read-only. A prepared handoff, not a routed ticket** — see below. |
+| `create_refund_request` | `(invoice_line_id: int, reason: str)` | W3 | ⚠️ HITL-gated. Inserts one refund-review ticket into `support.db`. Idempotent — see below. |
+| `escalate_to_human` | `(summary: str, urgency: Literal[...])` | W3 | Queues a durable handoff row in `support.db`. **Not assigned, sent, or notified** — see below. |
 
-**Four read, one gated write, one handoff.** An earlier diagram said "5 read + 1 write + 1 escalate," which is seven and doesn't match this list.
+**Four reads and two durable support side effects.** The refund request is approval-gated; the handoff queue is deliberately not, because it records that a human review is needed without committing a customer action. Both use the same stable idempotency-key discipline.
 
 ### Write semantics, settled now rather than during the build
 
 Three details that look like implementation trivia and are actually the difference between a claim and a provable property.
 
-**`escalate_to_human` does not route anything.** It looks up the customer's assigned `SupportRepId` from Chinook, formats a summary, and returns it. **No row is written and no message is sent.** Describe it as *preparing a handoff*, never as "escalating the ticket" or "notifying the rep" — claiming a side effect that doesn't exist is the easiest overclaim in the demo to get caught on, and it's gratuitous because the honest version is fine. Keeping it read-only also preserves the clean property that **the system has exactly one write path**, which is what makes the HITL story simple.
+**`escalate_to_human` queues work; it does not deliver it.** It resolves the customer's assigned `SupportRepId`, inserts an idempotent `handoff_requests` row with status `queued`, and returns the row id. No rep is paged, emailed, assigned, or notified, and nothing drains the queue in this POC. Describe the result as *queued for review under Steve Johnson*, never as "passed to Steve" or "Steve will follow up." The four-stage correction that led here is recorded in ADR-024 and `reports/traces/`.
 
 **The idempotency key must be server-generated and stable: `f"{thread_id}:{tool_call_id}"`.** A fresh UUID per resume would satisfy the `UNIQUE` constraint every time and file a duplicate ticket on every replay — the constraint would be enforcing nothing while appearing to. Both components come from the runtime rather than the model, so the same interrupt resumed twice produces the same key and the second insert is rejected. This is what `test_hitl_double_resume` actually verifies.
 
@@ -380,7 +378,7 @@ Verified: 59 customers · 275 artists · 347 albums · 3,503 tracks · 25 genres
 | **Primary** | **#6 Helena Holý** (Czech Republic) | 7 invoices, $49.62 lifetime. Rock (10), TV Shows (6), Latin (6). Latest invoice **#404, 2025-11-13, $25.86**. Rep: **Steve Johnson (#5)**. |
 | **The other tenant** | **#26 Richard Cunningham** (USA) | The customer Helena must never see. Rep: Margaret Park (#4). Seed a canary fact here for leakage regression tests. |
 
-**What the schema does and doesn't support** — worth knowing before claiming it in a demo. Chinook has invoices, not shipments, so this is a digital store with no "where's my order." It has no payment-processor events, so a "was I charged twice" question cannot be answered — the invoice table doesn't know what a card was charged, and building a tool that eyeballs repeated line items would dress up a guess as a capability. It has no download or entitlement events, so "I never received this track" can be *collected* and ticketed but not *verified*. Each of those ends in `escalate_to_human`, which prepares a handoff summary for the assigned rep — it does not route or file anything. They are handoff paths, not capabilities, and the agent should say so plainly to the customer. The brief anticipates this: the dataset is not a perfect fit, and the job is to weave a narrative rather than fight it.
+**What the schema does and doesn't support** — worth knowing before claiming it in a demo. Chinook has invoices, not shipments, so this is a digital store with no "where's my order." It has no payment-processor events, so a "was I charged twice" question cannot be answered — the invoice table doesn't know what a card was charged, and building a tool that eyeballs repeated line items would dress up a guess as a capability. It has no download or entitlement events, so "I never received this track" can be *collected* and ticketed but not *verified*. Each of those ends in `escalate_to_human`, which queues a durable review request under the assigned rep but does not assign, send, or notify anyone. They are handoff paths, not resolution capabilities, and the agent should say so plainly to the customer. The brief anticipates this: the dataset is not a perfect fit, and the job is to weave a narrative rather than fight it.
 
 ---
 
@@ -390,7 +388,7 @@ Verified: 59 customers · 275 artists · 347 albums · 3,503 tracks · 25 genres
 .
 ├── langgraph.json            # `auth` key wires the server-level boundary below
 ├── src/security/auth.py      # @auth.authenticate + @auth.on.threads  ← the real boundary, runs before a run exists
-├── src/gateway.py            # SupportGateway — same check for the Studio path, which is exempt from custom auth
+├── src/gateway.py            # SupportGateway — alternate wrapper/proof fixture; Studio does not pass through it
 ├── src/agent/
 │   ├── graph.py              # flat baseline  ← the file to show
 │   ├── graph_supervisor.py   # variant, only if it wins

@@ -1,4 +1,4 @@
-"""Render the two demo slides to PDF and PNG.
+"""Render the five demo slides to PDF and PNG.
 
     python scripts/render_slides.py
 
@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DECK = ROOT / "docs" / "slides" / "deck.html"
 OUT = ROOT / "reports" / "slides"
-SLIDES = 2
+SLIDES = 5
 VIEWPORT = (1280, 720)
 
 CANDIDATES = (

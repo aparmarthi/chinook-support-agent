@@ -2,482 +2,396 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Chinook Support Agent — LangChain Deployed Engineer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chinook Support Agent — Deployed Engineer Demo</title>
 <style>
   :root {
-    --bg: #0a0d10;
-    --panel: #12171c;
-    --line: #232c34;
-    --ink: #f2f5f7;
-    --dim: #93a1ad;
-    --faint: #6b7986;
-    --accent: #1fb8a6;
-    --warn: #e5a33a;
-    --bad: #d4636b;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, sans-serif;
+    --paper: #edf2f6;
+    --white: #ffffff;
+    --ink: #102435;
+    --navy: #16344c;
+    --slate: #527083;
+    --muted: #7a909f;
+    --line: #cad7df;
+    --blue: #1d63e9;
+    --blue-soft: #dce8ff;
+    --aqua: #008d92;
+    --aqua-soft: #d8eeee;
+    --coral: #d85f45;
+    --coral-soft: #f8dfd9;
+    --gold: #a76b09;
+    --gold-soft: #f5ead0;
+    --display: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    --body: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --mono: "SFMono-Regular", Menlo, Consolas, monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   html, body {
-    height: 100%;
-    background: #000;
-    font-family: var(--sans);
-    color: var(--ink);
-    overflow: hidden;
+    width: 100%; height: 100%; overflow: hidden;
+    background: #09131b; color: var(--ink); font-family: var(--body);
   }
-
+  button { font: inherit; }
   #stage {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 1280px; height: 720px;
-    transform-origin: center center;
+    position: absolute; left: 50%; top: 50%;
+    width: 1280px; height: 720px; transform-origin: center;
   }
-
   .slide {
-    position: absolute;
-    inset: 0;
-    background: var(--bg);
-    padding: 40px 56px 0;
-    display: none;
-    flex-direction: column;
+    position: absolute; inset: 0; display: none; overflow: hidden;
+    background: var(--paper); padding: 40px 54px 28px;
   }
-  .slide.on { display: flex; }
-
-  .body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 0;
+  .slide.on { display: flex; flex-direction: column; }
+  .slide::before {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 8px;
+    background: var(--blue);
   }
+  .slide[data-tone="aqua"]::before { background: var(--aqua); }
+  .slide[data-tone="coral"]::before { background: var(--coral); }
+  .slide[data-tone="gold"]::before { background: var(--gold); }
 
-  /* ---------- shared chrome ---------- */
-
-  .eyebrow {
-    font-size: 13px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 650;
+  .topline {
+    display: flex; align-items: center; gap: 12px;
+    font: 700 12px/1 var(--mono); letter-spacing: .12em;
+    text-transform: uppercase; color: var(--slate);
   }
+  .topline .signal {
+    display: inline-flex; align-items: center; gap: 7px; color: var(--blue);
+  }
+  .topline .signal::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+  }
+  .topline .spacer { flex: 1; }
+  .counter { color: var(--muted); }
   h1 {
-    font-size: 38px;
-    line-height: 1.1;
-    letter-spacing: -.02em;
-    font-weight: 680;
-    margin-top: 9px;
+    max-width: 1060px; margin-top: 18px;
+    font: 650 48px/1.06 var(--display); letter-spacing: -.035em; color: var(--ink);
   }
-  h1 .sub {
-    display: block;
-    font-size: 17px;
-    font-weight: 420;
-    color: var(--dim);
-    letter-spacing: 0;
-    margin-top: 8px;
+  h1 .accent { color: var(--blue); }
+  .lede {
+    margin-top: 12px; max-width: 1040px;
+    font: 400 20px/1.42 var(--body); color: var(--slate);
   }
-
+  .body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
   .footer {
-    border-top: 1px solid var(--line);
-    padding: 12px 0 14px;
-    display: flex;
-    align-items: baseline;
-    gap: 15px;
-    font-size: 11.5px;
-    line-height: 1.45;
-    color: var(--faint);
+    min-height: 38px; padding-top: 11px; border-top: 1px solid var(--line);
+    display: flex; align-items: flex-start; gap: 17px;
+    font: 500 11px/1.35 var(--mono); color: var(--muted);
   }
-  .footer.facts span { white-space: nowrap; }
-  .footer .dot { color: var(--line); }
-  .footer b { color: var(--dim); font-weight: 600; }
+  .footer strong { color: var(--navy); }
+  .footer .push { margin-left: auto; white-space: nowrap; }
 
-  .pageno {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 11.5px;
-    color: var(--line);
-    white-space: nowrap;
-  }
-
-  /* ---------- slide 1 ---------- */
-
-  .cols {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+  /* Slide 1 */
+  .thesis-grid {
+    display: grid; grid-template-columns: .94fr 1.46fr; gap: 34px; align-items: stretch;
     margin-top: 26px;
   }
-  .col {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 18px 18px 20px;
-    position: relative;
+  .broken-promise {
+    position: relative; background: var(--navy); color: var(--white);
+    border-radius: 18px; padding: 25px 26px 23px; overflow: hidden;
   }
-  .col.here {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
+  .broken-promise::after {
+    content: ""; position: absolute; width: 190px; height: 190px;
+    right: -65px; bottom: -105px; border: 28px solid rgba(255,255,255,.06); border-radius: 50%;
   }
-  .col .tag {
-    position: absolute;
-    top: -9px; left: 18px;
-    background: var(--accent);
-    color: #04120f;
-    font-size: 10.5px;
-    font-weight: 750;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: 2.5px 8px;
-    border-radius: 3px;
+  .broken-promise .label { font: 700 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #8fd9db; }
+  .broken-promise blockquote {
+    margin-top: 18px; font: 500 25px/1.3 var(--serif); letter-spacing: -.01em;
   }
-  .col h2 {
-    font-size: 21px;
-    font-weight: 660;
-    letter-spacing: -.01em;
+  .broken-promise .empty {
+    margin-top: 22px; display: flex; gap: 10px; align-items: center;
+    font: 700 13px/1 var(--mono); color: #ffb9a9;
   }
-  .col .what {
-    font-size: 14.5px;
-    line-height: 1.45;
-    color: var(--ink);
-    margin-top: 9px;
-  }
-  .col .when {
-    font-size: 13.5px;
-    line-height: 1.45;
-    color: var(--dim);
-    margin-top: 13px;
-    padding-top: 12px;
-    border-top: 1px solid var(--line);
-  }
-  .col .when em {
-    color: var(--faint);
-    font-style: normal;
-    display: block;
-    font-size: 11px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
+  .broken-promise .empty::before { content: ""; width: 32px; height: 2px; background: #ff8166; }
+  .broken-promise .truth { margin-top: 10px; font-size: 14px; line-height: 1.45; color: #bed0dc; max-width: 360px; }
 
-  .band {
-    margin-top: 18px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  .stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
+  .stack-card {
+    background: var(--white); border: 1px solid var(--line); border-radius: 13px;
+    padding: 17px 16px 15px; min-height: 150px;
   }
-  .band > div {
-    border-left: 2px solid var(--accent);
-    padding-left: 14px;
-    font-size: 14.5px;
-    line-height: 1.5;
-    color: var(--dim);
+  .stack-card.used { border: 2px solid var(--blue); padding: 16px 15px 14px; box-shadow: 0 8px 24px rgba(29,99,233,.1); }
+  .stack-card .tag { font: 700 10px/1 var(--mono); color: var(--blue); text-transform: uppercase; letter-spacing: .1em; min-height: 11px; }
+  .stack-card h2 { margin-top: 10px; font: 650 22px/1.1 var(--display); letter-spacing: -.02em; }
+  .stack-card p { margin-top: 8px; font-size: 13.5px; line-height: 1.4; color: var(--slate); }
+  .smith-rail {
+    grid-column: 1 / -1; display: grid; grid-template-columns: 135px 1fr 1fr 1fr;
+    align-items: center; gap: 10px; background: var(--aqua-soft); color: var(--navy);
+    border: 1px solid #b5d7d8; border-radius: 13px; padding: 13px 15px;
   }
-  .band strong { color: var(--ink); font-weight: 640; }
-  code {
-    font-family: var(--mono);
-    font-size: .9em;
-    color: var(--accent);
+  .smith-rail strong { font: 700 17px/1 var(--display); color: var(--aqua); }
+  .smith-rail span { position: relative; padding-left: 21px; font: 650 13px/1.2 var(--body); }
+  .smith-rail span::before { content: ""; position: absolute; left: 0; top: 2px; width: 10px; height: 10px; border: 2px solid var(--aqua); border-radius: 50%; background: var(--paper); }
+  .hypothesis {
+    grid-column: 1 / -1; padding: 12px 15px; border-left: 3px solid var(--gold);
+    background: var(--gold-soft); font-size: 13.5px; line-height: 1.35; color: var(--navy);
   }
+  .hypothesis b { color: var(--gold); }
 
-  /* ---------- slide 2 ---------- */
+  /* Slide 2 */
+  .architecture {
+    display: grid; grid-template-columns: 1.07fr .93fr; gap: 24px; margin-top: 22px;
+  }
+  .trust-chain { display: grid; gap: 9px; }
+  .trust-step {
+    position: relative; display: grid; grid-template-columns: 108px 1fr; gap: 15px;
+    align-items: center; min-height: 60px; padding: 11px 14px;
+    background: var(--white); border: 1px solid var(--line); border-radius: 11px;
+  }
+  .trust-step:not(:last-child)::after {
+    content: ""; position: absolute; width: 2px; height: 10px; background: var(--blue);
+    bottom: -10px; left: 66px; z-index: 2;
+  }
+  .trust-step .where { font: 700 11px/1.15 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--blue); }
+  .trust-step strong { display: block; font-size: 16px; color: var(--ink); }
+  .trust-step p { margin-top: 3px; font-size: 12.8px; line-height: 1.35; color: var(--slate); }
+  .agent-panel {
+    background: var(--navy); color: var(--white); border-radius: 16px; padding: 20px 20px 17px;
+  }
+  .agent-panel .overline { font: 700 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #8fd9db; }
+  .agent-panel h2 { margin-top: 8px; font: 650 27px/1.1 var(--display); }
+  .tools { margin-top: 16px; display: grid; gap: 9px; }
+  .tool-row { display: grid; grid-template-columns: 95px 1fr; gap: 10px; align-items: start; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.15); }
+  .tool-row b { font: 700 10px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: #8fd9db; }
+  .tool-row span { font-size: 13px; line-height: 1.35; color: #d9e5ec; }
+  .controls { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .control { border-radius: 9px; padding: 10px 11px; background: rgba(255,255,255,.08); }
+  .control strong { display: block; font-size: 12.5px; }
+  .control small { display: block; margin-top: 3px; font-size: 11px; line-height: 1.3; color: #b9cbd6; }
+  .narrow-claim {
+    grid-column: 1 / -1; display: grid; grid-template-columns: 105px 1fr 1fr; gap: 14px; align-items: center;
+    background: var(--coral-soft); border-left: 4px solid var(--coral); padding: 12px 15px;
+  }
+  .narrow-claim b { font: 750 11px/1.1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--coral); }
+  .narrow-claim span { font-size: 13.5px; line-height: 1.35; color: var(--navy); }
 
-  .grid2 {
-    display: grid;
-    grid-template-columns: 1.32fr 1fr;
-    gap: 18px;
-    margin-top: 20px;
+  /* Slide 3 */
+  .experiment {
+    display: grid; grid-template-columns: .78fr .78fr 1fr; gap: 16px; margin-top: 25px; align-items: stretch;
   }
+  .arm { background: var(--white); border: 1px solid var(--line); border-radius: 15px; padding: 20px 20px 16px; }
+  .arm.ship { border: 2px solid var(--blue); padding: 19px 19px 15px; box-shadow: 0 10px 28px rgba(29,99,233,.11); }
+  .arm .badge { display: inline-flex; padding: 5px 8px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font: 750 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .arm:not(.ship) .badge { background: #e7edf1; color: var(--slate); }
+  .arm h2 { margin-top: 12px; font: 650 25px/1 var(--display); }
+  .metric { margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .metric span { font-size: 12.5px; color: var(--slate); }
+  .metric b { font: 700 19px/1 var(--mono); color: var(--ink); }
+  .metric b.slow { color: var(--coral); }
+  .decision-card { background: var(--navy); color: var(--white); border-radius: 15px; padding: 22px 23px; }
+  .decision-card .label { font: 700 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #8fd9db; }
+  .decision-card h2 { margin-top: 11px; font: 600 27px/1.2 var(--serif); }
+  .decision-card p { margin-top: 14px; font-size: 14px; line-height: 1.45; color: #c5d5de; }
+  .decision-card .rule { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.17); font: 650 12.5px/1.45 var(--mono); color: #fff; }
+  .proof-strip {
+    grid-column: 1 / -1; display: grid; grid-template-columns: 120px 1fr 1fr 1fr; gap: 12px; align-items: center;
+    padding: 12px 15px; background: var(--white); border: 1px solid var(--line); border-radius: 11px;
+  }
+  .proof-strip > b { font: 750 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--aqua); }
+  .proof-strip span { font: 600 12px/1.25 var(--mono); color: var(--slate); }
 
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    text-align: left;
-    font-size: 10.5px;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-    color: var(--faint);
-    font-weight: 650;
-    padding: 0 0 8px;
-    border-bottom: 1px solid var(--line);
+  /* Slide 4 */
+  .truth-ladder { margin-top: 22px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .truth-card { position: relative; min-height: 178px; padding: 16px 15px 14px; background: var(--white); border: 1px solid var(--line); border-radius: 13px; }
+  .truth-card:not(:last-child)::after { content: "→"; position: absolute; right: -17px; top: 72px; z-index: 2; color: var(--blue); font: 700 20px/1 var(--mono); }
+  .truth-card .step { font: 750 10px/1 var(--mono); color: var(--blue); letter-spacing: .1em; text-transform: uppercase; }
+  .truth-card h3 { margin-top: 10px; font: 650 17px/1.25 var(--display); }
+  .truth-card .evidence { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--line); font: 600 11.5px/1.45 var(--mono); color: var(--slate); }
+  .truth-card.bad { border-top: 4px solid var(--coral); padding-top: 13px; }
+  .truth-card.partial { border-top: 4px solid var(--gold); padding-top: 13px; }
+  .truth-card.good { border-top: 4px solid var(--aqua); padding-top: 13px; }
+  .loop {
+    margin-top: 16px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+    background: var(--navy); border-radius: 13px; padding: 14px 12px;
   }
-  th.r, td.r { text-align: right; }
-  td {
-    font-size: 14px;
-    padding: 7px 0;
-    border-bottom: 1px solid #191f25;
-    color: var(--dim);
-  }
-  td.v {
-    font-family: var(--mono);
-    font-size: 14.5px;
-    color: var(--ink);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  td .note { display: block; font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .loop span { position: relative; text-align: center; color: #dbe7ed; font: 650 12px/1.25 var(--body); padding: 0 14px; }
+  .loop span:not(:last-child)::after { content: ""; position: absolute; right: -5px; top: 7px; width: 10px; height: 10px; border-top: 2px solid #8fd9db; border-right: 2px solid #8fd9db; transform: rotate(45deg); }
+  .loop b { color: #8fd9db; font-weight: 700; }
+  .differentiators { margin-top: 12px; display: flex; gap: 10px; }
+  .differentiators span { flex: 1; padding: 10px 12px; background: var(--aqua-soft); border-radius: 8px; font-size: 12.5px; line-height: 1.3; color: var(--navy); }
+  .differentiators b { color: var(--aqua); }
 
-  .lbl {
-    display: inline-block;
-    font-size: 9.5px;
-    font-weight: 750;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 3px;
-    vertical-align: 1.5px;
+  /* Slide 5 */
+  .close-grid { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .ledger { background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 18px 19px; }
+  .ledger h2 { font: 650 20px/1.1 var(--display); }
+  .ledger-row { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  .ledger-row span { font-size: 13px; color: var(--slate); }
+  .ledger-row b { font: 700 14px/1 var(--mono); color: var(--aqua); }
+  .ledger-row b.unknown { color: var(--coral); }
+  .friction { grid-column: 1 / -1; display: grid; grid-template-columns: 105px repeat(3, 1fr); gap: 12px; align-items: stretch; }
+  .friction > b { align-self: center; font: 750 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--coral); }
+  .friction div { padding: 11px 12px; background: var(--coral-soft); border-radius: 9px; font-size: 12.3px; line-height: 1.3; color: var(--navy); }
+  .pilot {
+    margin-top: 15px; display: grid; grid-template-columns: 120px 1fr 1fr 1fr; gap: 12px; align-items: center;
+    background: var(--navy); color: var(--white); border-radius: 13px; padding: 14px 16px;
   }
-  .lbl.m { background: rgba(31,184,166,.14); color: var(--accent); border: 1px solid rgba(31,184,166,.35); }
-  .lbl.d { background: rgba(229,163,58,.13); color: var(--warn); border: 1px solid rgba(229,163,58,.34); }
-  .lbl.u { background: rgba(212,99,107,.12); color: var(--bad); border: 1px solid rgba(212,99,107,.32); }
-
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 15px 17px;
-  }
-  .card + .card { margin-top: 14px; }
-  .card h3 {
-    font-size: 11px;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-    color: var(--faint);
-    font-weight: 650;
-    margin-bottom: 10px;
-  }
-  .card p {
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: var(--dim);
-  }
-  .card p + p { margin-top: 9px; }
-  .card strong { color: var(--ink); font-weight: 640; }
-  .verdict {
-    font-size: 15px;
-    color: var(--ink);
-    font-weight: 640;
-    line-height: 1.4;
-  }
-  .verdict span { color: var(--accent); }
-
-  .kv { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: var(--dim); }
-  .kv b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
-
-  /* ---------- speaker notes ---------- */
+  .pilot > b { font: 750 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: #8fd9db; }
+  .pilot span { font-size: 12.8px; line-height: 1.3; color: #dce7ed; }
+  .pilot span strong { color: #fff; }
 
   #notes {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    background: rgba(6,9,11,.97);
-    border-top: 2px solid var(--accent);
-    padding: 16px 56px 18px;
-    font-size: 14px;
-    line-height: 1.55;
-    color: var(--dim);
-    display: none;
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; display: none;
+    padding: 16px 54px 18px; background: rgba(9,19,27,.97); border-top: 3px solid var(--blue);
+    color: #dce7ed; font-size: 14px; line-height: 1.5;
   }
   #notes.on { display: block; }
-  #notes b { color: var(--ink); }
-  #notes .hint { color: var(--faint); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 7px; }
-
-  /* ---------- print ---------- */
+  #notes b { color: #8fd9db; }
+  #notes .hint { display: block; margin-bottom: 5px; font: 700 10px/1 var(--mono); text-transform: uppercase; letter-spacing: .1em; color: #9fb2bf; }
 
   @page { size: 1280px 720px; margin: 0; }
   @media print {
-    html, body { background: #fff; overflow: visible; height: auto; }
+    html, body { height: auto; overflow: visible; background: #fff; }
     #stage { position: static; width: auto; height: auto; transform: none !important; }
-    .slide { position: relative; display: flex !important; width: 1280px; height: 720px; page-break-after: always; }
+    .slide { position: relative; display: flex !important; flex-direction: column; width: 1280px; height: 720px; page-break-after: always; }
     #notes { display: none !important; }
   }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
-
-<div id="stage">
-
-  <!-- ============================ SLIDE 1 ============================ -->
-  <section class="slide on">
-    <div class="eyebrow">Chinook Digital Music &nbsp;·&nbsp; Support Agent</div>
-    <h1>Same runtime, different altitudes
-      <span class="sub">The three things are not a product menu. They are one stack, and you can move between them without a rewrite.</span>
-    </h1>
-
+<main id="stage" aria-live="polite">
+  <section class="slide on" data-tone="aqua" aria-label="Slide 1: product map and thesis">
+    <div class="topline"><span class="signal">Chinook Digital Music</span><span>Support agent</span><span class="spacer"></span><span class="counter">01 / 05</span></div>
+    <h1>The build is the easy half. <span class="accent">Trust is the product.</span></h1>
+    <p class="lede">A realistic support flow, the controls around it, and the LangSmith loop that caught a fluent failure no error dashboard could see.</p>
     <div class="body">
-    <div class="cols">
-      <div class="col here">
-        <div class="tag">Built here</div>
-        <h2>LangChain</h2>
-        <div class="what">The framework. Building blocks and <code>create_agent</code> — a configurable model-and-tool harness with middleware.</div>
-        <div class="when"><em>When you reach for it</em>Default starting point. Nearly every agent, including this one.</div>
-      </div>
-      <div class="col">
-        <h2>LangGraph</h2>
-        <div class="what">The runtime underneath. Durable execution, state, checkpointing, streaming, human-in-the-loop.</div>
-        <div class="when"><em>When you reach for it</em>Directly, when you need explicit state transitions, deterministic routing, or parallel branches.</div>
-      </div>
-      <div class="col">
-        <h2>Deep Agents</h2>
-        <div class="what">An opinionated harness on top. Planning, subagents, virtual filesystem, skills.</div>
-        <div class="when"><em>When you reach for it</em>Long-horizon work where the context outgrows the window.</div>
-      </div>
-    </div>
-
-    <div class="band">
-      <div><strong>You don't pick one.</strong> <code>create_agent</code> returns a compiled LangGraph. What I built today drops into a <code>StateGraph</code> as a node tomorrow with its middleware intact — no rewrite at the boundary.</div>
-      <div><strong>LangSmith is the other half.</strong> The OSS is how you build the agent; LangSmith is how you find out whether it's any good. Framework-agnostic — it speaks OpenTelemetry.</div>
-    </div>
-    </div>
-
-    <!--
-      Company figures, verified 5 Aug 2026. Downloads (100M+/mo) and GitHub stars
-      current as of June 2026; LangSmith customers (6,000+), 5 of the Fortune 10
-      and ~35% of the Fortune 500 reported mid-2026. Funding is the Oct 2025
-      Series B: $125M at a $1.25B valuation, led by IVP — NOT total raised, which
-      is ~$160M disclosed across seed, A and B. Re-check the morning of; a stale
-      number quoted back to the company that published it is the worst version.
-    -->
-    <div class="footer facts">
-      <span><b>Open source since 2022</b></span><span class="dot">·</span>
-      <span><b>100M+</b> monthly downloads</span><span class="dot">·</span>
-      <span><b>6,000+</b> LangSmith customers</span><span class="dot">·</span>
-      <span><b>5 of the Fortune 10</b> · ~1/3 of the Fortune 500</span><span class="dot">·</span>
-      <span><b>$125M Series B</b> at $1.25B — IVP, Sequoia, Benchmark, CapitalG</span>
-      <span class="pageno">1 / 2</span>
-    </div>
-  </section>
-
-  <!-- ============================ SLIDE 2 ============================ -->
-  <section class="slide">
-    <div class="eyebrow">Results</div>
-    <h1>Every number labeled
-      <span class="sub">Measured on this build · Modeled from assumptions · Unavailable until real traffic. The third category is the one worth reading.</span>
-    </h1>
-
-    <div class="body">
-    <div class="grid2">
-      <div>
-        <table>
-          <tr>
-            <th>Metric</th><th class="r">Value</th><th class="r" style="width:104px">Basis</th>
-          </tr>
-          <tr>
-            <td>Task resolution, benchmark<span class="note">30 examples · 6 slices · every slice clean at this commit</span></td>
-            <td class="r v">30 / 30</td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Cross-tenant data access<span class="note">code evaluator, never a judge · hard gate</span></td>
-            <td class="r v">0 &nbsp;<span style="color:var(--faint);font-weight:400">(30/30)</span></td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Unapproved writes<span class="note">no refund ticket without a human click</span></td>
-            <td class="r v">0 &nbsp;<span style="color:var(--faint);font-weight:400">(30/30)</span></td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Escalation decisions correct<span class="note">unsafe-resolution rate 0 · 4 labeled cases, so a percentage would be dishonest</span></td>
-            <td class="r v">4 / 4</td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Full-turn latency, p50<span class="note">p95 7.1s — directional only at n=30</span></td>
-            <td class="r v">3.8 s</td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Cost per priced eval turn<span class="note">29 of 30 examples are single-turn · a real conversation costs several times more</span></td>
-            <td class="r v">$0.0010</td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>API spend, every eval run on disk<span class="note">220 priced rows across 19 result files · both arms, every rerun · excludes Studio</span></td>
-            <td class="r v">$0.22</td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Deterministic tests passing<span class="note">the security claims each have one behind them</span></td>
-            <td class="r v">139</td><td class="r"><span class="lbl m">Measured</span></td>
-          </tr>
-          <tr>
-            <td>Deflected labor / month<span class="note">1,200 contacts · 60% billing-class · 70% containment · 6 min at $0.60/min</span></td>
-            <td class="r v">~$1,800</td><td class="r"><span class="lbl d">Modeled</span></td>
-          </tr>
-          <tr>
-            <td>Containment rate <span style="color:var(--faint)">· recommendation attach rate</span><span class="note">the North Star and the upsell line — both need production traffic</span></td>
-            <td class="r v" style="color:var(--bad)">not known</td><td class="r"><span class="lbl u">Unavailable</span></td>
-          </tr>
-        </table>
-      </div>
-
-      <div>
-        <div class="card">
-          <h3>The experiment</h3>
-          <p class="verdict">Both arms resolved <span>30/30</span>. I shipped <span>flat</span>.</p>
-          <p>Bars were pre-registered before the supervisor existed. It came in <strong>+2.8s on p50</strong> against a +2.0s ceiling, with <strong>no mixed-intent gain</strong> and no quality gain to pay for it.</p>
-          <p><strong>Last week this said 30 against 29, in the supervisor's favour, and I shipped flat anyway</strong> — one example on thirty isn't a quality difference. Rerun at this commit, they tie. That is what a one-example margin was worth. What reproduced both times is the overhead of the extra hop: <strong>1.7x median latency, 61 tool calls against 45</strong>. The verdict rests on that.</p>
-        </div>
-
-        <div class="card">
-          <h3>Provenance</h3>
-          <div class="kv"><span>Commit, both arms</span><b>a29a530 · clean</b></div>
-          <div class="kv"><span>Agent model</span><b>gpt-5.6-luna</b></div>
-          <div class="kv"><span>Dataset digest</span><b>6ba144216f8d</b></div>
-          <div class="kv"><span>Evaluator digest</span><b>decda2664959</b></div>
-          <p style="margin-top:10px;font-size:12.5px">Generated into <code>reports/experiment.md</code>, not typed. The script refuses to publish two arms that disagree on commit, model, dataset, or evaluators.</p>
+      <div class="thesis-grid">
+        <article class="broken-promise">
+          <div class="label">The reliability problem</div>
+          <blockquote>“I’m handing this to Steve… I’ve passed along your concern.”</blockquote>
+          <div class="empty">Tool calls: none</div>
+          <p class="truth">Warm tone. Correct facts. Green trace. The customer waits for help that was never requested.</p>
+        </article>
+        <div class="stack">
+          <article class="stack-card used"><div class="tag">Built here</div><h2>LangChain</h2><p>Fast, configurable agent harness. Six tools and middleware on one standard loop.</p></article>
+          <article class="stack-card"><div class="tag">Runtime underneath</div><h2>LangGraph</h2><p>Durable state, explicit topology, streaming, checkpointing, and human interrupts.</p></article>
+          <article class="stack-card"><div class="tag">Graduate when needed</div><h2>Deep Agents</h2><p>Long-horizon planning, subagents, skills, and a virtual filesystem.</p></article>
+          <div class="smith-rail"><strong>LangSmith</strong><span>Observe</span><span>Evaluate</span><span>Improve</span></div>
+          <div class="hypothesis"><b>Business hypothesis</b> — resolve billing accurately, then use the resolved moment for discovery. Recommendation attach rate is unknown until real traffic.</div>
         </div>
       </div>
     </div>
-    </div>
-
-    <div class="footer">
-      <span><b>Inference is not the binding cost.</b> Even at the modeled full-conversation rate, deflecting 500 contacts is single-digit dollars of tokens against ~$1,800 of labor. I'm not leading with that ratio — the real cost here is engineering and the review loop, not the model.</span>
-      <span class="pageno">2 / 2</span>
-    </div>
+    <footer class="footer"><span><strong>100M+</strong> monthly OSS downloads</span><span><strong>6K+</strong> active LangSmith customers</span><span><strong>5 of Fortune 10</strong></span><span><strong>35%</strong> of Fortune 500</span><span><strong>$125M Series B</strong> at $1.25B</span><span class="push">Sources: LangChain · verified 05 Aug 2026</span></footer>
   </section>
 
-</div>
+  <section class="slide" aria-label="Slide 2: cognitive architecture and security">
+    <div class="topline"><span class="signal">Cognitive architecture</span><span class="spacer"></span><span class="counter">02 / 05</span></div>
+    <h1>One rule: <span class="accent">Helena can only act as Helena.</span></h1>
+    <p class="lede">The model understands the request and chooses a tool. Code fixes the customer identity, scopes the data, calculates money, and controls writes.</p>
+    <div class="body">
+      <div class="architecture">
+        <div class="trust-chain">
+          <article class="trust-step"><div class="where">Sign in</div><div><strong>Verify who is calling</strong><p>Helena’s bearer credential resolves to customer 6. The request body cannot claim customer 26.</p></div></article>
+          <article class="trust-step"><div class="where">Thread</div><div><strong>Protect the saved conversation</strong><p>Only Helena can open or resume Helena’s thread—before its history is loaded.</p></div></article>
+          <article class="trust-step"><div class="where">Data</div><div><strong>Scope every read</strong><p>Tools expose no customer picker; parameterized SQL binds Helena’s ID and computes totals.</p></div></article>
+          <article class="trust-step"><div class="where">Action</div><div><strong>Control side effects</strong><p>Refunds pause for approval; stable keys prevent a retry from creating a duplicate ticket.</p></div></article>
+        </div>
+        <article class="agent-panel">
+          <div class="overline">Flat create_agent · six tools</div>
+          <h2>Model: language + tool choice</h2>
+          <div class="tools">
+            <div class="tool-row"><b>Billing · 3</b><span>List invoices · invoice detail · SQL spend summary</span></div>
+            <div class="tool-row"><b>Discovery · 1</b><span>Catalog-grounded recommendations excluding owned tracks</span></div>
+            <div class="tool-row"><b>Support · 2</b><span>File refund request · queue human handoff</span></div>
+          </div>
+          <div class="controls">
+            <div class="control"><strong>Model never chooses</strong><small>Customer · SQL · billing totals</small></div>
+            <div class="control"><strong>Code enforces</strong><small>Approval · idempotency · audit guard</small></div>
+          </div>
+        </article>
+        <div class="narrow-claim"><b>Two attacks,<br>kept separate</b><span><strong>Thread attack:</strong> Richard → Helena’s thread. Blocked before conversation history loads.</span><span><strong>Identity attack:</strong> Helena credential + Richard’s ID. Rejected before a run starts.</span></div>
+      </div>
+    </div>
+    <footer class="footer"><span><strong>Implementation:</strong> src/security/auth.py:190</span><span>src/agent/graph.py:86</span><span>src/data/db.py:227</span><span>src/agent/tools/support.py:53</span><span class="push">Studio identity is a developer-side simulation, not production auth.</span></footer>
+  </section>
 
-<div id="notes"></div>
+  <section class="slide" data-tone="gold" aria-label="Slide 3: flat versus supervisor experiment">
+    <div class="topline"><span class="signal">Architecture decision</span><span class="spacer"></span><span class="counter">03 / 05</span></div>
+    <h1>Complexity did not earn its hop. <span class="accent">Flat ships.</span></h1>
+    <p class="lede">Same model, same 30-example dataset, same evaluators, same commit. The supervisor had to clear every pre-registered bar.</p>
+    <div class="body">
+      <div class="experiment">
+        <article class="arm ship"><span class="badge">Ships</span><h2>Flat</h2><div class="metric"><span>Resolved</span><b>30 / 30</b></div><div class="metric"><span>p50 full turn</span><b>3.8s</b></div><div class="metric"><span>Tool calls</span><b>45</b></div><div class="metric"><span>Security failures</span><b>0</b></div></article>
+        <article class="arm"><span class="badge">Challenger</span><h2>Supervisor</h2><div class="metric"><span>Resolved</span><b>30 / 30</b></div><div class="metric"><span>p50 full turn</span><b class="slow">6.6s</b></div><div class="metric"><span>Tool calls</span><b class="slow">61</b></div><div class="metric"><span>Security failures</span><b>0</b></div></article>
+        <aside class="decision-card"><div class="label">What made the decision credible</div><h2>The first controlled freeze showed 29–30. I did not bank a one-example lead.</h2><p>The bar was written before the challenger existed. After the escalation fix, both arms were rerun at the same commit and tied. What survived was the extra hop: 1.7× median latency and 16 more tool calls.</p><div class="rule">Decision rule: visible quality gain + no workflow regression + ≤2.0s latency penalty. Ties go to the simpler topology.</div></aside>
+        <div class="proof-strip"><b>Provenance (both arms)</b><span>commit a29a530 · clean</span><span>dataset 6ba144216f8d</span><span>evaluators decda2664959</span></div>
+      </div>
+    </div>
+    <footer class="footer"><span><strong>Measured, not inferred.</strong> 30 examples are a decision set, not a statistical claim.</span><span class="push">Artifact: reports/experiment.md</span></footer>
+  </section>
 
+  <section class="slide" data-tone="aqua" aria-label="Slide 4: LangSmith improvement loop">
+    <div class="topline"><span class="signal">LangSmith loop</span><span class="spacer"></span><span class="counter">04 / 05</span></div>
+    <h1>A trace proves a call happened. <span class="accent">Not that the promise is true.</span></h1>
+    <p class="lede">Core message: a believable answer is not enough. I move from a real failure to a replayable test, a coded quality rule, and ongoing monitoring.</p>
+    <div class="body">
+      <div class="truth-ladder">
+        <article class="truth-card bad"><div class="step">01 · Fluent claim</div><h3>“I’m handing this to Steve.”</h3><div class="evidence">tool calls: none<br>side effect: none</div></article>
+        <article class="truth-card bad"><div class="step">02 · Tool appears</div><h3>Escalation tool returns prose</h3><div class="evidence">tool call: yes<br>durable row: none</div></article>
+        <article class="truth-card partial"><div class="step">03 · Effect exists</div><h3>Row queued; reply says “passed”</h3><div class="evidence">row: queued<br>assigned / sent: no</div></article>
+        <article class="truth-card good"><div class="step">04 · Honest claim</div><h3>“Queued; not assigned or sent.”</h3><div class="evidence">row: queued<br>claim matches state</div></article>
+      </div>
+      <div class="loop"><span><b>Trace</b><br>find failure</span><span><b>Replay</b><br>reproduce state</span><span><b>Dataset</b><br>freeze case</span><span><b>Evaluator</b><br>encode rule</span><span><b>Experiment</b><br>prove fix</span><span><b>Production</b><br>monitor samples</span></div>
+      <div class="differentiators"><span><b>State-aware replay</b> — clone a traced thread back into the local graph.</span><span><b>Trace → dataset</b> — turn a real failure into a permanent regression case.</span><span><b>One quality definition</b> — reuse evaluators offline and online.</span></div>
+    </div>
+    <footer class="footer"><span><strong>Code for truth:</strong> exact facts, authorization, writes, trajectories</span><span><strong>Judges for judgment:</strong> tone and helpfulness</span><span class="push">No deployment features shown.</span></footer>
+  </section>
+
+  <section class="slide" data-tone="coral" aria-label="Slide 5: results, friction, and pilot recommendation">
+    <div class="topline"><span class="signal">Recommendation</span><span class="spacer"></span><span class="counter">05 / 05</span></div>
+    <h1>Pilot two workflows. <span class="accent">Stop on two failures.</span></h1>
+    <p class="lede">The build is ready for a bounded evaluation—not a production victory lap. The missing numbers require real customers and real reviewers.</p>
+    <div class="body">
+      <div class="close-grid">
+        <article class="ledger"><h2>Measured on this build</h2><div class="ledger-row"><span>Task resolution, frozen comparison</span><b>30 / 30</b></div><div class="ledger-row"><span>Cross-tenant access / unapproved refund writes</span><b>0 / 0</b></div><div class="ledger-row"><span>Flat p50 full-turn latency</span><b>3.8s</b></div><div class="ledger-row"><span>Deterministic pre-flight</span><b>139 passed</b></div></article>
+        <article class="ledger"><h2>Unknown until production traffic</h2><div class="ledger-row"><span>Containment without unsafe resolution</span><b class="unknown">unknown</b></div><div class="ledger-row"><span>Recommendation attach / conversion rate</span><b class="unknown">unknown</b></div><div class="ledger-row"><span>Human review agreement and downstream outcome</span><b class="unknown">unknown</b></div><div class="ledger-row"><span>Actual queue shape and integration effort</span><b class="unknown">unknown</b></div></article>
+        <div class="friction"><b>Friction<br>worth fixing</b><div>Authorization payload hid run context under <code>kwargs</code>; the obvious check failed open.</div><div>Useful HITL cards required async prefetch because the description callback cannot do I/O.</div><div>Middleware composed a prompt no UI exposed—the root cause of the fabricated handoff.</div></div>
+      </div>
+      <div class="pilot"><b>Two-week pilot</b><span><strong>Scope</strong><br>billing lookup + refund intake</span><span><strong>Measure</strong><br>containment + unsafe-resolution</span><span><strong>Safety stop</strong><br>any foreign-tenant access or unapproved refund write</span></div>
+    </div>
+    <footer class="footer"><span><strong>Next:</strong> add support-rep annotation queue; hold recommendations behind an attach-rate experiment.</span><span class="push">The build is not the bottleneck. Getting to reliable is.</span></footer>
+  </section>
+</main>
+
+<aside id="notes" aria-hidden="true"></aside>
 <script>
   const slides = [...document.querySelectorAll('.slide')];
-  const notesEl = document.getElementById('notes');
-  let i = 0, notesOn = false;
-
+  const stage = document.getElementById('stage');
+  const notes = document.getElementById('notes');
+  let index = 0;
+  let notesOn = false;
   const NOTES = [
-    "<span class='hint'>Slide 1 — 2:00 total, then stop talking and go to the product</span>" +
-    "<b>Company (0:30):</b> \"Quickly, because you're making a platform bet.\" Read the footer strip, then: \"that's the whole company slide.\" " +
-    "<b>OSS map (1:30):</b> lead with <b>same runtime, different altitudes</b> — not a product list. Land the two points: you don't pick one, and I chose the middle one deliberately. " +
-    "<b>Never say</b> \"loop vs. DAG\" or \"LangGraph is for when it stops being a loop\" — LangGraph supports cycles and create_agent is itself a loop on it. " +
-    "<b>Close:</b> \"If you keep one thing from today: the build is the easy half.\" " +
-    "<b>Sources for the footer strip, verified 5 Aug 2026 —</b> downloads, GitHub stars and Fortune 10 adoption: blog.langchain.com and the LangChain 1.0 / LangGraph 1.0 launch posts (figures current as of June 2026). " +
-    "LangSmith customer count and Fortune 500 share: LangChain's Series B announcement and Interrupt 2026 materials. " +
-    "Funding: $125M Series B led by IVP at a $1.25B post-money, 20 Oct 2025 — corroborated by Tracxn and Crunchbase. " +
-    "<b>That is the Series B, not total raised (~$160M disclosed across seed, A and B).</b> If pressed for a source, say you took them from LangChain's own published material and offer to send links — do not guess a URL aloud.",
-
-    "<span class='hint'>Slide 2 — 1:00, then friction and the recommendation</span>" +
-    "<b>Lead with the labels, not the numbers.</b> \"Three categories, and the one I'd read first is Unavailable.\" " +
-    "<b>Counts, not percentages</b> — 30 examples doesn't support a percentage. " +
-    "<b>The experiment card is the strongest thing on the slide:</b> the complicated thing appeared to win, I declined to bank a one-example margin because the bars were written first, and on the rerun at the current commit the lead vanished. Both freezes are on disk, so this is showable, not assertable. " +
-    "<b>Provenance: have it, don't volunteer it.</b> Only open it if someone probes the numbers. " +
-    "<b>Then:</b> friction (three items), then the recommendation — pilot two workflows, two weeks, instrument containment and unsafe-resolution, safety stop on any cross-tenant failure or unapproved write."
+    "<span class='hint'>0:00–4:00 · land the thesis, then leave the slides</span><b>Open:</b> ‘Agents fail most dangerously when nothing looks broken.’ Tell the empty-tool-list story in 30 seconds. State the Chinook assumptions. Give the company proof strip, then the OSS map as one stack. <b>Transition:</b> ‘Let me show one customer moving through three increasingly consequential intents before I explain the machinery.’",
+    "<span class='hint'>10:00–14:30 · after the live customer flow and injection</span><b>Lead with one rule:</b> Helena can only act as Helena. Read the left side as four code-owned guardrails, then the six-tool menu on the right. Keep the attacks separate: Richard opening Helena’s thread is a history leak; Helena claiming Richard’s ID is an identity override. Both stop before a run. <b>Critical caveat:</b> Studio simulates the verified session; Agent Server tests prove production auth.",
+    "<span class='hint'>14:30–18:30 · architecture experiment</span><b>Lead with the result:</b> both resolved 30/30; flat is 3.8s versus 6.6s. Explain that the earlier one-example lead was not banked because the rule existed first. <b>Never say:</b> the supervisor ‘won’ or the result ‘flipped.’",
+    "<span class='hint'>18:30–26:00 · use this slide as the map, then enter LangSmith</span><b>Orient first:</b> the top row is the truth ladder; the bottom row is the engineering loop. Then show before trace → add to dataset → evaluator → after trace → experiment. Say: ‘Three fixes, and none began with something going red.’ Name state-aware replay, trace-to-dataset, and offline/online evaluator reuse as differentiators. Do not open Deployments.",
+    "<span class='hint'>26:00–30:00 · friction + recommendation</span><b>Read the unknown column first.</b> Give only three friction findings. Recommend billing + refund intake, two weeks, explicit safety stops. <b>Close:</b> ‘The build is not the bottleneck. Getting to reliable is.’ Stop talking and take questions."
   ];
 
   function fit() {
-    const s = Math.min(innerWidth / 1280, innerHeight / 720);
-    document.getElementById('stage').style.transform =
-      `translate(-50%, -50%) scale(${s})`;
+    const scale = Math.min(innerWidth / 1280, innerHeight / 720);
+    stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
   }
-
-  function show(n) {
-    i = Math.max(0, Math.min(slides.length - 1, n));
-    slides.forEach((s, k) => s.classList.toggle('on', k === i));
-    notesEl.innerHTML = NOTES[i];
-    history.replaceState(null, '', '#' + (i + 1));
+  function show(next) {
+    index = Math.max(0, Math.min(slides.length - 1, next));
+    slides.forEach((slide, i) => slide.classList.toggle('on', i === index));
+    notes.innerHTML = NOTES[index];
+    history.replaceState(null, '', `#${index + 1}`);
   }
-
+  function toggleNotes() {
+    notesOn = !notesOn;
+    notes.classList.toggle('on', notesOn);
+    notes.setAttribute('aria-hidden', String(!notesOn));
+  }
   addEventListener('resize', fit);
-  addEventListener('keydown', e => {
-    if (['ArrowRight', ' ', 'PageDown', 'ArrowDown'].includes(e.key)) { show(i + 1); e.preventDefault(); }
-    if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(e.key)) { show(i - 1); e.preventDefault(); }
-    if (e.key === 'n') { notesOn = !notesOn; notesEl.classList.toggle('on', notesOn); }
+  addEventListener('keydown', event => {
+    if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { show(index + 1); event.preventDefault(); }
+    if (['ArrowLeft', 'PageUp'].includes(event.key)) { show(index - 1); event.preventDefault(); }
+    if (event.key.toLowerCase() === 'n') { toggleNotes(); event.preventDefault(); }
+    if (event.key === 'Home') { show(0); }
+    if (event.key === 'End') { show(slides.length - 1); }
   });
-  addEventListener('click', () => show(i + 1));
-
   fit();
   show((parseInt(location.hash.slice(1), 10) || 1) - 1);
 </script>

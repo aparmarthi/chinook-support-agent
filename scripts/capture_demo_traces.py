@@ -1,10 +1,10 @@
 """Record the demo's conversations against the live server and print their traces.
 
-Block 5.3 already has its before/after pair. This fills the rest of §11 of
-DEMO_SCRIPT: the Block 2 customer thread and the Block 3 injection attempt,
-recorded as real runs so the URLs are fallbacks if anything misbehaves live.
+The escalation failure already has its before/after pair. This records the rest:
+the multi-intent customer thread and the injection attempt, captured as real runs
+so the URLs are fallbacks if anything misbehaves live.
 
-The Block 2 turns are one thread on purpose. A multi-turn trace is the artifact
+The customer turns are one thread on purpose. A multi-turn trace is the artifact
 worth having — three separate single-turn traces would not show that the refund
 turn is reasoning over a conversation that already happened.
 
@@ -151,7 +151,7 @@ def main() -> None:
         "handoff_requests gained a row"
     )
 
-    print("\nPaste these into DEMO_SCRIPT.md §11 and screenshot them.")
+    print("\nKeep these URLs as the fallback if a live run misbehaves.")
 
 
 if __name__ == "__main__":

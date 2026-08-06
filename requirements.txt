@@ -7,7 +7,7 @@ langgraph>=1.2.10,<2.0
 langsmith>=0.10.15,<1.0
 deepagents>=0.7.1,<1.0
 
-# Model provider — OpenAI (see docs/BUILD_PLAN.md "Budget")
+# Model provider — OpenAI
 langchain-openai>=1.4.1,<2.0
 # Direct dependency, not just transitive: the retry middleware names OpenAI's
 # transient exception classes so it retries a timeout and not a bad request.

@@ -6,8 +6,6 @@
 
 What's actually being assessed is not the code. It's whether this person can run a pre-sales technical engagement: co-design an architecture, defend the tradeoffs to an engineer, connect it to business value for a director, and handle a competitive objection without getting defensive. The agent is the artifact; the demo is the deliverable. Where those two goals conflict, the demo wins — that's the reasoning behind most of the scope cuts in §3.
 
-See [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) §0 for the audience read and [`COMPETITIVE.md`](COMPETITIVE.md) for objection handling.
-
 ---
 
 ## 1. Problem

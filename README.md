@@ -12,7 +12,7 @@ Three workflows against the [Chinook](https://github.com/lerocha/chinook-databas
 
 1. **Account & billing** — invoice lookups and spend summaries, aggregated in SQL rather than by the model
 2. **Music discovery** — recommendations grounded in the customer's own purchase history, excluding tracks they already own
-3. **Refunds & handoff** — drafts a refund *request ticket*, pauses for human approval, and prepares a handoff summary for the customer's actual assigned support rep
+3. **Refunds & handoff** — drafts a refund *request ticket*, pauses for human approval, and queues a durable handoff row under the customer's actual assigned support rep without claiming the rep was notified
 
 Three business problems, **six tools.** The brief says not to go for breadth of tools, so the count is a designed ceiling — [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) §5 lists what was cut and why, including a duplicate-charge detector that was scoped and rejected because Chinook has no payment events to detect against.
 
@@ -35,18 +35,16 @@ Full reasoning in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/deci
 
 | Doc | What's in it |
 |---|---|
-| [`docs/BRIEF.md`](docs/BRIEF.md) | **The brief verbatim + compliance matrix** — source of truth for every "the brief says…" claim |
 | [`docs/PRD.md`](docs/PRD.md) | Problem, users, scope, success metrics, security model, ROI |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Cognitive architecture, tools, middleware, evaluation matrix, data layer |
 | [`docs/decisions.md`](docs/decisions.md) | 24 ADRs — the choices, the reversals, and what would change our mind |
-| [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md) | Day-by-day plan, budget, cut order, risk register |
-| [`docs/RUN_SHEET.md`](docs/RUN_SHEET.md) | **The one page presented from** — clock, exact utterances, numbers, cut ladder |
-| [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | Audience read, run of show, hot takes, statements to avoid, Q&A prep |
-| [`docs/COMPETITIVE.md`](docs/COMPETITIVE.md) | Positioning and objection handling — read the morning of |
-| [`docs/FRICTION_LOG.md`](docs/FRICTION_LOG.md) | Friction log — filled during the build |
-| [`docs/slack-kickoff.md`](docs/slack-kickoff.md) | Plan-of-attack post and the two questions worth asking |
+| [`docs/FRICTION_LOG.md`](docs/FRICTION_LOG.md) | Platform friction found during the build, with the workaround for each |
+| [`reports/experiment.md`](reports/experiment.md) | Frozen flat-vs-supervisor comparison, generated from the result files it names |
+| [`docs/slides/deck.html`](docs/slides/deck.html) | Five-slide customer-facing deck; keyboard navigation and speaker notes |
 
-**Read order:** PRD → ARCHITECTURE → decisions → BUILD_PLAN → DEMO_SCRIPT → COMPETITIVE.
+**Read order:** PRD → ARCHITECTURE → decisions. `reports/experiment.md` is the architecture decision with its evidence attached; `docs/FRICTION_LOG.md` is the feedback worth sending back to the platform team.
+
+Presentation material — run sheet, demo script, competitive positioning, and the presenter guide — is deliberately not in this repo. It is preparation scaffolding, and several of those documents contain superseded claims that this README and the ADRs correct.
 
 ## Design decisions that reversed
 
@@ -90,4 +88,14 @@ langgraph dev
 
 ## Results
 
-_To be filled in after the build: containment rate, evaluator scores, experiment comparison, cost per conversation._
+Frozen at commit `a29a530` with the same model, dataset, and evaluators in both arms:
+
+| Metric | Flat | Supervisor |
+|---|---:|---:|
+| Resolved | **30/30** | **30/30** |
+| Mixed-intent | **5/5** | **5/5** |
+| p50 full-turn latency | **3.8s** | 6.6s |
+| Tool calls | **45** | 61 |
+| Security failures | **0** | **0** |
+
+Flat ships: the supervisor added 1.7× median latency with no measured quality gain. See [`reports/experiment.md`](reports/experiment.md) for generated provenance. The pre-flight suite recorded **139 deterministic passes** with the Agent Server running; **11** additional LLM-marked tests are kept separate. Production containment, recommendation attach rate, and human-review agreement remain unknown until real traffic.

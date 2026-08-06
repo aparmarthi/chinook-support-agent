@@ -281,7 +281,7 @@ Retry middleware needs one caveat that isn't optional: **retry transient failure
 
 And it's the more honest position. LangSmith's case doesn't rest on being better at every axis — it rests on the loop being closed and the framework and platform being co-designed. That argument is *stronger* when you've already granted that the trace-viewing piece is commoditized.
 
-**Would change our mind.** Nothing. Full positioning in [`COMPETITIVE.md`](COMPETITIVE.md).
+**Would change our mind.** Nothing.
 
 ---
 
@@ -375,7 +375,7 @@ So the judge was re-run against deliberately bad replies. Tool talk and schema w
 
 ## ADR-020 — Answering "invent a reliability problem" with a real one
 
-**Status.** Accepted. Drives Block 1 and Block 5.3 of [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
+**Status.** Accepted. Drives the opening failure story and the reliability argument that closes the demo.
 
 **Context.** The kickoff post asked whether there was a specific support or reliability problem to optimize for. The answer: *"No specific problem, but if you create one and craft a narrative around it, that would be interesting!"* — an explicit invitation to invent a scenario.
 
