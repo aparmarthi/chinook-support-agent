@@ -1,4 +1,6 @@
-# Chinook Music Store Support Agent
+# Tenant-Safe Support Agent
+
+*A customer-support agent on the Chinook music-store dataset.*
 
 A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built to be demoed live to a mixed business and technical audience.
 

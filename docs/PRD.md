@@ -1,10 +1,10 @@
-# PRD — Chinook Music Store Support Agent
+# PRD — Tenant-Safe Support Agent
 
 **Owner:** Amey Parmarthi
 **Status:** Draft for build
 **Context:** The deliverable is a *live demo* to a mixed business and technical audience, not a shipped product. Every requirement below has to justify its airtime.
 
-What's actually being assessed is not the code. It's whether this person can run a pre-sales technical engagement: co-design an architecture, defend the tradeoffs to an engineer, connect it to business value for a director, and handle a competitive objection without getting defensive. The agent is the artifact; the demo is the deliverable. Where those two goals conflict, the demo wins — that's the reasoning behind most of the scope cuts in §3.
+The code is only half the point. The demo has to run like a pre-sales technical engagement: co-design an architecture, defend the tradeoffs to an engineer, connect it to business value for a director, and handle a competitive objection without getting defensive. The agent is the artifact; the demo is the deliverable. Where those two goals conflict, the demo wins — that's the reasoning behind most of the scope cuts in §3.
 
 ---
 
