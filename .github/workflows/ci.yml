@@ -8,6 +8,11 @@ on:
 jobs:
   agent:
     runs-on: ubuntu-latest
+    env:
+      # `src/agent/graph.py` builds the served agent at import, and the OpenAI
+      # client refuses to construct without a key. No test here calls it; one
+      # that did would fail on this placeholder instead of spending money.
+      OPENAI_API_KEY: ci-placeholder-not-a-key
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
