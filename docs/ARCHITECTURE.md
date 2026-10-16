@@ -305,7 +305,7 @@ Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed 
 
 The split is the principle: **anything with a ground truth gets a code evaluator; LLM judges are for the genuinely subjective.** Never let a probabilistic grader score a safety property (ADR-010).
 
-**Measured, 30/30 on the code checks**, with the tone judge at a mean 0.97 of 1.00 across the 29 replies eligible for it. The thirtieth is the pending-approval example, which ends on an interrupt and has no final answer — the judge returns `None` rather than zero there, because "not graded" and "bad tone" must not average together.
+**Measured at commit `613bd0b`, every example run five times: 147/150 on the code checks**, with the tone judge at a mean 0.88 of 1.00 across the 142 replies that passed every code check. The judge grades nothing else: not a failed reply, and not the pending-approval example, which ends on an interrupt and has no final answer — the judge returns `None` rather than zero there, because "not graded" and "bad tone" must not average together. The misses and the raw rows are in the README's Results.
 
 The judge is calibrated and the calibration is a test (`tests/test_judge_calibration.py`, marked `llm`). It needed to be: the first version marked four structurally identical escalation replies with two different verdicts. See ADR-019 — the interesting part is not the miscalibration but what fixing it nearly did.
 
