@@ -1,0 +1,14 @@
+# Root-anchored: gcloudignore uses gitignore rules, where a bare "data/"
+# would also drop src/data/.
+/.env
+/.venv/
+/.git/
+/data/
+/web/
+/docs/
+/evals/
+/reports/
+/tests/
+**/__pycache__/
+/.langgraph_api/
+/.pytest_cache/

@@ -120,8 +120,13 @@ def build_agent(
             PIIMiddleware("credit_card", strategy="redact", apply_to_input=True),
             # Both retries default to `retry_on=(Exception,)`, which would
             # retry an authorization denial — turning one refusal into three,
-            # slower and no less refused. Transient causes only.
-            ModelRetryMiddleware(max_retries=2, retry_on=TRANSIENT_MODEL_ERRORS),
+            # slower and no less refused. Transient causes only. The model
+            # retry also defaults to `on_failure="continue"`, which turns an
+            # exhausted retry into an assistant reply quoting the exception;
+            # "error" raises instead, and the caller decides what to show.
+            ModelRetryMiddleware(
+                max_retries=2, retry_on=TRANSIENT_MODEL_ERRORS, on_failure="error"
+            ),
             ToolRetryMiddleware(max_retries=2, retry_on=(sqlite3.OperationalError,)),
             CustomerContextMiddleware(),
             # Last, so it runs first: after_model hooks execute in reverse
