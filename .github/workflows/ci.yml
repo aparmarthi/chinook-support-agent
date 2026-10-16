@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    env:
+      # `src/agent/graph.py` builds the served agent at import, and the OpenAI
+      # client refuses to construct without a key. No test here calls it; one
+      # that did would fail on this placeholder instead of spending money.
+      OPENAI_API_KEY: ci-placeholder-not-a-key
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      # Builds chinook.db from the pinned upstream dump and verifies every row count.
+      - run: python scripts/setup_data.py
+      # Deterministic suite only: `llm` tests are deselected in pytest.ini, and the
+      # native-auth tests skip without a running `langgraph dev`.
+      - run: python -m pytest
+      # No model calls: proves the dataset loads and every evaluator runs. The
+      # graded runs cost money and are committed under evals/results/.
+      - run: python -m evals.run --dry-run --out "$RUNNER_TEMP"
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build   # includes the TypeScript check

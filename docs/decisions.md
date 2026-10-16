@@ -153,6 +153,8 @@ Keeping the tripwire is still worth it for the reasons the original ADR gave: it
 
 **Rationale.** Studio is the right surface. A hand-built chat UI would look worse than Studio and would consume hours that belong to the eval loop. Studio also *is* part of the pitch — showing the graph, the thread state, and time-travel debugging is a LangSmith feature demo, not a workaround.
 
+**Superseded by [ADR-025](#adr-025--a-public-url-needs-a-front-door-not-studio)** for anyone who isn't screen-sharing. Studio stays the debugging surface.
+
 ---
 
 ## ADR-008 — Repo layout fits an agent project, not an ML pipeline
@@ -489,3 +491,29 @@ Verified reply: *"I've queued request #3 for support review under Steve Johnson�
 **The four traces are kept as a series** (`reports/traces/`), because each stage passed the checks that existed when it shipped and none was caught by anything going red: claimed with no tool → tool with no write → write with an overstated claim → claim matching the row.
 
 **Would change our mind.** A real ticketing integration, at which point `queued` becomes `sent` and the status column starts earning its keep. ⚠️ Do not estimate how long that integration takes without knowing the system on the other side.
+
+---
+
+## ADR-025 — A public URL needs a front door, not Studio
+
+**Status.** Accepted. Supersedes ADR-007 for public access.
+
+**Context.** ADR-007 assumed one audience: someone watching a screen-share while the builder drives Studio. A link someone can open alone is a different product. Studio needs a local server and a LangSmith login, and its custom-auth exemption (ADR-022) means identity there comes from the selected assistant, not a credential. That is fine on a laptop and unacceptable on the internet.
+
+**Decision.** A FastAPI service (`src/api.py`) on Cloud Run, and a Next.js client (`web/`) on Vercel at `support.ameyparmarthi.com`. Vercel proxies `/api/*` to the service, so the browser makes only same-origin calls: no CORS preflight per turn, and nothing for a corporate network's private routing of `*.run.app` (which Chrome's local-network protection then blocks) to break.
+
+- **Identity comes from a signed token, never the request body.** `POST /api/session` takes a persona name (Helena or Richard only — an endpoint that accepted any id would be an enumeration tool) and returns an HMAC-signed token bound to that customer. Every later call derives `AuthContext` from the signature. It is the same rule as the tools, one layer out: nothing a caller sends can name a tenant.
+- **Conversations go through `SupportGateway`.** The API adds no ownership logic of its own. `send` now also accepts the `Command(resume=...)` that answers a refund approval, so a decision on someone else's refund fails the same check as a message to their thread, before the checkpoint loads.
+- **The visitor plays the reviewer.** The approval card is the server's own `describe_refund_request` output. The UI says plainly that in production this slip goes to a support rep, not the customer who asked.
+- **A paused thread accepts only a decision.** A new message on a thread waiting for approval would leave the refund tool call without a result, and the model API rejects that on every later turn. The runner returns 409 instead.
+
+**State is in-process, on purpose.** The checkpointer is an `InMemorySaver`, and `support.db` lives in the container. Both reset together on restart, so a token can outlive its conversations but never point at another customer's. The client handles that 404 by opening a new conversation. That correctness depends on one instance, so the service runs with `max-instances=1`. Postgres (`PostgresSaver` plus the support tables) is the scaling path; nothing above the store would change.
+
+**Spend is capped three ways.** 20 turns per session and 500 per UTC day, both in memory, with the OpenAI project's hard monthly limit behind them. A turn is a message or a refund decision; a turn refused before the model runs (wrong conversation, pending refund, one already in flight) is refunded. The per-session cap is a courtesy, since anyone can mint another session. Because a restart resets the counters, the provider limit is the real ceiling. Conversations are capped at 1,000 a day, since each one holds a thread in memory and costs no model call to open.
+
+**A conversation belongs to a session, not just a customer.** The gateway binds a conversation to a customer, and the API also binds it to the session that opened it. Without that, two visitors who both signed in as Helena could drive each other's threads given a leaked id. One turn runs per conversation at a time (409 otherwise), so a double-clicked approve can't race. When the model asks for two refunds in one turn, the slip lists both and one decision covers both, because HITL requires one decision per pending call.
+
+**Found while building it.** `ModelRetryMiddleware` defaults to `on_failure="continue"`, which turns an exhausted retry into an *assistant message* containing the exception text. In Studio that reads as a debugging aid; on a public page it shows a customer `APITimeoutError`. The API first mapped that reply to a 503 at the edge, while the agent was frozen for the experiment in `reports/experiment.md`. The fix is now in both arms: `on_failure="error"` makes an exhausted retry raise, the API turns the exception into a 503, and `tests/test_api.py` drives a real `APITimeoutError` through the agent to hold it there. The frozen comparison still names commit `a29a530`; the repeat runs in the README are at the fixed commit.
+
+**Would change our mind.** Real users with real accounts. Personas would give way to an identity provider, the reviewer would move to an operator console, and the in-memory counters would move to Redis.
+

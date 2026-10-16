@@ -305,7 +305,7 @@ Each example stores `customer_id`, a fresh `thread_id`, expected facts, allowed 
 
 The split is the principle: **anything with a ground truth gets a code evaluator; LLM judges are for the genuinely subjective.** Never let a probabilistic grader score a safety property (ADR-010).
 
-**Measured, 30/30 on the code checks**, with the tone judge at a mean 0.97 of 1.00 across the 29 replies eligible for it. The thirtieth is the pending-approval example, which ends on an interrupt and has no final answer — the judge returns `None` rather than zero there, because "not graded" and "bad tone" must not average together.
+**Measured at commit `613bd0b`, every example run five times: 147/150 on the code checks**, with the tone judge at a mean 0.88 of 1.00 across the 142 replies that passed every code check. The judge grades nothing else: not a failed reply, and not the pending-approval example, which ends on an interrupt and has no final answer — the judge returns `None` rather than zero there, because "not graded" and "bad tone" must not average together. The misses and the raw rows are in the README's Results.
 
 The judge is calibrated and the calibration is a test (`tests/test_judge_calibration.py`, marked `llm`). It needed to be: the first version marked four structurally identical escalation replies with two different verdicts. See ADR-019 — the interesting part is not the miscalibration but what fixing it nearly did.
 
@@ -333,6 +333,8 @@ Same model, same dataset, stratified by workflow, one causal variable. **Write t
 **Run each mixed-intent example three times per arm.** It's the primary justification for the supervisor and there are only four examples, so a single pass can't distinguish a real effect from one unlucky sample. Report per-example success *and* run-level variance — if an example passes 3/3 in one arm and 1/3 in the other, that's informative in a way a single run isn't. Twelve extra luna runs is roughly $0.10. This still isn't statistical significance and shouldn't be described as such; it's the cheapest available defense against reading noise as signal.
 
 **State the power limitation rather than hiding it.** Twenty-nine examples cannot support a significance claim, and the mixed-intent slice is four. This is a *decision rule under small samples*, not an experiment — which is why the bar is "clears every threshold and wins the primary metric by a visible margin," and why ties go to the simpler architecture. Say that out loud if asked; the honest framing is stronger than a confident percentage would be.
+
+⚠️ **The counts above are the planning draft's: 29 examples, four mixed-intent.** ADR-017 split one mixed-intent example in two before the experiment ran, so it ran on 30 and five — fifteen repeat runs per arm, not twelve. The bars were applied as written; a +2 margin on five is still a visible one.
 
 **Both outcomes are presentable.** If the supervisor wins, you have numbers instead of intuition. If it loses, you built the complex thing, measured it, and deleted it — and pre-registering the threshold is what makes that a decision rather than a rationalization.
 

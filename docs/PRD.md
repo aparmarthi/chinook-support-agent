@@ -1,7 +1,7 @@
 # PRD — Tenant-Safe Support Agent
 
 **Owner:** Amey Parmarthi
-**Status:** Draft for build
+**Status:** Built. Measured results are in the [README](../README.md#results) and [`reports/experiment.md`](../reports/experiment.md).
 **Context:** The deliverable is a *live demo* to a mixed business and technical audience, not a shipped product. Every requirement below has to justify its airtime.
 
 The code is only half the point. The demo has to run like a pre-sales technical engagement: co-design an architecture, defend the tradeoffs to an engineer, connect it to business value for a director, and handle a competitive objection without getting defensive. The agent is the artifact; the demo is the deliverable. Where those two goals conflict, the demo wins — that's the reasoning behind most of the scope cuts in §3.
@@ -44,7 +44,7 @@ Those three gaps map to the three things this demo has to prove. The OSS gets yo
 | **Support lead** | Containment rate, quality trend, an audit trail | A dashboard, not a spreadsheet |
 | **Engineer** | Reproduce a bad run, fix it, prove the fix didn't break anything else | Trace → dataset → experiment loop |
 
-The last two are the LangSmith buyers. The demo must show them their own workflow, not just the customer's happy path.
+The last two are the people who decide whether an agent reaches production. The demo must show them their own workflow, not just the customer's happy path.
 
 ---
 

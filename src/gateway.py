@@ -35,6 +35,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from langgraph.types import Command
+
 from src.agent.context import AuthContext
 from src.data.db import support_connection
 
@@ -156,14 +158,16 @@ class SupportGateway:
         return handle
 
     def send(
-        self, auth: AuthContext, conversation_id: str, message: str
+        self, auth: AuthContext, conversation_id: str, message: str | Command
     ) -> Any:
         """Authorize the conversation, then run one turn.
 
         Args:
             auth: Trusted identity from the verified session.
             conversation_id: Client-visible conversation identifier.
-            message: The user's turn.
+            message: The user's turn, or a ``Command(resume=...)`` answering a
+                pending refund approval. Both go through the same check: a
+                decision on someone else's refund is a write to their thread.
 
         Returns:
             Whatever the runner returns.

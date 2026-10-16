@@ -93,7 +93,9 @@ def _build_specialist(
             ToolCallLimitMiddleware(
                 run_limit=MAX_SPECIALIST_TOOL_CALLS, exit_behavior="end"
             ),
-            ModelRetryMiddleware(max_retries=2, retry_on=TRANSIENT_MODEL_ERRORS),
+            ModelRetryMiddleware(
+                max_retries=2, retry_on=TRANSIENT_MODEL_ERRORS, on_failure="error"
+            ),
             ToolRetryMiddleware(max_retries=2, retry_on=(sqlite3.OperationalError,)),
         ],
         name=name,
@@ -239,7 +241,9 @@ def build_supervisor(
                 run_limit=MAX_TOOL_CALLS_PER_RUN, exit_behavior="end"
             ),
             PIIMiddleware("credit_card", strategy="redact", apply_to_input=True),
-            ModelRetryMiddleware(max_retries=2, retry_on=TRANSIENT_MODEL_ERRORS),
+            ModelRetryMiddleware(
+                max_retries=2, retry_on=TRANSIENT_MODEL_ERRORS, on_failure="error"
+            ),
             ToolRetryMiddleware(max_retries=2, retry_on=(sqlite3.OperationalError,)),
             CustomerContextMiddleware(),
             RefundApprovalPreflight(),
