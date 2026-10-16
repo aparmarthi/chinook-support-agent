@@ -1,6 +1,6 @@
 # Chinook Music Store Support Agent
 
-A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built for the final round of the LangChain Deployed Engineer process — the deliverable is a live 35-minute demo to a mixed business/technical audience.
+A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built to be demoed live to a mixed business and technical audience.
 
 **Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 139 deterministic tests, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
 
@@ -14,7 +14,7 @@ Three workflows against the [Chinook](https://github.com/lerocha/chinook-databas
 2. **Music discovery** — recommendations grounded in the customer's own purchase history, excluding tracks they already own
 3. **Refunds & handoff** — drafts a refund *request ticket*, pauses for human approval, and queues a durable handoff row under the customer's actual assigned support rep without claiming the rep was notified
 
-Three business problems, **six tools.** The brief says not to go for breadth of tools, so the count is a designed ceiling — [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) §5 lists what was cut and why, including a duplicate-charge detector that was scoped and rejected because Chinook has no payment events to detect against.
+Three business problems, **six tools.** Depth beats breadth of tools, so the count is a designed ceiling — [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) §5 lists what was cut and why, including a duplicate-charge detector that was scoped and rejected because Chinook has no payment events to detect against.
 
 The commercial angle: a billing question and a product recommendation are the same conversation. The support queue is a cost center and an upsell surface at once — an opportunity created, not revenue booked, since there's no checkout in this build.
 

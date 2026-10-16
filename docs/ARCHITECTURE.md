@@ -72,7 +72,7 @@ Four options were considered. The honest position is that the right answer is un
 
 **D. `create_deep_agent`.** Wrong harness for a sub-10-second support turn — planning, a virtual filesystem, and skills are overhead here. Deep Agents is the right call for long-horizon work where context outgrows the window. Shown as the graduation path, not the default. Optional stretch, cut first: a playlist curator for the one genuinely multi-step request.
 
-**The interview sentence this buys:** *"I expected specialization to help, so I tested it against a flat agent on the same dataset and model. It moved mixed-intent completion from X to Y at N% more latency, so I kept it / cut it."* That beats any amount of architectural reasoning.
+**The sentence this buys:** *"I expected specialization to help, so I tested it against a flat agent on the same dataset and model. It moved mixed-intent completion from X to Y at N% more latency, so I kept it / cut it."* That beats any amount of architectural reasoning.
 
 ---
 
@@ -88,7 +88,7 @@ Three links, each with a single job, and the property worth stating is that **no
 2. **The scoped repository** is the only way to reach the database. Every method reads identity from `AuthContext` and takes no tenant parameter, so "fetch customer 26" is not expressible — there is no argument to put it in.
 3. **Ownership-enforcing SQL** binds the tenant in the `WHERE` clause of every customer-scoped query. `get_invoice_detail(invoice_id)` runs `WHERE InvoiceId=? AND CustomerId=?` and returns not-found for someone else's invoice — identical to a nonexistent one, so there's no oracle to probe. No LLM-authored SQL anywhere (ADR-003).
 
-Rehearse that sentence. It's the answer to the brief's "how do you ensure the customer can only see info about themselves," and being able to name the three links in order is the difference between a design and a description.
+That sentence is the answer to "how do you ensure the customer can only see info about themselves," and being able to name the three links in order is the difference between a design and a description.
 
 ### Layers
 
@@ -218,7 +218,7 @@ No claim without a test behind it. If a row here has no passing test by Day 2, t
 
 ## 5. Tools
 
-**Six model-visible tools, and the ceiling is deliberate.** The brief says: *"Do not go for breadth of tools. Pick a short list (2-4) interesting business problems that the chatbot should be able to solve."*
+**Six model-visible tools, and the ceiling is deliberate.** Depth over breadth: a short list of two to four business problems the agent solves well.
 
 Read that precisely — the 2-4 is **business problems**, not tools, so three workflows is compliant. But "do not go for breadth of tools" is an explicit instruction, so every tool has to earn its slot against it and ties go to fewer.
 
@@ -253,7 +253,7 @@ Naming your cuts confidently is a better signal than justifying additions.
 
 ### Two notes worth saying out loud
 
-**Naming.** It's `create_refund_request`, not `request_refund` — the system creates a ticket, it does not move money. Say it that way; a panel will check whether the claim matches the code.
+**Naming.** It's `create_refund_request`, not `request_refund` — the system creates a ticket, it does not move money. Say it that way; a reviewer will check whether the claim matches the code.
 
 **Why `get_spend_summary` survives** when the model could sum `get_my_invoices` itself: **you don't let a model do arithmetic on money.** Aggregation in SQL is correct by construction; a column of invoice totals added up by an LLM is exactly where billing accuracy quietly fails. Same principle as code evaluators for ground-truth properties, one layer down.
 
@@ -378,7 +378,7 @@ Verified: 59 customers · 275 artists · 347 albums · 3,503 tracks · 25 genres
 | **Primary** | **#6 Helena Holý** (Czech Republic) | 7 invoices, $49.62 lifetime. Rock (10), TV Shows (6), Latin (6). Latest invoice **#404, 2025-11-13, $25.86**. Rep: **Steve Johnson (#5)**. |
 | **The other tenant** | **#26 Richard Cunningham** (USA) | The customer Helena must never see. Rep: Margaret Park (#4). Seed a canary fact here for leakage regression tests. |
 
-**What the schema does and doesn't support** — worth knowing before claiming it in a demo. Chinook has invoices, not shipments, so this is a digital store with no "where's my order." It has no payment-processor events, so a "was I charged twice" question cannot be answered — the invoice table doesn't know what a card was charged, and building a tool that eyeballs repeated line items would dress up a guess as a capability. It has no download or entitlement events, so "I never received this track" can be *collected* and ticketed but not *verified*. Each of those ends in `escalate_to_human`, which queues a durable review request under the assigned rep but does not assign, send, or notify anyone. They are handoff paths, not resolution capabilities, and the agent should say so plainly to the customer. The brief anticipates this: the dataset is not a perfect fit, and the job is to weave a narrative rather than fight it.
+**What the schema does and doesn't support** — worth knowing before claiming it in a demo. Chinook has invoices, not shipments, so this is a digital store with no "where's my order." It has no payment-processor events, so a "was I charged twice" question cannot be answered — the invoice table doesn't know what a card was charged, and building a tool that eyeballs repeated line items would dress up a guess as a capability. It has no download or entitlement events, so "I never received this track" can be *collected* and ticketed but not *verified*. Each of those ends in `escalate_to_human`, which queues a durable review request under the assigned rep but does not assign, send, or notify anyone. They are handoff paths, not resolution capabilities, and the agent should say so plainly to the customer. The dataset is not a perfect fit, and the job is to weave a narrative rather than fight it.
 
 ---
 

@@ -1,6 +1,6 @@
 # Decision Log
 
-Pre-recorded before the build so the reasoning is honest rather than reconstructed. Update status as reality intervenes — a decision that got reversed mid-build is a *better* interview story than one that was right the first time, provided you can say why.
+Pre-recorded before the build so the reasoning is honest rather than reconstructed. Update status as reality intervenes — a decision that got reversed mid-build is a *better* story than one that was right the first time, provided you can say why.
 
 Format: decision, alternatives, rationale, and what would change our mind.
 
@@ -14,7 +14,7 @@ Format: decision, alternatives, rationale, and what would change our mind.
 
 **Alternatives.** A broad toolbelt (playlists, artist bios, address changes, subscriptions, gift cards).
 
-**Rationale.** The brief is explicit and it's the governing constraint here:
+**Rationale.** The scope is explicit and it's the governing constraint here:
 
 > *"Do not go for breadth of tools. Pick a short list (2-4) interesting business problems that the chatbot should be able to solve."*
 
@@ -89,7 +89,7 @@ That is the second time this ADR has been corrected, and the two corrections are
 
 **Decision.** Nine hand-written query functions. No `SQLDatabaseToolkit`, no LLM-authored SQL.
 
-**Alternatives.** The SQL agent toolkit — which is, notably, the obvious thing to reach for with Chinook, and probably what most submissions will do.
+**Alternatives.** The SQL agent toolkit — which is, notably, the obvious thing to reach for with Chinook, and probably what most implementations will do.
 
 **Rationale.** This is a security decision and the most defensible one in the build.
 
@@ -113,7 +113,7 @@ Secondary benefits: predictable latency, no schema in the prompt, and every quer
 
 **Rationale.** Deep Agents is a harness for long-horizon work — planning, subagent spawning, a virtual filesystem for context that outgrows the window, skills. A billing lookup that has to return in under eight seconds needs none of that, and the planning overhead is a latency tax paid for nothing. Matching the harness to the task *is* the expertise; using the most powerful one available is how prototypes fail to become products.
 
-The brief requires explaining LangChain vs. LangGraph vs. Deep Agents. Explaining the difference is fine; **showing** the same store's problem solved two ways — a fast loop for support turns, a planning harness for a genuinely multi-step curation request — is much stronger, and it demonstrates judgment rather than recall.
+The scope calls for explaining LangChain vs. LangGraph vs. Deep Agents. Explaining the difference is fine; **showing** the same store's problem solved two ways — a fast loop for support turns, a planning harness for a genuinely multi-step curation request — is much stronger, and it demonstrates judgment rather than recall.
 
 **Would change our mind.** If the playlist-curator stretch reveals that Deep Agents' defaults handle the support case with no latency penalty, that's worth knowing and worth saying.
 
@@ -151,7 +151,7 @@ Keeping the tripwire is still worth it for the reasons the original ADR gave: it
 
 **Decision.** No FastAPI, no Streamlit, no custom chat window.
 
-**Rationale.** The brief says so, and the brief is right. A hand-built chat UI would look worse than Studio and would consume hours that belong to the eval loop. Studio also *is* part of the pitch — showing the graph, the thread state, and time-travel debugging is a LangSmith feature demo, not a workaround.
+**Rationale.** Studio is the right surface. A hand-built chat UI would look worse than Studio and would consume hours that belong to the eval loop. Studio also *is* part of the pitch — showing the graph, the thread state, and time-travel debugging is a LangSmith feature demo, not a workaround.
 
 ---
 
@@ -249,7 +249,7 @@ This is also the better adversarial demo. Typing "ignore previous instructions a
 
 Splitting the files makes the claim structural: the agent has no write path into customer or invoice data because the connection it reads them through cannot write. The idempotency key handles the case the HITL flow makes likely — an interrupt resumed twice shouldn't create two tickets.
 
-**Naming follows.** `create_refund_request`, not `request_refund`. The system files a ticket; it does not move money. Say it that way in the demo, because a panel will check whether the claim matches the code.
+**Naming follows.** `create_refund_request`, not `request_refund`. The system files a ticket; it does not move money. Say it that way in the demo, because a reviewer will check whether the claim matches the code.
 
 **Would change our mind.** Nothing.
 
@@ -409,7 +409,7 @@ And answering the invitation with "I didn't need to invent one" is itself the de
 
 **Why not work around it.** Creating an organization to demo a feature would mean presenting an environment that isn't the one the work was done in, and the demo's whole credibility rests on everything shown being real. The seeding run is the clearer call: its only consumer was Insights and Engine, so with both gone it's an hour of runtime and 150 traces producing nothing. Work whose consumer disappeared should disappear with it.
 
-**Consequence, and it's a constraint worth naming.** The brief requires showing *differentiating* features, and the obvious differentiators were all gated. Every differentiator now has to come from ungated capability: thread forking and replay from an arbitrary step, one-click trace-to-dataset on a real failure, the same evaluators offline and online, and tracing as an environment variable. The planning note that at least two differentiators must be ungated is the only reason this requirement is still satisfiable.
+**Consequence, and it's a constraint worth naming.** The demo has to show *differentiating* features, and the obvious differentiators were all gated. Every differentiator now has to come from ungated capability: thread forking and replay from an arbitrary step, one-click trace-to-dataset on a real failure, the same evaluators offline and online, and tracing as an environment variable. The planning note that at least two differentiators must be ungated is the only reason this requirement is still satisfiable.
 
 **The upside is real rather than consoling.** Engine automates the loop of spot-the-failure, root-cause, dataset example, evaluator. This build walked that loop by hand and has the artifact to show for it. Having done it manually is a better basis for talking about the automation than having watched the automation run.
 

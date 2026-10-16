@@ -2,7 +2,7 @@
 .env
 *.key
 
-# Internal planning notes — working artifacts, not part of the submission
+# Internal planning notes — working artifacts, not part of the repo
 docs/internal/
 
 # Data — rebuilt by scripts/setup_data.py
