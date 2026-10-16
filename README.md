@@ -4,7 +4,7 @@
 
 A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built to be demoed live to a mixed business and technical audience.
 
-**Try it:** [tenant-safe-support.vercel.app](https://tenant-safe-support.vercel.app). Sign in as one of two customers, then try to see the other's account.
+**Try it:** [support.ameyparmarthi.com](https://support.ameyparmarthi.com). Sign in as one of two customers, then try to see the other's account.
 
 **Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 163 deterministic tests run in CI, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
 
