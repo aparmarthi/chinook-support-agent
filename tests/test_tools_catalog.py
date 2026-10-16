@@ -1,6 +1,6 @@
 """Tests for the recommendation tool (W2).
 
-W2 is the second area of work the brief requires, so these are compliance
+W2 is the second area of work in scope, so these are compliance
 tests as much as correctness tests. They also pin two properties the demo
 depends on: recommendations never include something the customer already owns,
 and the same request always returns the same list, so an evaluation run is not

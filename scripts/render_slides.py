@@ -4,7 +4,7 @@
 
 `docs/slides/deck.html` is the source of truth — it is the thing presented, and
 it carries the presenter notes. This produces the artifacts that survive a dead
-laptop, a broken projector, or a submission that has to be read rather than
+laptop, a broken projector, or a deck that has to be read rather than
 watched: `reports/slides/deck.pdf` and one PNG per slide.
 
 Regenerate after editing the deck. A stale PNG of a corrected number is exactly

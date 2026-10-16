@@ -2,7 +2,7 @@
 
 **Owner:** Amey Parmarthi
 **Status:** Draft for build
-**Context:** Final round of the LangChain Deployed Engineer process. The deliverable is a *live 35-minute demo*, not a shipped product — presented to Neil Dahlke (Director of Deployed Engineering) and Conrad Corbett (Deployed Engineer). Every requirement below has to justify its airtime.
+**Context:** The deliverable is a *live demo* to a mixed business and technical audience, not a shipped product. Every requirement below has to justify its airtime.
 
 What's actually being assessed is not the code. It's whether this person can run a pre-sales technical engagement: co-design an architecture, defend the tradeoffs to an engineer, connect it to business value for a director, and handle a competitive objection without getting defensive. The agent is the artifact; the demo is the deliverable. Where those two goals conflict, the demo wins — that's the reasoning behind most of the scope cuts in §3.
 
@@ -52,7 +52,7 @@ The last two are the LangSmith buyers. The demo must show them their own workflo
 
 ### In scope — three workflows, six tools
 
-The brief is explicit: *"Do not go for breadth of tools. Pick a short list (2-4) interesting business problems that the chatbot should be able to solve."*
+The scope is explicit: depth over breadth of tools — a short list of two to four business problems the agent solves well.
 
 Three business problems sits in the middle of that range. The tool count is held to six by treating the instruction as a constraint to design against rather than a suggestion — full accounting of what was cut in [`ARCHITECTURE.md`](ARCHITECTURE.md) §5. Each workflow also exists to make a *different* architectural point, which is the second filter: a workflow that doesn't carry an argument doesn't get demo minutes.
 
@@ -75,17 +75,17 @@ Three claims that sound natural in a support demo and that Chinook does not back
 | "It verifies the download failed" | No download or entitlement events exist. | **Collects** the claim and files a ticket. Cannot validate it → human decides. |
 | "It issued a refund" | Nothing moves money. | Creates a **refund request ticket** in `support.db` after approval. |
 
-Naming reflects this: the tool is `create_refund_request`, not `request_refund`. Volunteering these limits early costs thirty seconds and buys credibility for everything else — and the brief anticipates the dataset being an imperfect fit.
+Naming reflects this: the tool is `create_refund_request`, not `request_refund`. Volunteering these limits early costs thirty seconds and buys credibility for everything else — and the dataset is an imperfect fit for a support desk, so the limits are real.
 
-**Note what the first row cost.** A `find_duplicate_charges` tool was scoped and cut, because the brief says *"do not go for breadth of tools"* and a tool whose best possible outcome is an escalation doesn't earn a slot against that. Being able to name a tool you deliberately didn't build is worth more in the room than the tool would have been.
+**Note what the first row cost.** A `find_duplicate_charges` tool was scoped and cut, because the scope favors depth over breadth of tools, and a tool whose best possible outcome is an escalation doesn't earn a slot against that. Being able to name a tool you deliberately didn't build is worth more in the room than the tool would have been.
 
 ### Explicitly out of scope
 
 | Cut | Why |
 |---|---|
-| Custom web UI (FastAPI + Streamlit) | Brief says use Studio. Building a UI spends demo-prep hours on the one thing that earns zero credit, and a homemade chat window looks *worse* than Studio. |
+| Custom web UI (FastAPI + Streamlit) | Studio is the demo surface. Building a UI spends hours on the one thing that adds no signal about the agent, and a homemade chat window looks *worse* than Studio. |
 | Text-to-SQL / `SQLDatabaseToolkit` | This is a security decision, not a laziness decision. See §5 and ADR-003. |
-| Deployment / LangGraph Platform | Brief explicitly says do not show deployments. |
+| Deployment / LangGraph Platform | Out of scope for the demo — the agent, not the deployment, is the subject. |
 | Auth system | Identity is *stubbed as already-verified* and injected as runtime context. Building real auth demonstrates nothing about LangChain. |
 | Shipping/order status | Chinook invoices are digital purchases. There is no shipment table. Don't fight the data. |
 
@@ -136,7 +136,7 @@ Klarna does the work here: a company with orders of magnitude more support volum
 
 ## 5. Security model — "how do you ensure the customer only sees themselves?"
 
-This question is in the brief, which means it's scored. The wrong answer is "the system prompt tells it to." A prompt is a suggestion, not a control. **Identity must never be model-controlled.**
+This is the first question any security review asks. The wrong answer is "the system prompt tells it to." A prompt is a suggestion, not a control. **Identity must never be model-controlled.**
 
 Two invariants, not one — the second is the one most designs miss:
 
@@ -145,7 +145,7 @@ Two invariants, not one — the second is the one most designs miss:
 
 B matters because A alone doesn't save you. A checkpointed thread created as Helena holds her invoice data in its message history; resume it under Richard's context and the model can read and repeat it without issuing a single unauthorized query. Scoped queries, unscoped conversations.
 
-The whole boundary in one sentence: **trusted `AuthContext` → scoped repository → ownership-enforcing SQL.** Three links, each with one job, and none of them reachable by anything the model emits. Rehearse that phrasing — it's the answer to the brief's isolation requirement.
+The whole boundary in one sentence: **trusted `AuthContext` → scoped repository → ownership-enforcing SQL.** Three links, each with one job, and none of them reachable by anything the model emits. That phrasing is the answer to the isolation requirement.
 
 Five layers, defense in depth:
 
@@ -198,9 +198,9 @@ The test asserts the property that matters: the request is rejected **and the ch
 
 ## 8. Definition of done
 
-**Must have — these are the submission:**
+**Must have — these are the deliverable:**
 
-- [ ] **W1 and W2 run end-to-end in Studio against real Chinook rows.** These two are the compliance floor — billing and recommendations are the brief's own example of two distinct *areas*, and billing plus refunds would be one area wearing two hats. W2 is never cut.
+- [ ] **W1 and W2 run end-to-end in Studio against real Chinook rows.** These two are the compliance floor — billing and recommendations are two genuinely distinct *areas*, and billing plus refunds would be one area wearing two hats. W2 is never cut.
 - [ ] W3 refund with HITL runs end-to-end. Strong target, and the third area — but it gets cut before W2 does.
 - [ ] Prompt injection blocked, visible in a trace.
 - [ ] **Cross-tenant thread resume rejected**, with a deterministic test.
