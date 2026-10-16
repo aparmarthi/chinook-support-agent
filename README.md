@@ -4,7 +4,9 @@
 
 A customer support agent for an online music store, built on LangChain's `create_agent` and instrumented end-to-end with LangSmith. Built to be demoed live to a mixed business and technical audience.
 
-**Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 139 deterministic tests, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
+**Try it:** [tenant-safe-support.vercel.app](https://tenant-safe-support.vercel.app). Sign in as one of two customers, then try to see the other's account.
+
+**Status:** built and running. Flat agent with six tools, human-in-the-loop refunds, tenant isolation enforced at the Agent Server boundary, 163 deterministic tests run in CI, LangSmith evals over a 30-example dataset, and a measured flat-vs-supervisor experiment (flat ships).
 
 ---
 
@@ -39,7 +41,7 @@ Full reasoning in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/deci
 |---|---|
 | [`docs/PRD.md`](docs/PRD.md) | Problem, users, scope, success metrics, security model, ROI |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Cognitive architecture, tools, middleware, evaluation matrix, data layer |
-| [`docs/decisions.md`](docs/decisions.md) | 24 ADRs — the choices, the reversals, and what would change our mind |
+| [`docs/decisions.md`](docs/decisions.md) | 25 ADRs — the choices, the reversals, and what would change our mind |
 | [`docs/FRICTION_LOG.md`](docs/FRICTION_LOG.md) | Platform friction found during the build, with the workaround for each |
 | [`reports/experiment.md`](reports/experiment.md) | Frozen flat-vs-supervisor comparison, generated from the result files it names |
 | [`docs/slides/deck.html`](docs/slides/deck.html) | Five-slide customer-facing deck; keyboard navigation and speaker notes |
@@ -88,6 +90,15 @@ Then run in Studio:
 langgraph dev
 ```
 
+Or run the public web app locally ([ADR-025](docs/decisions.md)):
+
+```bash
+uvicorn src.api:create_app --factory --port 8000     # API
+cd web && npm install && npm run dev                  # http://localhost:3000
+```
+
+The API is a FastAPI service over the same agent: signed session tokens for identity, `SupportGateway` for conversation ownership, and per-session and daily message caps. The `Dockerfile` builds the Chinook data into the image and runs it on Cloud Run; `web/` deploys to Vercel and proxies `/api/*` to the service (`API_ORIGIN`), so the browser stays same-origin.
+
 ## Results
 
 Frozen at commit `a29a530` with the same model, dataset, and evaluators in both arms:
@@ -100,4 +111,4 @@ Frozen at commit `a29a530` with the same model, dataset, and evaluators in both 
 | Tool calls | **45** | 61 |
 | Security failures | **0** | **0** |
 
-Flat ships: the supervisor added 1.7× median latency with no measured quality gain. See [`reports/experiment.md`](reports/experiment.md) for generated provenance. The pre-flight suite recorded **139 deterministic passes** with the Agent Server running; **11** additional LLM-marked tests are kept separate. Production containment, recommendation attach rate, and human-review agreement remain unknown until real traffic.
+Flat ships: the supervisor added 1.7× median latency with no measured quality gain. See [`reports/experiment.md`](reports/experiment.md) for generated provenance. The deterministic suite is **163 tests**: CI runs them on every push, and the 10 native-auth tests skip there because they need a running Agent Server. **11** LLM-marked tests are kept separate. Production containment, recommendation attach rate, and human-review agreement remain unknown until real traffic.

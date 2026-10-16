@@ -334,6 +334,8 @@ Same model, same dataset, stratified by workflow, one causal variable. **Write t
 
 **State the power limitation rather than hiding it.** Twenty-nine examples cannot support a significance claim, and the mixed-intent slice is four. This is a *decision rule under small samples*, not an experiment — which is why the bar is "clears every threshold and wins the primary metric by a visible margin," and why ties go to the simpler architecture. Say that out loud if asked; the honest framing is stronger than a confident percentage would be.
 
+⚠️ **The counts above are the planning draft's: 29 examples, four mixed-intent.** ADR-017 split one mixed-intent example in two before the experiment ran, so it ran on 30 and five — fifteen repeat runs per arm, not twelve. The bars were applied as written; a +2 margin on five is still a visible one.
+
 **Both outcomes are presentable.** If the supervisor wins, you have numbers instead of intuition. If it loses, you built the complex thing, measured it, and deleted it — and pre-registering the threshold is what makes that a decision rather than a rationalization.
 
 ### Result — flat ships
